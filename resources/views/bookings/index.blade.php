@@ -1,86 +1,125 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Bookings') }}
-            </h2>
-            <a href="{{ route('bookings.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                + New Booking
-            </a>
+    <!-- Page Title -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Bookings</h1>
+            <p class="text-slate-500">Manage all safari bookings</p>
         </div>
-    </x-slot>
+        <a href="{{ route('bookings.create') }}" class="btn btn-primary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            New Booking
+        </a>
+    </div>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
+    <!-- Filters -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('bookings.index') }}" class="tab {{ !request('status') ? 'active' : '' }}">All</a>
+            <a href="{{ route('bookings.index') }}?status=upcoming" class="tab {{ request('status') === 'upcoming' ? 'active' : '' }}">Upcoming</a>
+            <a href="{{ route('bookings.index') }}?status=active" class="tab {{ request('status') === 'active' ? 'active' : '' }}">Active</a>
+            <a href="{{ route('bookings.index') }}?status=completed" class="tab {{ request('status') === 'completed' ? 'active' : '' }}">Completed</a>
+        </div>
+    </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking #</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead Traveler</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Travelers</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse($bookings as $booking)
-                                <tr>
-                                    <td class="px-4 py-4 whitespace-nowrap">
-                                        <a href="{{ route('bookings.show', $booking) }}" class="text-indigo-600 hover:text-indigo-900 font-medium">
-                                            {{ $booking->booking_number }}
-                                        </a>
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $booking->country }}
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        @php $lead = $booking->travelers->where('is_lead', true)->first(); @endphp
-                                        {{ $lead ? $lead->full_name : '-' }}
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $booking->start_date->format('M j') }} - {{ $booking->end_date->format('M j, Y') }}
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {{ $booking->status === 'active' ? 'bg-green-100 text-green-800' : '' }}
-                                            {{ $booking->status === 'upcoming' ? 'bg-blue-100 text-blue-800' : '' }}
-                                            {{ $booking->status === 'completed' ? 'bg-gray-100 text-gray-800' : '' }}">
-                                            {{ ucfirst($booking->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $booking->travelers->count() }}
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="{{ route('bookings.show', $booking) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                                        <a href="{{ route('bookings.edit', $booking) }}" class="text-gray-600 hover:text-gray-900">Edit</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                        No bookings found. <a href="{{ route('bookings.create') }}" class="text-indigo-600 hover:text-indigo-900">Create your first booking</a>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+    <!-- Bookings Table -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Booking #</th>
+                    <th>Start Date</th>
+                    <th>Lead Traveler</th>
+                    <th>Travelers</th>
+                    <th>End Date</th>
+                    <th>Country</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($bookings as $booking)
+                    @php
+                        $lead = $booking->travelers->where('is_lead', true)->first();
+                        $totalTravelers = $booking->travelers->count();
+                    @endphp
+                    <tr class="cursor-pointer hover:bg-slate-50">
+                        <td>
+                            <a href="{{ route('bookings.show', $booking) }}" class="text-teal-600 hover:text-teal-700 font-medium">
+                                {{ $booking->booking_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                {{ $booking->start_date->format('M d, Y') }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="font-medium text-slate-900">
+                                {{ $lead ? $lead->last_name . ', ' . $lead->first_name : '-' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                {{ $totalTravelers }}
+                            </div>
+                        </td>
+                        <td>{{ $booking->end_date->format('M d, Y') }}</td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {{ $booking->country }}
+                            </div>
+                        </td>
+                        <td>
+                            @if($booking->status === 'upcoming')
+                                <span class="badge badge-info">Upcoming</span>
+                            @elseif($booking->status === 'active')
+                                <span class="badge badge-success">Active</span>
+                            @else
+                                <span class="badge" style="background: #f1f5f9; color: #475569;">Completed</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary text-sm py-2 px-3">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                    Open
+                                </a>
+                                <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-secondary text-sm py-2 px-3">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="py-12 text-center text-slate-500">
+                            No bookings found. <a href="{{ route('bookings.create') }}" class="text-teal-600 hover:text-teal-700">Create your first booking</a>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
 
-                    <div class="mt-4">
-                        {{ $bookings->links() }}
-                    </div>
-                </div>
+        @if($bookings->hasPages())
+            <div class="px-6 py-4 border-t border-slate-200">
+                {{ $bookings->links() }}
             </div>
-        </div>
+        @endif
     </div>
 </x-app-layout>

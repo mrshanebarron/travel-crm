@@ -1,172 +1,188 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+    <!-- Page Title -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p class="text-slate-500">Welcome back, {{ Auth::user()->name }}. Here is your booking overview.</p>
+    </div>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm">Total Bookings</div>
-                    <div class="text-3xl font-bold text-gray-900">{{ $stats['total_bookings'] }}</div>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm">Upcoming</div>
-                    <div class="text-3xl font-bold text-indigo-600">{{ $stats['upcoming_bookings'] }}</div>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm">Active</div>
-                    <div class="text-3xl font-bold text-green-600">{{ $stats['active_bookings'] }}</div>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm">Pending Tasks</div>
-                    <div class="text-3xl font-bold text-amber-600">{{ $stats['pending_tasks'] }}</div>
-                </div>
+    <!-- Stats Cards - 5 columns -->
+    <div class="grid grid-cols-5 gap-4 mb-8">
+        <a href="{{ route('bookings.index') }}?status=upcoming" class="stat-card group">
+            <div class="flex items-center justify-between mb-3">
+                <span class="w-3 h-3 rounded-full bg-teal-500"></span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
             </div>
+            <p class="text-3xl font-bold text-slate-900 mb-1">{{ $stats['upcoming_bookings'] }}</p>
+            <p class="text-sm text-slate-500">Upcoming Bookings</p>
+        </a>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Upcoming Bookings -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Upcoming Safaris</h3>
-                            <a href="{{ route('bookings.create') }}" class="text-sm text-indigo-600 hover:text-indigo-800">+ New Booking</a>
-                        </div>
-                        @forelse($upcomingBookings as $booking)
-                            <a href="{{ route('bookings.show', $booking) }}" class="block p-4 border rounded-lg mb-3 hover:bg-gray-50">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="font-medium text-gray-900">{{ $booking->booking_number }}</div>
-                                        <div class="text-sm text-gray-500">{{ $booking->country }}</div>
-                                        <div class="text-sm text-gray-500">
-                                            {{ $booking->travelers->count() }} travelers
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-sm font-medium text-indigo-600">
-                                            {{ $booking->start_date->format('M j, Y') }}
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ $booking->start_date->diffForHumans() }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="text-gray-500 text-center py-8">No upcoming safaris</div>
-                        @endforelse
-                    </div>
-                </div>
+        <a href="{{ route('bookings.index') }}?status=active" class="stat-card group">
+            <div class="flex items-center justify-between mb-3">
+                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </div>
+            <p class="text-3xl font-bold text-slate-900 mb-1">{{ $stats['active_bookings'] }}</p>
+            <p class="text-sm text-slate-500">Currently Running</p>
+        </a>
 
-                <!-- Pending Tasks -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Pending Tasks</h3>
-                            <a href="{{ route('tasks.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">View All</a>
-                        </div>
-                        @forelse($pendingTasks as $task)
-                            <div class="p-4 border rounded-lg mb-3">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="font-medium text-gray-900">{{ $task->name }}</div>
-                                        <div class="text-sm text-gray-500">
-                                            {{ $task->booking->booking_number }}
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        @if($task->due_date)
-                                            <div class="text-sm {{ $task->due_date->isPast() ? 'text-red-600 font-medium' : 'text-gray-600' }}">
-                                                {{ $task->due_date->format('M j') }}
-                                            </div>
-                                        @endif
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $task->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                            {{ str_replace('_', ' ', $task->status) }}
-                                        </span>
-                                    </div>
-                                </div>
+        <a href="{{ route('bookings.index') }}?status=completed" class="stat-card group">
+            <div class="flex items-center justify-between mb-3">
+                <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </div>
+            <p class="text-3xl font-bold text-slate-900 mb-1">{{ $stats['completed_bookings'] }}</p>
+            <p class="text-sm text-slate-500">Past Bookings</p>
+        </a>
+
+        <a href="{{ route('tasks.index') }}?filter=mine" class="stat-card group">
+            <div class="flex items-center justify-between mb-3">
+                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </div>
+            <p class="text-3xl font-bold text-slate-900 mb-1">{{ $stats['tasks_assigned_to_me'] }}</p>
+            <p class="text-sm text-slate-500">Tasks Assigned to Me</p>
+        </a>
+
+        <a href="{{ route('tasks.index') }}?filter=assigned" class="stat-card group">
+            <div class="flex items-center justify-between mb-3">
+                <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </div>
+            <p class="text-3xl font-bold text-slate-900 mb-1">{{ $stats['tasks_assigned_by_me'] }}</p>
+            <p class="text-sm text-slate-500">Tasks I Assigned</p>
+        </a>
+    </div>
+
+    <!-- Upcoming Bookings Table -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900">Upcoming Bookings</h2>
+            <a href="{{ route('bookings.index') }}" class="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1">
+                View All
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Start Date</th>
+                    <th>Lead Traveler</th>
+                    <th>Travelers</th>
+                    <th>End Date</th>
+                    <th>Country</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($upcomingBookings as $booking)
+                    @php
+                        $lead = $booking->travelers->where('is_lead', true)->first();
+                        $totalTravelers = $booking->travelers->count();
+                    @endphp
+                    <tr class="cursor-pointer hover:bg-slate-50">
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                {{ $booking->start_date->format('M d, Y') }}
                             </div>
-                        @empty
-                            <div class="text-gray-500 text-center py-8">No pending tasks</div>
-                        @endforelse
-                    </div>
-                </div>
+                        </td>
+                        <td>
+                            <span class="font-medium text-slate-900">
+                                {{ $lead ? $lead->last_name . ', ' . $lead->first_name : '-' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                {{ $totalTravelers }}
+                            </div>
+                        </td>
+                        <td>{{ $booking->end_date->format('M d, Y') }}</td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {{ $booking->country }}
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary text-sm py-2 px-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Open
+                            </a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-500">
+                            No upcoming bookings
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-                <!-- Active Bookings -->
-                @if($activeBookings->count() > 0)
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg lg:col-span-2">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Active Safaris</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @foreach($activeBookings as $booking)
-                                <a href="{{ route('bookings.show', $booking) }}" class="block p-4 border-2 border-green-200 bg-green-50 rounded-lg hover:bg-green-100">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <div class="font-medium text-gray-900">{{ $booking->booking_number }}</div>
-                                            <div class="text-sm text-gray-600">{{ $booking->country }}</div>
-                                            <div class="text-sm text-gray-500">{{ $booking->travelers->count() }} travelers</div>
-                                        </div>
-                                        <div class="text-right">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Active
-                                            </span>
-                                            <div class="text-xs text-gray-500 mt-1">
-                                                Day {{ now()->diffInDays($booking->start_date) + 1 }} of {{ $booking->start_date->diffInDays($booking->end_date) + 1 }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                 </div>
-                @endif
-
-                <!-- Pending Transfers -->
-                @if($pendingTransfers->count() > 0)
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg lg:col-span-2">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Pending Transfers</h3>
-                            <a href="{{ route('transfers.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">View All</a>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead>
-                                    <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Transfer #</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    @foreach($pendingTransfers as $transfer)
-                                        <tr>
-                                            <td class="px-4 py-3">
-                                                <a href="{{ route('transfers.show', $transfer) }}" class="text-indigo-600 hover:text-indigo-800">
-                                                    {{ $transfer->transfer_number }}
-                                                </a>
-                                            </td>
-                                            <td class="px-4 py-3 text-sm text-gray-500">{{ $transfer->request_date->format('M j, Y') }}</td>
-                                            <td class="px-4 py-3 text-sm font-medium">${{ number_format($transfer->total_amount, 2) }}</td>
-                                            <td class="px-4 py-3">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $transfer->status === 'draft' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800' }}">
-                                                    {{ str_replace('_', ' ', $transfer->status) }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                @endif
+                <h3 class="font-semibold text-slate-900">New Booking</h3>
             </div>
+            <p class="text-sm text-slate-500 mb-4">Create a new safari booking with client details.</p>
+            <a href="{{ route('bookings.create') }}" class="btn btn-primary w-full">Create Booking</a>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-slate-900">New Transfer</h3>
+            </div>
+            <p class="text-sm text-slate-500 mb-4">Create a new fund transfer request to Kenya.</p>
+            <a href="{{ route('transfers.create') }}" class="btn btn-primary w-full">Create Transfer</a>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-slate-900">View Reports</h3>
+            </div>
+            <p class="text-sm text-slate-500 mb-4">Access financial and operational reports.</p>
+            <button class="btn btn-secondary w-full">Open Reports</button>
         </div>
     </div>
 </x-app-layout>

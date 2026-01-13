@@ -5,31 +5,137 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>Safari CRM - Jensen Adventures</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            :root {
+                --background: #f8fafc;
+                --foreground: #0f172a;
+                --sidebar: #1e293b;
+                --primary: #0d9488;
+                --primary-dark: #0f766e;
+            }
+            body { font-family: 'Inter', system-ui, sans-serif; }
+            .sidebar {
+                background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            }
+            .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                color: #94a3b8;
+                transition: all 0.2s;
+            }
+            .sidebar-link:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #ffffff;
+            }
+            .sidebar-link.active {
+                background: #0d9488;
+                color: #ffffff;
+            }
+            .stat-card {
+                background: #ffffff;
+                border-radius: 12px;
+                padding: 20px;
+                border: 1px solid #e2e8f0;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .stat-card:hover {
+                border-color: #0d9488;
+                box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+            }
+            .data-table { width: 100%; border-collapse: collapse; }
+            .data-table th {
+                text-align: left;
+                padding: 12px 16px;
+                background: #f8fafc;
+                font-weight: 600;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #64748b;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .data-table td {
+                padding: 16px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .data-table tr:hover { background: #f8fafc; }
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .btn-primary {
+                background: #0d9488;
+                color: white;
+            }
+            .btn-primary:hover { background: #0f766e; }
+            .btn-secondary {
+                background: #f1f5f9;
+                color: #475569;
+            }
+            .btn-secondary:hover { background: #e2e8f0; }
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 4px 12px;
+                border-radius: 9999px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            .badge-success { background: #dcfce7; color: #166534; }
+            .badge-warning { background: #fef3c7; color: #92400e; }
+            .badge-info { background: #dbeafe; color: #1e40af; }
+            .tab {
+                padding: 12px 24px;
+                border-bottom: 2px solid transparent;
+                color: #64748b;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .tab:hover { color: #0f172a; }
+            .tab.active {
+                border-bottom-color: #0d9488;
+                color: #0d9488;
+            }
+        </style>
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+    <body class="antialiased bg-[#f8fafc]">
+        <div class="min-h-screen flex">
+            @include('layouts.sidebar')
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+            <main class="flex-1 ml-64">
+                @include('layouts.header')
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
+                <div class="p-8">
+                    @if(session('success'))
+                        <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    {{ $slot }}
+                </div>
             </main>
         </div>
     </body>

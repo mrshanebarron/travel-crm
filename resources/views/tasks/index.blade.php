@@ -1,98 +1,127 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Tasks') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse($tasks as $task)
-                                <tr class="{{ $task->due_date && $task->due_date->isPast() ? 'bg-red-50' : '' }}">
-                                    <td class="px-4 py-4">
-                                        <div class="font-medium text-gray-900">{{ $task->name }}</div>
-                                        @if($task->description)
-                                            <div class="text-sm text-gray-500">{{ Str::limit($task->description, 50) }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap">
-                                        <a href="{{ route('bookings.show', $task->booking) }}" class="text-indigo-600 hover:text-indigo-900">
-                                            {{ $task->booking->booking_number }}
-                                        </a>
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm">
-                                        @if($task->due_date)
-                                            <span class="{{ $task->due_date->isPast() ? 'text-red-600 font-medium' : 'text-gray-900' }}">
-                                                {{ $task->due_date->format('M j, Y') }}
-                                            </span>
-                                            @if($task->due_date->isPast())
-                                                <span class="text-xs text-red-600">(overdue)</span>
-                                            @endif
-                                        @else
-                                            <span class="text-gray-400">No due date</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {{ $task->status === 'pending' ? 'bg-gray-100 text-gray-800' : '' }}
-                                            {{ $task->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : '' }}
-                                            {{ $task->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}">
-                                            {{ str_replace('_', ' ', ucfirst($task->status)) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $task->assignedTo?->name ?? '-' }}
-                                    </td>
-                                    <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="name" value="{{ $task->name }}">
-                                            <input type="hidden" name="status" value="completed">
-                                            <button type="submit" class="text-green-600 hover:text-green-900 mr-3">Complete</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('tasks.destroy', $task) }}" class="inline" onsubmit="return confirm('Delete this task?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                                        No pending tasks
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-
-                    <div class="mt-4">
-                        {{ $tasks->links() }}
-                    </div>
-                </div>
-            </div>
+    <!-- Page Title -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Tasks</h1>
+            <p class="text-slate-500">Track and manage booking tasks</p>
         </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('tasks.index') }}" class="tab {{ !request('filter') ? 'active' : '' }}">All Tasks</a>
+            <a href="{{ route('tasks.index') }}?filter=mine" class="tab {{ request('filter') === 'mine' ? 'active' : '' }}">Assigned to Me</a>
+            <a href="{{ route('tasks.index') }}?filter=assigned" class="tab {{ request('filter') === 'assigned' ? 'active' : '' }}">Tasks I Assigned</a>
+            <a href="{{ route('tasks.index') }}?filter=overdue" class="tab {{ request('filter') === 'overdue' ? 'active' : '' }}">Overdue</a>
+        </div>
+    </div>
+
+    <!-- Tasks Table -->
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Booking</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Assigned To</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($tasks as $task)
+                    <tr class="cursor-pointer hover:bg-slate-50 {{ $task->due_date && $task->due_date->isPast() && $task->status !== 'completed' ? 'bg-red-50' : '' }}">
+                        <td>
+                            <div class="font-medium text-slate-900">{{ $task->name }}</div>
+                            @if($task->description)
+                                <div class="text-sm text-slate-500">{{ Str::limit($task->description, 60) }}</div>
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('bookings.show', $task->booking) }}" class="text-teal-600 hover:text-teal-700 font-medium">
+                                {{ $task->booking->booking_number }}
+                            </a>
+                        </td>
+                        <td>
+                            @if($task->due_date)
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 {{ $task->due_date->isPast() && $task->status !== 'completed' ? 'text-red-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span class="{{ $task->due_date->isPast() && $task->status !== 'completed' ? 'text-red-600 font-medium' : 'text-slate-900' }}">
+                                        {{ $task->due_date->format('M d, Y') }}
+                                    </span>
+                                    @if($task->due_date->isPast() && $task->status !== 'completed')
+                                        <span class="text-xs text-red-600 font-medium">(overdue)</span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-slate-400">No due date</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($task->status === 'pending')
+                                <span class="badge" style="background: #f1f5f9; color: #475569;">Pending</span>
+                            @elseif($task->status === 'in_progress')
+                                <span class="badge badge-info">In Progress</span>
+                            @else
+                                <span class="badge badge-success">Completed</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
+                                    <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <span class="text-slate-700">{{ $task->assignedTo?->name ?? 'Unassigned' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                @if($task->status !== 'completed')
+                                    <form method="POST" action="{{ route('tasks.update', $task) }}" class="inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="name" value="{{ $task->name }}">
+                                        <input type="hidden" name="status" value="completed">
+                                        <button type="submit" class="btn btn-primary text-sm py-2 px-3">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Complete
+                                        </button>
+                                    </form>
+                                @endif
+                                <form method="POST" action="{{ route('tasks.destroy', $task) }}" class="inline" onsubmit="return confirm('Delete this task?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-secondary text-sm py-2 px-3 text-red-600 hover:text-red-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-500">
+                            No tasks found
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        @if($tasks->hasPages())
+            <div class="px-6 py-4 border-t border-slate-200">
+                {{ $tasks->links() }}
+            </div>
+        @endif
     </div>
 </x-app-layout>

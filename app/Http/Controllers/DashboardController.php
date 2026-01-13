@@ -15,7 +15,7 @@ class DashboardController extends Controller
             ->where('status', 'upcoming')
             ->where('start_date', '>=', Carbon::today())
             ->orderBy('start_date')
-            ->limit(5)
+            ->limit(10)
             ->get();
 
         $activeBookings = Booking::with(['groups.travelers'])
@@ -23,30 +23,28 @@ class DashboardController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        $pendingTasks = Task::with(['booking', 'assignedTo'])
-            ->where('status', '!=', 'completed')
-            ->orderBy('due_date')
-            ->limit(10)
-            ->get();
+        $completedBookings = Booking::where('status', 'completed')->count();
 
-        $pendingTransfers = Transfer::with(['expenses'])
-            ->whereIn('status', ['draft', 'sent'])
-            ->orderBy('request_date')
-            ->limit(5)
-            ->get();
+        $tasksAssignedToMe = Task::where('assigned_to', auth()->id())
+            ->where('status', '!=', 'completed')
+            ->count();
+
+        $tasksAssignedByMe = Task::where('assigned_by', auth()->id())
+            ->where('assigned_to', '!=', auth()->id())
+            ->where('status', '!=', 'completed')
+            ->count();
 
         $stats = [
-            'total_bookings' => Booking::count(),
             'upcoming_bookings' => Booking::where('status', 'upcoming')->count(),
             'active_bookings' => Booking::where('status', 'active')->count(),
-            'pending_tasks' => Task::where('status', '!=', 'completed')->count(),
+            'completed_bookings' => $completedBookings,
+            'tasks_assigned_to_me' => $tasksAssignedToMe,
+            'tasks_assigned_by_me' => $tasksAssignedByMe,
         ];
 
         return view('dashboard', compact(
             'upcomingBookings',
             'activeBookings',
-            'pendingTasks',
-            'pendingTransfers',
             'stats'
         ));
     }
