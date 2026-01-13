@@ -14,6 +14,7 @@ use App\Http\Controllers\TransferController;
 use App\Http\Controllers\TransferExpenseController;
 use App\Http\Controllers\LedgerEntryController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -23,6 +24,9 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Search
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
 
     // Bookings
     Route::resource('bookings', BookingController::class);

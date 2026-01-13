@@ -9,11 +9,16 @@ use Illuminate\Support\Facades\DB;
 
 class TransferController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $transfers = Transfer::with(['creator', 'expenses.booking'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = Transfer::with(['creator', 'expenses.booking']);
+
+        // Filter by status if provided
+        if ($request->has('status') && in_array($request->status, ['draft', 'sent', 'transfer_completed', 'vendor_payments_completed'])) {
+            $query->where('status', $request->status);
+        }
+
+        $transfers = $query->orderBy('created_at', 'desc')->paginate(15);
 
         return view('transfers.index', compact('transfers'));
     }
