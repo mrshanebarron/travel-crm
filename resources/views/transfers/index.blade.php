@@ -39,7 +39,7 @@
             </thead>
             <tbody>
                 @forelse($transfers as $transfer)
-                    <tr class="cursor-pointer hover:bg-slate-50">
+                    <tr class="cursor-pointer hover:bg-slate-50" onclick="window.location='{{ route('transfers.show', $transfer) }}'">
                         <td>
                             <a href="{{ route('transfers.show', $transfer) }}" class="text-teal-600 hover:text-teal-700 font-medium">
                                 {{ $transfer->transfer_number }}
@@ -75,7 +75,7 @@
                                 {{ $transfer->expenses->count() }} items
                             </div>
                         </td>
-                        <td>
+                        <td onclick="event.stopPropagation()">
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('transfers.show', $transfer) }}" class="btn btn-secondary text-sm py-2 px-3">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

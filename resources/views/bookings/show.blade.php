@@ -144,6 +144,7 @@
                                     <th class="text-right">Received</th>
                                     <th class="text-right">Paid</th>
                                     <th class="text-right">Balance</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -159,6 +160,13 @@
                                         </td>
                                         <td class="text-right font-semibold {{ $entry->balance >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                             ${{ number_format($entry->balance, 2) }}
+                                        </td>
+                                        <td class="text-right">
+                                            <form method="POST" action="{{ route('ledger-entries.destroy', $entry) }}" class="inline" onsubmit="return confirm('Delete this entry?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -283,6 +291,11 @@
                                 </a>
                                 <div class="text-xs text-slate-500">{{ ucfirst($doc->category) }}</div>
                             </div>
+                            <form method="POST" action="{{ route('documents.destroy', $doc) }}" onsubmit="return confirm('Delete this document?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
+                            </form>
                         </div>
                     @empty
                         <p class="text-slate-500 text-sm text-center">No documents</p>
@@ -306,9 +319,18 @@
 
                     @forelse($booking->activityLogs->sortByDesc('created_at')->take(5) as $log)
                         <div class="p-3 border-l-2 border-teal-500 bg-slate-50 rounded-r-lg mb-2">
-                            <div class="text-sm text-slate-900">{{ $log->notes }}</div>
-                            <div class="text-xs text-slate-500 mt-1">
-                                {{ $log->user->name }} - {{ $log->created_at->diffForHumans() }}
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="text-sm text-slate-900">{{ $log->notes }}</div>
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        {{ $log->user->name }} - {{ $log->created_at->diffForHumans() }}
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ route('activity-logs.destroy', $log) }}" onsubmit="return confirm('Delete this note?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium ml-2">Delete</button>
+                                </form>
                             </div>
                         </div>
                     @empty

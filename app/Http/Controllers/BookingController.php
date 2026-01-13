@@ -121,9 +121,62 @@ class BookingController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'required|in:upcoming,active,completed',
             'guides' => 'nullable|array',
+            'travelers' => 'sometimes|array',
+            'travelers.*.id' => 'nullable|exists:travelers,id',
+            'travelers.*.first_name' => 'required|string|max:255',
+            'travelers.*.last_name' => 'required|string|max:255',
+            'travelers.*.email' => 'nullable|email|max:255',
+            'travelers.*.phone' => 'nullable|string|max:255',
+            'travelers.*.dob' => 'nullable|date',
         ]);
 
-        $booking->update($validated);
+        DB::transaction(function () use ($validated, $booking) {
+            $booking->update([
+                'country' => $validated['country'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+                'status' => $validated['status'],
+                'guides' => $validated['guides'] ?? [],
+            ]);
+
+            // Update travelers if provided
+            if (isset($validated['travelers'])) {
+                $group = $booking->groups()->first();
+                $existingTravelerIds = [];
+
+                foreach ($validated['travelers'] as $index => $travelerData) {
+                    if (!empty($travelerData['id'])) {
+                        // Update existing traveler
+                        $traveler = Traveler::find($travelerData['id']);
+                        if ($traveler) {
+                            $traveler->update([
+                                'first_name' => $travelerData['first_name'],
+                                'last_name' => $travelerData['last_name'],
+                                'email' => $travelerData['email'] ?? null,
+                                'phone' => $travelerData['phone'] ?? null,
+                                'dob' => $travelerData['dob'] ?? null,
+                            ]);
+                            $existingTravelerIds[] = $traveler->id;
+                        }
+                    } else {
+                        // Create new traveler
+                        $newTraveler = $group->travelers()->create([
+                            'first_name' => $travelerData['first_name'],
+                            'last_name' => $travelerData['last_name'],
+                            'email' => $travelerData['email'] ?? null,
+                            'phone' => $travelerData['phone'] ?? null,
+                            'dob' => $travelerData['dob'] ?? null,
+                            'is_lead' => $index === 0 && $group->travelers()->count() === 0,
+                            'order' => $index,
+                        ]);
+                        $existingTravelerIds[] = $newTraveler->id;
+                    }
+                }
+
+                // Delete travelers that were removed
+                $group->travelers()->whereNotIn('id', $existingTravelerIds)->delete();
+            }
+        });
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Booking updated successfully.');

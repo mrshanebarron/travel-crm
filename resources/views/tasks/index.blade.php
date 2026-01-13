@@ -10,10 +10,11 @@
     <!-- Filters -->
     <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
         <div class="flex items-center gap-4">
-            <a href="{{ route('tasks.index') }}" class="tab {{ !request('filter') ? 'active' : '' }}">All Tasks</a>
+            <a href="{{ route('tasks.index') }}" class="tab {{ !request('filter') ? 'active' : '' }}">Open Tasks</a>
             <a href="{{ route('tasks.index') }}?filter=mine" class="tab {{ request('filter') === 'mine' ? 'active' : '' }}">Assigned to Me</a>
             <a href="{{ route('tasks.index') }}?filter=assigned" class="tab {{ request('filter') === 'assigned' ? 'active' : '' }}">Tasks I Assigned</a>
             <a href="{{ route('tasks.index') }}?filter=overdue" class="tab {{ request('filter') === 'overdue' ? 'active' : '' }}">Overdue</a>
+            <a href="{{ route('tasks.index') }}?filter=completed" class="tab {{ request('filter') === 'completed' ? 'active' : '' }}">Completed</a>
         </div>
     </div>
 
@@ -32,7 +33,7 @@
             </thead>
             <tbody>
                 @forelse($tasks as $task)
-                    <tr class="cursor-pointer hover:bg-slate-50 {{ $task->due_date && $task->due_date->isPast() && $task->status !== 'completed' ? 'bg-red-50' : '' }}">
+                    <tr class="cursor-pointer hover:bg-slate-50 {{ $task->due_date && $task->due_date->isPast() && $task->status !== 'completed' ? 'bg-red-50' : '' }}" onclick="window.location='{{ route('bookings.show', $task->booking) }}'">
                         <td>
                             <div class="font-medium text-slate-900">{{ $task->name }}</div>
                             @if($task->description)
@@ -40,9 +41,9 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('bookings.show', $task->booking) }}" class="text-teal-600 hover:text-teal-700 font-medium">
+                            <span class="text-teal-600 font-medium">
                                 {{ $task->booking->booking_number }}
-                            </a>
+                            </span>
                         </td>
                         <td>
                             @if($task->due_date)
@@ -80,7 +81,7 @@
                                 <span class="text-slate-700">{{ $task->assignedTo?->name ?? 'Unassigned' }}</span>
                             </div>
                         </td>
-                        <td>
+                        <td onclick="event.stopPropagation()">
                             <div class="flex items-center gap-2">
                                 @if($task->status !== 'completed')
                                     <form method="POST" action="{{ route('tasks.update', $task) }}" class="inline">
@@ -120,7 +121,7 @@
 
         @if($tasks->hasPages())
             <div class="px-6 py-4 border-t border-slate-200">
-                {{ $tasks->links() }}
+                {{ $tasks->withQueryString()->links() }}
             </div>
         @endif
     </div>

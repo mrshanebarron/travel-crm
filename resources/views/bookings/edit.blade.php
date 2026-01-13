@@ -8,14 +8,14 @@
         </a>
         <div>
             <h1 class="text-2xl font-bold text-slate-900">Edit {{ $booking->booking_number }}</h1>
-            <p class="text-slate-500">Update booking details</p>
+            <p class="text-slate-500">Update booking details and travelers</p>
         </div>
     </div>
 
     <div class="max-w-4xl">
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="p-6">
-                <form method="POST" action="{{ route('bookings.update', $booking) }}">
+                <form method="POST" action="{{ route('bookings.update', $booking) }}" x-data="bookingEditForm()">
                     @csrf
                     @method('PUT')
 
@@ -72,6 +72,71 @@
                         </div>
                     </div>
 
+                    <!-- Travelers -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-slate-900">Travelers</h3>
+                            <button type="button" @click="addTraveler()" class="btn btn-secondary text-sm py-2 px-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Traveler
+                            </button>
+                        </div>
+
+                        <template x-for="(traveler, index) in travelers" :key="index">
+                            <div class="p-4 border border-slate-200 rounded-lg mb-4 relative">
+                                <button type="button" x-show="travelers.length > 1" @click="removeTraveler(index)"
+                                    class="absolute top-3 right-3 text-red-500 hover:text-red-700">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-sm font-medium text-slate-500" x-text="traveler.is_lead ? 'Lead Traveler' : 'Traveler ' + (index + 1)"></span>
+                                    <template x-if="traveler.is_lead">
+                                        <span class="badge badge-info text-xs">Lead</span>
+                                    </template>
+                                </div>
+
+                                <input type="hidden" :name="'travelers[' + index + '][id]'" x-model="traveler.id">
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                                        <input type="text" :name="'travelers[' + index + '][first_name]'" x-model="traveler.first_name"
+                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                                        <input type="text" :name="'travelers[' + index + '][last_name]'" x-model="traveler.last_name"
+                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                        <input type="email" :name="'travelers[' + index + '][email]'" x-model="traveler.email"
+                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                                        <input type="text" :name="'travelers[' + index + '][phone]'" x-model="traveler.phone"
+                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                                        <input type="date" :name="'travelers[' + index + '][dob]'" x-model="traveler.dob"
+                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
                     <div class="flex justify-between pt-4 border-t border-slate-200">
                         <button type="button" onclick="document.getElementById('delete-form').submit()" class="btn btn-secondary text-red-600 hover:bg-red-50">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,4 +166,28 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function bookingEditForm() {
+            return {
+                travelers: @json($booking->travelers->map(function($t) {
+                    return [
+                        'id' => $t->id,
+                        'first_name' => $t->first_name,
+                        'last_name' => $t->last_name,
+                        'email' => $t->email,
+                        'phone' => $t->phone,
+                        'dob' => $t->dob ? $t->dob->format('Y-m-d') : '',
+                        'is_lead' => $t->is_lead,
+                    ];
+                })),
+                addTraveler() {
+                    this.travelers.push({ id: '', first_name: '', last_name: '', email: '', phone: '', dob: '', is_lead: false });
+                },
+                removeTraveler(index) {
+                    this.travelers.splice(index, 1);
+                }
+            }
+        }
+    </script>
 </x-app-layout>

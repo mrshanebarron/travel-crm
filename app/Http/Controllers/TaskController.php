@@ -27,6 +27,9 @@ class TaskController extends Controller
                 $query->where('due_date', '<', now())
                       ->where('status', '!=', 'completed');
                 break;
+            case 'completed':
+                $query->where('status', 'completed');
+                break;
             default:
                 $query->where('status', '!=', 'completed');
                 break;

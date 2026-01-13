@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Transfer;
 use App\Models\TransferExpense;
 use Illuminate\Http\Request;
@@ -53,7 +54,8 @@ class TransferController extends Controller
     public function edit(Transfer $transfer)
     {
         $transfer->load(['expenses.booking']);
-        return view('transfers.edit', compact('transfer'));
+        $bookings = Booking::where('status', '!=', 'completed')->orderBy('booking_number')->get();
+        return view('transfers.edit', compact('transfer', 'bookings'));
     }
 
     public function update(Request $request, Transfer $transfer)
