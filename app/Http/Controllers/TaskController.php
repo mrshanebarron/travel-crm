@@ -8,12 +8,31 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::with(['booking', 'assignedTo', 'assignedBy'])
-            ->where('status', '!=', 'completed')
-            ->orderBy('due_date')
-            ->paginate(20);
+        $query = Task::with(['booking', 'assignedTo', 'assignedBy']);
+
+        // Apply filters
+        switch ($request->filter) {
+            case 'mine':
+                $query->where('assigned_to', auth()->id())
+                      ->where('status', '!=', 'completed');
+                break;
+            case 'assigned':
+                $query->where('assigned_by', auth()->id())
+                      ->where('assigned_to', '!=', auth()->id())
+                      ->where('status', '!=', 'completed');
+                break;
+            case 'overdue':
+                $query->where('due_date', '<', now())
+                      ->where('status', '!=', 'completed');
+                break;
+            default:
+                $query->where('status', '!=', 'completed');
+                break;
+        }
+
+        $tasks = $query->orderBy('due_date')->paginate(20);
 
         return view('tasks.index', compact('tasks'));
     }

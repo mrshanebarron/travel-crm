@@ -11,11 +11,16 @@ use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $bookings = Booking::with(['groups.travelers', 'creator'])
-            ->orderBy('start_date', 'desc')
-            ->paginate(15);
+        $query = Booking::with(['groups.travelers', 'creator']);
+
+        // Filter by status if provided
+        if ($request->has('status') && in_array($request->status, ['upcoming', 'active', 'completed'])) {
+            $query->where('status', $request->status);
+        }
+
+        $bookings = $query->orderBy('start_date', 'desc')->paginate(15);
 
         return view('bookings.index', compact('bookings'));
     }

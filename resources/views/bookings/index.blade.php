@@ -44,11 +44,11 @@
                         $lead = $booking->travelers->where('is_lead', true)->first();
                         $totalTravelers = $booking->travelers->count();
                     @endphp
-                    <tr class="cursor-pointer hover:bg-slate-50">
+                    <tr class="cursor-pointer hover:bg-slate-50" onclick="window.location='{{ route('bookings.show', $booking) }}'">
                         <td>
-                            <a href="{{ route('bookings.show', $booking) }}" class="text-teal-600 hover:text-teal-700 font-medium">
+                            <span class="text-teal-600 font-medium">
                                 {{ $booking->booking_number }}
-                            </a>
+                            </span>
                         </td>
                         <td>
                             <div class="flex items-center gap-2">

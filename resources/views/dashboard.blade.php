@@ -92,7 +92,7 @@
                         $lead = $booking->travelers->where('is_lead', true)->first();
                         $totalTravelers = $booking->travelers->count();
                     @endphp
-                    <tr class="cursor-pointer hover:bg-slate-50">
+                    <tr class="cursor-pointer hover:bg-slate-50" onclick="window.location='{{ route('bookings.show', $booking) }}'">
                         <td>
                             <div class="flex items-center gap-2">
                                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +125,7 @@
                             </div>
                         </td>
                         <td>
-                            <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary text-sm py-2 px-3">
+                            <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary text-sm py-2 px-3" onclick="event.stopPropagation()">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
@@ -176,13 +176,13 @@
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                     </svg>
                 </div>
-                <h3 class="font-semibold text-slate-900">View Reports</h3>
+                <h3 class="font-semibold text-slate-900">View Tasks</h3>
             </div>
-            <p class="text-sm text-slate-500 mb-4">Access financial and operational reports.</p>
-            <button class="btn btn-secondary w-full">Open Reports</button>
+            <p class="text-sm text-slate-500 mb-4">Manage pending tasks and assignments.</p>
+            <a href="{{ route('tasks.index') }}" class="btn btn-primary w-full">View Tasks</a>
         </div>
     </div>
 </x-app-layout>
