@@ -167,20 +167,23 @@
         </div>
     </div>
 
+    @php
+        $travelersJson = $booking->travelers->map(function($t) {
+            return [
+                'id' => $t->id,
+                'first_name' => $t->first_name,
+                'last_name' => $t->last_name,
+                'email' => $t->email,
+                'phone' => $t->phone,
+                'dob' => $t->dob ? $t->dob->format('Y-m-d') : '',
+                'is_lead' => $t->is_lead,
+            ];
+        })->values();
+    @endphp
     <script>
         function bookingEditForm() {
             return {
-                travelers: @json($booking->travelers->map(function($t) {
-                    return [
-                        'id' => $t->id,
-                        'first_name' => $t->first_name,
-                        'last_name' => $t->last_name,
-                        'email' => $t->email,
-                        'phone' => $t->phone,
-                        'dob' => $t->dob ? $t->dob->format('Y-m-d') : '',
-                        'is_lead' => $t->is_lead,
-                    ];
-                })),
+                travelers: {!! json_encode($travelersJson) !!},
                 addTraveler() {
                     this.travelers.push({ id: '', first_name: '', last_name: '', email: '', phone: '', dob: '', is_lead: false });
                 },
