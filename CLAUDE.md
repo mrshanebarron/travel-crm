@@ -88,3 +88,28 @@ Based on external audit feedback:
   - Bookings: Can't delete if payments received, no force delete
   - Transfers: Can't modify completed transfers, can only delete drafts
 - **Config Externalization**: Moved default task list to `config/booking_tasks.php`
+
+### UI Polish (January 13, 2026)
+- **Tab Icons**: Fixed alignment - added flexbox to tab buttons so icons display inline with text
+
+---
+
+## Client Relationship Notes
+
+**Communication Style**: Values prompt responses above all. Previous developers left him waiting days/weeks for updates. He's patient but needs acknowledgment and regular updates.
+
+**Long-term Potential**:
+- Interested in ongoing website maintenance (tapestryofafrica.com)
+- Content updates: rotating packages, homepage features, keeping things current
+- Looking for a reliable developer for continued work after CRM completion
+
+**Project Status**: Contract pending - demo impressed him significantly ("worked with another group for almost a year and we didn't get near as far")
+
+---
+
+## Demo Site
+
+**URL:** https://travelcrm.demo.sbarron.com
+**Login:** Pre-filled on login page
+**Server:** 138.197.105.147 (Demo server)
+**Path:** /var/www/demos/travelcrm
