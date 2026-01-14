@@ -9,32 +9,32 @@
 
     <!-- Date Filter & Export -->
     <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
-        <div class="flex items-center justify-between">
-            <form method="GET" action="{{ route('reports.index') }}" class="flex items-center gap-4">
-                <div>
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div class="w-full sm:w-auto">
                     <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Start Date</label>
                     <input type="date" name="start_date" value="{{ $startDate->format('Y-m-d') }}"
                         class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                 </div>
-                <div>
+                <div class="w-full sm:w-auto">
                     <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">End Date</label>
                     <input type="date" name="end_date" value="{{ $endDate->format('Y-m-d') }}"
                         class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                 </div>
-                <div class="pt-5">
-                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                <div class="sm:pt-5 w-full sm:w-auto">
+                    <button type="submit" class="btn btn-primary w-full sm:w-auto">Apply Filter</button>
                 </div>
             </form>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <a href="{{ route('reports.export.bookings', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}"
-                    class="btn btn-secondary text-sm">
+                    class="btn btn-secondary text-sm justify-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     Export Bookings
                 </a>
                 <a href="{{ route('reports.export.financial', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}"
-                    class="btn btn-secondary text-sm">
+                    class="btn btn-secondary text-sm justify-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl border border-slate-200 p-6">
             <div class="flex items-center gap-3 mb-2">
                 <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -98,7 +98,7 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Monthly Bookings Chart -->
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200">
@@ -147,7 +147,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Top Destinations Bar Chart -->
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200">
@@ -179,7 +179,7 @@
             <h2 class="text-lg font-semibold text-slate-900">Financial Summary</h2>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div class="text-center p-4 bg-green-50 rounded-lg">
                     <p class="text-sm font-medium text-green-600 mb-1">Total Received</p>
                     <p class="text-2xl font-bold text-green-700">${{ number_format($financialStats['total_received'], 2) }}</p>
@@ -202,6 +202,7 @@
             <h2 class="text-lg font-semibold text-slate-900">Recent Transfers</h2>
             <a href="{{ route('transfers.index') }}" class="text-orange-600 hover:text-orange-800 text-sm font-medium">View All</a>
         </div>
+        <div class="overflow-x-auto">
         <table class="data-table">
             <thead>
                 <tr>
@@ -242,6 +243,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <!-- Chart.js from CDN -->
