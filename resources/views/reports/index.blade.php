@@ -105,7 +105,7 @@
                 <h2 class="text-lg font-semibold text-slate-900">Bookings by Month</h2>
             </div>
             <div class="p-6">
-                <canvas id="monthlyBookingsChart" height="200"></canvas>
+                <canvas id="monthlyBookingsChart" height="120"></canvas>
             </div>
         </div>
 
