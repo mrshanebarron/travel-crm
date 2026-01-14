@@ -13,13 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class TransferController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(Transfer::class, 'transfer');
-    }
-
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Transfer::class);
+
         $query = Transfer::with(['creator', 'expenses.booking']);
 
         // Filter by status if provided
@@ -34,11 +31,14 @@ class TransferController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Transfer::class);
         return view('transfers.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Transfer::class);
+
         $validated = $request->validate([
             'request_date' => 'required|date',
         ]);
@@ -55,12 +55,14 @@ class TransferController extends Controller
 
     public function show(Transfer $transfer)
     {
+        $this->authorize('view', $transfer);
         $transfer->load(['expenses.booking', 'creator', 'transferTask', 'vendorTask']);
         return view('transfers.show', compact('transfer'));
     }
 
     public function edit(Transfer $transfer)
     {
+        $this->authorize('update', $transfer);
         $transfer->load(['expenses.booking']);
         $bookings = Booking::with(['groups.travelers'])
             ->where('status', '!=', 'completed')
@@ -71,6 +73,8 @@ class TransferController extends Controller
 
     public function update(Request $request, Transfer $transfer)
     {
+        $this->authorize('update', $transfer);
+
         $validated = $request->validate([
             'request_date' => 'required|date',
             'status' => 'required|in:draft,sent,transfer_completed,vendor_payments_completed',
@@ -176,6 +180,7 @@ class TransferController extends Controller
 
     public function destroy(Transfer $transfer)
     {
+        $this->authorize('delete', $transfer);
         $transfer->delete();
 
         return redirect()->route('transfers.index')

@@ -13,13 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(Booking::class, 'booking');
-    }
-
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Booking::class);
+
         $query = Booking::with(['groups.travelers', 'creator']);
 
         // Filter by status if provided
@@ -34,11 +31,14 @@ class BookingController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Booking::class);
         return view('bookings.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Booking::class);
+
         $validated = $request->validate([
             'country' => 'required|string|max:255',
             'start_date' => 'required|date',
@@ -102,6 +102,8 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
+        $this->authorize('view', $booking);
+
         $booking->load([
             'groups.travelers.flights',
             'groups.travelers.payment',
@@ -119,12 +121,15 @@ class BookingController extends Controller
 
     public function edit(Booking $booking)
     {
+        $this->authorize('update', $booking);
         $booking->load(['groups.travelers', 'safariDays']);
         return view('bookings.edit', compact('booking'));
     }
 
     public function update(Request $request, Booking $booking)
     {
+        $this->authorize('update', $booking);
+
         $validated = $request->validate([
             'country' => 'required|string|max:255',
             'start_date' => 'required|date',
@@ -194,6 +199,8 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking)
     {
+        $this->authorize('delete', $booking);
+
         $booking->delete();
 
         return redirect()->route('bookings.index')
