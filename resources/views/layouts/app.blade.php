@@ -119,11 +119,12 @@
                 overflow-x: auto;
             }
             .tab {
-                padding: 12px 24px;
+                padding: 10px 14px;
                 border-bottom: 2px solid transparent;
                 margin-bottom: -2px;
                 color: #64748b;
                 font-weight: 500;
+                font-size: 0.875rem;
                 cursor: pointer;
                 transition: all 0.2s;
                 white-space: nowrap;
