@@ -9,8 +9,8 @@
     <div class="grid grid-cols-5 gap-4 mb-8">
         <a href="{{ route('bookings.index') }}?status=upcoming" class="stat-card group">
             <div class="flex items-center justify-between mb-3">
-                <span class="w-3 h-3 rounded-full bg-teal-500"></span>
-                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </div>
@@ -21,7 +21,7 @@
         <a href="{{ route('bookings.index') }}?status=active" class="stat-card group">
             <div class="flex items-center justify-between mb-3">
                 <span class="w-3 h-3 rounded-full bg-green-500"></span>
-                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </div>
@@ -32,7 +32,7 @@
         <a href="{{ route('bookings.index') }}?status=completed" class="stat-card group">
             <div class="flex items-center justify-between mb-3">
                 <span class="w-3 h-3 rounded-full bg-slate-400"></span>
-                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </div>
@@ -43,7 +43,7 @@
         <a href="{{ route('tasks.index') }}?filter=mine" class="stat-card group">
             <div class="flex items-center justify-between mb-3">
                 <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </div>
@@ -54,7 +54,7 @@
         <a href="{{ route('tasks.index') }}?filter=assigned" class="stat-card group">
             <div class="flex items-center justify-between mb-3">
                 <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-                <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </div>
@@ -67,7 +67,7 @@
     <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-slate-900">Upcoming Bookings</h2>
-            <a href="{{ route('bookings.index') }}" class="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1">
+            <a href="{{ route('bookings.index') }}" class="text-orange-600 hover:text-orange-800 text-sm font-medium flex items-center gap-1">
                 View All
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -148,8 +148,8 @@
     <div class="grid grid-cols-3 gap-4">
         <div class="bg-white rounded-xl border border-slate-200 p-6">
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 </div>

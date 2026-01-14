@@ -46,7 +46,7 @@
                     @endphp
                     <tr class="cursor-pointer hover:bg-slate-50" onclick="window.location='{{ route('bookings.show', $booking) }}'">
                         <td>
-                            <span class="text-teal-600 font-medium">
+                            <span class="text-orange-600 font-medium">
                                 {{ $booking->booking_number }}
                             </span>
                         </td>
@@ -109,7 +109,7 @@
                 @empty
                     <tr>
                         <td colspan="8" class="py-12 text-center text-slate-500">
-                            No bookings found. <a href="{{ route('bookings.create') }}" class="text-teal-600 hover:text-teal-700">Create your first booking</a>
+                            No bookings found. <a href="{{ route('bookings.create') }}" class="text-orange-600 hover:text-orange-800">Create your first booking</a>
                         </td>
                     </tr>
                 @endforelse

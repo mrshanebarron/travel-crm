@@ -41,7 +41,7 @@
                 @forelse($transfers as $transfer)
                     <tr class="cursor-pointer hover:bg-slate-50" onclick="window.location='{{ route('transfers.show', $transfer) }}'">
                         <td>
-                            <a href="{{ route('transfers.show', $transfer) }}" class="text-teal-600 hover:text-teal-700 font-medium">
+                            <a href="{{ route('transfers.show', $transfer) }}" class="text-orange-600 hover:text-orange-800 font-medium">
                                 {{ $transfer->transfer_number }}
                             </a>
                         </td>
@@ -94,7 +94,7 @@
                 @empty
                     <tr>
                         <td colspan="6" class="py-12 text-center text-slate-500">
-                            No transfer requests found. <a href="{{ route('transfers.create') }}" class="text-teal-600 hover:text-teal-700">Create your first transfer</a>
+                            No transfer requests found. <a href="{{ route('transfers.create') }}" class="text-orange-600 hover:text-orange-800">Create your first transfer</a>
                         </td>
                     </tr>
                 @endforelse

@@ -15,6 +15,9 @@ use App\Http\Controllers\TransferExpenseController;
 use App\Http\Controllers\LedgerEntryController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\GroupController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,8 +31,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search');
 
+    // Clients
+    Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+
+    // Reports
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
     // Bookings
     Route::resource('bookings', BookingController::class);
+    Route::post('/bookings/{booking}/import-pdf', [BookingController::class, 'importPdf'])->name('bookings.import-pdf');
+
+    // Groups
+    Route::post('/bookings/{booking}/groups', [GroupController::class, 'store'])->name('groups.store');
+    Route::delete('/groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');
 
     // Travelers (nested under groups for creation)
     Route::post('/groups/{group}/travelers', [TravelerController::class, 'store'])->name('travelers.store');

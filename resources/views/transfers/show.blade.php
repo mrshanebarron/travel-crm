@@ -31,6 +31,63 @@
         </div>
     </div>
 
+    <!-- Workflow Progress -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center {{ $transfer->status !== 'draft' ? 'bg-green-500 text-white' : 'bg-orange-500 text-white' }}">
+                    @if($transfer->status !== 'draft')
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    @else
+                        <span class="text-sm font-bold">1</span>
+                    @endif
+                </div>
+                <span class="font-medium {{ $transfer->status === 'draft' ? 'text-orange-600' : 'text-green-600' }}">Draft</span>
+            </div>
+            <div class="flex-1 h-1 mx-4 {{ in_array($transfer->status, ['sent', 'transfer_completed', 'vendor_payments_completed']) ? 'bg-green-500' : 'bg-slate-200' }}"></div>
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center {{ in_array($transfer->status, ['transfer_completed', 'vendor_payments_completed']) ? 'bg-green-500 text-white' : ($transfer->status === 'sent' ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-500') }}">
+                    @if(in_array($transfer->status, ['transfer_completed', 'vendor_payments_completed']))
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    @else
+                        <span class="text-sm font-bold">2</span>
+                    @endif
+                </div>
+                <span class="font-medium {{ $transfer->status === 'sent' ? 'text-orange-600' : (in_array($transfer->status, ['transfer_completed', 'vendor_payments_completed']) ? 'text-green-600' : 'text-slate-500') }}">Sent</span>
+            </div>
+            <div class="flex-1 h-1 mx-4 {{ in_array($transfer->status, ['transfer_completed', 'vendor_payments_completed']) ? 'bg-green-500' : 'bg-slate-200' }}"></div>
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center {{ $transfer->status === 'vendor_payments_completed' ? 'bg-green-500 text-white' : ($transfer->status === 'transfer_completed' ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-500') }}">
+                    @if($transfer->status === 'vendor_payments_completed')
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    @else
+                        <span class="text-sm font-bold">3</span>
+                    @endif
+                </div>
+                <span class="font-medium {{ $transfer->status === 'transfer_completed' ? 'text-orange-600' : ($transfer->status === 'vendor_payments_completed' ? 'text-green-600' : 'text-slate-500') }}">Transfer Done</span>
+            </div>
+            <div class="flex-1 h-1 mx-4 {{ $transfer->status === 'vendor_payments_completed' ? 'bg-green-500' : 'bg-slate-200' }}"></div>
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center {{ $transfer->status === 'vendor_payments_completed' ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-500' }}">
+                    @if($transfer->status === 'vendor_payments_completed')
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    @else
+                        <span class="text-sm font-bold">4</span>
+                    @endif
+                </div>
+                <span class="font-medium {{ $transfer->status === 'vendor_payments_completed' ? 'text-green-600' : 'text-slate-500' }}">Completed</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="grid grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl border border-slate-200 p-5">
@@ -62,26 +119,28 @@
                 <thead>
                     <tr>
                         <th>Booking</th>
+                        <th>Description</th>
                         <th>Category</th>
                         <th>Vendor</th>
-                        <th>Type</th>
                         <th class="text-right">Amount</th>
-                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($transfer->expenses as $expense)
                         <tr>
                             <td>
-                                <a href="{{ route('bookings.show', $expense->booking) }}" class="text-teal-600 hover:text-teal-800 font-medium">
-                                    {{ $expense->booking->booking_number }}
-                                </a>
+                                @if($expense->booking)
+                                    <a href="{{ route('bookings.show', $expense->booking) }}" class="text-orange-600 hover:text-orange-800 font-medium">
+                                        {{ $expense->booking->booking_number }}
+                                    </a>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
                             </td>
-                            <td class="text-slate-900">{{ ucfirst(str_replace('_', ' ', $expense->category)) }}</td>
-                            <td class="text-slate-900">{{ $expense->vendor_name ?? '-' }}</td>
-                            <td class="text-slate-500">{{ ucfirst($expense->payment_type) }}</td>
+                            <td class="text-slate-900">{{ $expense->description }}</td>
+                            <td class="text-slate-600">{{ ucfirst(str_replace('_', ' ', $expense->category)) }}</td>
+                            <td class="text-slate-600">{{ $expense->vendor_name ?? '-' }}</td>
                             <td class="text-right font-medium text-slate-900">${{ number_format($expense->amount, 2) }}</td>
-                            <td class="text-slate-500">{{ Str::limit($expense->notes, 30) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -89,14 +148,13 @@
                     <tr class="bg-slate-50">
                         <td colspan="4" class="text-right font-semibold text-slate-900">Total:</td>
                         <td class="text-right font-bold text-slate-900">${{ number_format($transfer->total_amount, 2) }}</td>
-                        <td></td>
                     </tr>
                 </tfoot>
             </table>
         @else
             <div class="p-12 text-center">
                 <p class="text-slate-500">No expenses added yet.</p>
-                <a href="{{ route('transfers.edit', $transfer) }}" class="text-teal-600 hover:text-teal-700 font-medium">Add expenses</a>
+                <a href="{{ route('transfers.edit', $transfer) }}" class="text-orange-600 hover:text-orange-800 font-medium">Add expenses</a>
             </div>
         @endif
     </div>
@@ -109,6 +167,13 @@
             </div>
             <div class="p-6">
                 <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 bg-slate-400 rounded-full"></div>
+                        <div>
+                            <span class="font-medium text-slate-900">Created</span>
+                            <span class="text-sm text-slate-500 ml-2">{{ $transfer->created_at->format('M j, Y g:i A') }}</span>
+                        </div>
+                    </div>
                     @if($transfer->sent_at)
                         <div class="flex items-center gap-3">
                             <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
@@ -133,6 +198,7 @@
                             <div>
                                 <span class="font-medium text-slate-900">Vendor payments completed</span>
                                 <span class="text-sm text-slate-500 ml-2">{{ $transfer->vendor_payments_completed_at->format('M j, Y g:i A') }}</span>
+                                <span class="badge badge-success ml-2">Ledger entries posted</span>
                             </div>
                         </div>
                     @endif

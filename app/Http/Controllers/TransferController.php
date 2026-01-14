@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Transfer;
 use App\Models\TransferExpense;
+use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -70,6 +71,8 @@ class TransferController extends Controller
             'status' => $validated['status'],
         ];
 
+        $oldStatus = $transfer->status;
+
         // Set timestamps based on status changes
         if ($validated['status'] === 'sent' && !$transfer->sent_at) {
             $updateData['sent_at'] = now();
@@ -79,12 +82,48 @@ class TransferController extends Controller
         }
         if ($validated['status'] === 'vendor_payments_completed' && !$transfer->vendor_payments_completed_at) {
             $updateData['vendor_payments_completed_at'] = now();
+
+            // Auto-post ledger entries when vendor payments are completed
+            // This creates "paid" entries in each booking's ledger
+            DB::transaction(function () use ($transfer) {
+                foreach ($transfer->expenses as $expense) {
+                    if ($expense->booking_id) {
+                        // Check if ledger entry already exists for this transfer expense
+                        $existingEntry = LedgerEntry::where('booking_id', $expense->booking_id)
+                            ->where('description', 'LIKE', '%Transfer ' . $transfer->transfer_number . '%')
+                            ->first();
+
+                        if (!$existingEntry) {
+                            // Calculate running balance for this booking
+                            $lastEntry = LedgerEntry::where('booking_id', $expense->booking_id)
+                                ->orderBy('id', 'desc')
+                                ->first();
+
+                            $balance = ($lastEntry ? $lastEntry->balance : 0) - $expense->amount;
+
+                            LedgerEntry::create([
+                                'booking_id' => $expense->booking_id,
+                                'date' => now(),
+                                'description' => 'Transfer ' . $transfer->transfer_number . ' - ' . $expense->description,
+                                'type' => 'paid',
+                                'amount' => $expense->amount,
+                                'balance' => $balance,
+                            ]);
+                        }
+                    }
+                }
+            });
         }
 
         $transfer->update($updateData);
 
+        $message = 'Transfer request updated.';
+        if ($oldStatus !== 'vendor_payments_completed' && $validated['status'] === 'vendor_payments_completed') {
+            $message = 'Transfer completed! Ledger entries have been posted to each booking.';
+        }
+
         return redirect()->route('transfers.show', $transfer)
-            ->with('success', 'Transfer request updated.');
+            ->with('success', $message);
     }
 
     public function destroy(Transfer $transfer)

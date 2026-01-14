@@ -189,4 +189,24 @@ class BookingController extends Controller
         return redirect()->route('bookings.index')
             ->with('success', 'Booking deleted successfully.');
     }
+
+    public function importPdf(Request $request, Booking $booking)
+    {
+        $request->validate([
+            'pdf' => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        // Store the uploaded PDF
+        $path = $request->file('pdf')->store('safari-pdfs', 'local');
+
+        // For now, we'll add a placeholder message. PDF parsing to be implemented.
+        // The Safari Office PDF format has been analyzed and can be parsed for:
+        // - Day-by-day itinerary
+        // - Accommodations
+        // - Activities
+        // - Meal plans
+
+        return redirect()->route('bookings.show', $booking)
+            ->with('info', 'PDF uploaded. Automatic parsing coming soon - please enter itinerary manually for now.');
+    }
 }

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Safari CRM - Jensen Adventures</title>
+        <title>Safari CRM - Tapestry of Africa</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -19,8 +19,8 @@
                 --background: #f8fafc;
                 --foreground: #0f172a;
                 --sidebar: #1e293b;
-                --primary: #0d9488;
-                --primary-dark: #0f766e;
+                --primary: #e8941c;
+                --primary-dark: #d17c0a;
             }
             body { font-family: 'Inter', system-ui, sans-serif; }
             .sidebar {
@@ -40,7 +40,7 @@
                 color: #ffffff;
             }
             .sidebar-link.active {
-                background: #0d9488;
+                background: #e8941c;
                 color: #ffffff;
             }
             .stat-card {
@@ -52,8 +52,8 @@
                 transition: all 0.2s;
             }
             .stat-card:hover {
-                border-color: #0d9488;
-                box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+                border-color: #e8941c;
+                box-shadow: 0 4px 12px rgba(232, 148, 28, 0.15);
             }
             .data-table { width: 100%; border-collapse: collapse; }
             .data-table th {
@@ -85,15 +85,20 @@
                 transition: all 0.2s;
             }
             .btn-primary {
-                background: #0d9488;
+                background: #e8941c;
                 color: white;
             }
-            .btn-primary:hover { background: #0f766e; }
+            .btn-primary:hover { background: #d17c0a; }
             .btn-secondary {
                 background: #f1f5f9;
                 color: #475569;
             }
             .btn-secondary:hover { background: #e2e8f0; }
+            .btn-danger {
+                background: #ef4444;
+                color: white;
+            }
+            .btn-danger:hover { background: #dc2626; }
             .badge {
                 display: inline-flex;
                 align-items: center;
@@ -105,19 +110,31 @@
             .badge-success { background: #dcfce7; color: #166534; }
             .badge-warning { background: #fef3c7; color: #92400e; }
             .badge-info { background: #dbeafe; color: #1e40af; }
+            .badge-orange { background: #ffedd5; color: #c2410c; }
+            .tab-container {
+                display: flex;
+                gap: 0;
+                border-bottom: 2px solid #e2e8f0;
+                margin-bottom: 24px;
+                overflow-x: auto;
+            }
             .tab {
                 padding: 12px 24px;
                 border-bottom: 2px solid transparent;
+                margin-bottom: -2px;
                 color: #64748b;
                 font-weight: 500;
                 cursor: pointer;
                 transition: all 0.2s;
+                white-space: nowrap;
             }
             .tab:hover { color: #0f172a; }
             .tab.active {
-                border-bottom-color: #0d9488;
-                color: #0d9488;
+                border-bottom-color: #e8941c;
+                color: #e8941c;
             }
+            .tab-content { display: none; }
+            .tab-content.active { display: block; }
         </style>
     </head>
     <body class="antialiased bg-[#f8fafc]">
