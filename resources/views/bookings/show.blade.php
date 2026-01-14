@@ -750,13 +750,13 @@
                     <div id="paid-category-field" class="hidden">
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Expense Category</label>
                         <select name="paid_category" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
-                            <option value="lodge">Lodge/Camp</option>
-                            <option value="transport">Transport</option>
-                            <option value="flights">Internal Flights</option>
-                            <option value="park_fees">Park Fees</option>
-                            <option value="guide">Safari Guide</option>
-                            <option value="meals">Meals</option>
-                            <option value="other">Other</option>
+                            <option value="lodges_camps">Lodges/Camps</option>
+                            <option value="driver_guide">Driver/Guide</option>
+                            <option value="park_entry">Park Entry</option>
+                            <option value="arrival_dept_flight">Arrival/Dept Flight</option>
+                            <option value="internal_flights">Internal Flights</option>
+                            <option value="driver_guide_invoices">Driver/Guide Invoices</option>
+                            <option value="misc">Misc</option>
                         </select>
                     </div>
                     <div id="vendor-field" class="hidden">

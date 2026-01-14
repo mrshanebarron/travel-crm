@@ -104,9 +104,12 @@
                             @endforeach
                         </select>
                         <select name="category" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('category') border-red-500 @enderror" required>
-                            <option value="lodge" {{ old('category') == 'lodge' ? 'selected' : '' }}>Lodge</option>
-                            <option value="guide_vehicle" {{ old('category') == 'guide_vehicle' ? 'selected' : '' }}>Guide/Vehicle</option>
+                            <option value="lodges_camps" {{ old('category') == 'lodges_camps' ? 'selected' : '' }}>Lodges/Camps</option>
+                            <option value="driver_guide" {{ old('category') == 'driver_guide' ? 'selected' : '' }}>Driver/Guide</option>
                             <option value="park_entry" {{ old('category') == 'park_entry' ? 'selected' : '' }}>Park Entry</option>
+                            <option value="arrival_dept_flight" {{ old('category') == 'arrival_dept_flight' ? 'selected' : '' }}>Arrival/Dept Flight</option>
+                            <option value="internal_flights" {{ old('category') == 'internal_flights' ? 'selected' : '' }}>Internal Flights</option>
+                            <option value="driver_guide_invoices" {{ old('category') == 'driver_guide_invoices' ? 'selected' : '' }}>Driver/Guide Invoices</option>
                             <option value="misc" {{ old('category') == 'misc' ? 'selected' : '' }}>Misc</option>
                         </select>
                         <input type="text" name="vendor_name" placeholder="Vendor" value="{{ old('vendor_name') }}" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
@@ -138,7 +141,7 @@
                             @foreach($transfer->expenses as $expense)
                                 <tr>
                                     <td>
-                                        <a href="{{ route('bookings.show', $expense->booking) }}" class="text-teal-600 hover:text-teal-800 font-medium">
+                                        <a href="{{ route('bookings.show', $expense->booking) }}" class="text-orange-600 hover:text-orange-800 font-medium">
                                             {{ $expense->booking->booking_number }}
                                         </a>
                                     </td>
