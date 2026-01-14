@@ -19,8 +19,8 @@
                 --background: #f8fafc;
                 --foreground: #0f172a;
                 --sidebar: #1e293b;
-                --primary: #e8941c;
-                --primary-dark: #d17c0a;
+                --primary: #E17D2F;
+                --primary-dark: #c96a1e;
             }
             body { font-family: 'Inter', system-ui, sans-serif; }
             .sidebar {
@@ -40,7 +40,7 @@
                 color: #ffffff;
             }
             .sidebar-link.active {
-                background: #e8941c;
+                background: #E17D2F;
                 color: #ffffff;
             }
             .stat-card {
@@ -52,7 +52,7 @@
                 transition: all 0.2s;
             }
             .stat-card:hover {
-                border-color: #e8941c;
+                border-color: #E17D2F;
                 box-shadow: 0 4px 12px rgba(232, 148, 28, 0.15);
             }
             .data-table { width: 100%; border-collapse: collapse; }
@@ -85,10 +85,10 @@
                 transition: all 0.2s;
             }
             .btn-primary {
-                background: #e8941c;
+                background: #E17D2F;
                 color: white;
             }
-            .btn-primary:hover { background: #d17c0a; }
+            .btn-primary:hover { background: #c96a1e; }
             .btn-secondary {
                 background: #f1f5f9;
                 color: #475569;
@@ -131,8 +131,8 @@
             }
             .tab:hover { color: #0f172a; }
             .tab.active {
-                border-bottom-color: #e8941c;
-                color: #e8941c;
+                border-bottom-color: #E17D2F;
+                color: #E17D2F;
             }
             .tab-content { display: none; }
             .tab-content.active { display: block; }

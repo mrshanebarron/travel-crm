@@ -234,7 +234,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        Import PDF
+                        Import
                     </button>
                 </div>
             </div>
@@ -1209,11 +1209,35 @@
         </div>
     </div>
 
-    <!-- Import PDF Modal -->
+    <!-- Import Safari Office Modal -->
     <div id="import-pdf-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold text-slate-900 mb-4">Import Safari Office PDF</h3>
-            <form method="POST" action="{{ route('bookings.import-pdf', $booking) }}" enctype="multipart/form-data">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Import from Safari Office</h3>
+
+            <!-- Tabs for import type -->
+            <div class="flex gap-4 mb-6 border-b border-slate-200">
+                <button type="button" class="import-tab pb-2 px-1 border-b-2 border-orange-500 text-orange-600 font-medium text-sm" data-import-tab="url">Online Booking URL</button>
+                <button type="button" class="import-tab pb-2 px-1 border-b-2 border-transparent text-slate-500 font-medium text-sm" data-import-tab="pdf">PDF Upload</button>
+            </div>
+
+            <!-- URL Import Form -->
+            <form id="import-url-form" method="POST" action="{{ route('bookings.import-url', $booking) }}">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Safari Office Booking URL</label>
+                        <input type="url" name="safari_office_url" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500" placeholder="https://company.safarioffice.app/abc123/online" required>
+                    </div>
+                    <p class="text-sm text-slate-500">Paste the Safari Office online booking link. This will extract the itinerary directly from the webpage.</p>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('import-pdf-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import from URL</button>
+                </div>
+            </form>
+
+            <!-- PDF Import Form -->
+            <form id="import-pdf-form" method="POST" action="{{ route('bookings.import-pdf', $booking) }}" enctype="multipart/form-data" class="hidden">
                 @csrf
                 <div class="space-y-4">
                     <div>
@@ -1434,5 +1458,28 @@
                 dropoffField.classList.remove('hidden');
             }
         }
+
+        // Import modal tab switching
+        document.querySelectorAll('.import-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update tab styles
+                document.querySelectorAll('.import-tab').forEach(t => {
+                    t.classList.remove('border-orange-500', 'text-orange-600');
+                    t.classList.add('border-transparent', 'text-slate-500');
+                });
+                this.classList.remove('border-transparent', 'text-slate-500');
+                this.classList.add('border-orange-500', 'text-orange-600');
+
+                // Toggle forms
+                const tabType = this.dataset.importTab;
+                if (tabType === 'url') {
+                    document.getElementById('import-url-form').classList.remove('hidden');
+                    document.getElementById('import-pdf-form').classList.add('hidden');
+                } else {
+                    document.getElementById('import-url-form').classList.add('hidden');
+                    document.getElementById('import-pdf-form').classList.remove('hidden');
+                }
+            });
+        });
     </script>
 </x-app-layout>

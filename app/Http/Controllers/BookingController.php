@@ -397,27 +397,44 @@ class BookingController extends Controller
     /**
      * Create default tasks for a new booking based on the Master Checklist template.
      * Tasks are triggered based on timing relative to the safari start date.
+     * Assignments are based on the team_members config mapping.
      */
     private function createDefaultTasks(Booking $booking): void
     {
         $defaultTasks = config('booking_tasks.default_tasks', []);
+        $teamMembers = config('booking_tasks.team_members', []);
 
         $safariStartDate = $booking->start_date;
         $safariEndDate = $booking->end_date;
+        $bookingCreatedDate = now();
 
         foreach ($defaultTasks as $taskData) {
             $dueDate = null;
 
             if (!empty($taskData['on_create'])) {
+                // Immediate tasks - due tomorrow
                 $dueDate = now()->addDays(1);
+            } elseif (!empty($taskData['days_after_booking'])) {
+                // Tasks relative to booking creation date
+                $dueDate = $bookingCreatedDate->copy()->addDays($taskData['days_after_booking']);
             } elseif (!empty($taskData['days_before'])) {
+                // Tasks relative to safari start date
                 $dueDate = $safariStartDate->copy()->subDays($taskData['days_before']);
                 // Don't create tasks with due dates in the past
                 if ($dueDate->lt(now())) {
                     $dueDate = now();
                 }
             } elseif (!empty($taskData['days_after'])) {
+                // Post-safari tasks
                 $dueDate = $safariEndDate->copy()->addDays($taskData['days_after']);
+            }
+
+            // Look up assigned user by name from team_members config
+            $assignedTo = null;
+            if (!empty($taskData['assigned_to_name'])) {
+                $memberName = $taskData['assigned_to_name'];
+                // Try to find user by name (case-insensitive partial match)
+                $assignedTo = User::where('name', 'like', "%{$memberName}%")->first()?->id;
             }
 
             $booking->tasks()->create([
@@ -425,8 +442,112 @@ class BookingController extends Controller
                 'status' => 'pending',
                 'due_date' => $dueDate,
                 'days_before_safari' => $taskData['days_before'] ?? null,
+                'assigned_to' => $assignedTo,
                 'assigned_by' => auth()->id(),
             ]);
+        }
+    }
+
+    /**
+     * Import safari itinerary from Safari Office URL.
+     */
+    public function importUrl(Request $request, Booking $booking)
+    {
+        $this->authorize('update', $booking);
+
+        $request->validate([
+            'safari_office_url' => ['required', 'url', 'regex:/^https:\/\/[a-z0-9-]+\.safarioffice\.app\/[a-z0-9-]+\/online$/i'],
+        ], [
+            'safari_office_url.regex' => 'Please enter a valid Safari Office online booking URL.',
+        ]);
+
+        try {
+            $scraper = new \App\Services\SafariOfficeWebScraper();
+            $parsedDays = $scraper->parse($request->safari_office_url);
+
+            if (empty($parsedDays)) {
+                // Log activity
+                $booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action' => 'url_import_failed',
+                    'description' => 'Safari Office URL imported but no itinerary data could be extracted.',
+                ]);
+
+                return redirect()->route('bookings.show', $booking)
+                    ->with('warning', 'Could not extract itinerary data from the Safari Office page. Please try importing a PDF instead.');
+            }
+
+            // Get existing safari days
+            $existingDays = $booking->safariDays()->orderBy('day_number')->get()->keyBy('day_number');
+            $updatedCount = 0;
+
+            DB::transaction(function () use ($parsedDays, $booking, $existingDays, &$updatedCount) {
+                foreach ($parsedDays as $dayData) {
+                    $dayNumber = $dayData['day_number'];
+
+                    if ($existingDays->has($dayNumber)) {
+                        // Update existing day - only fill in empty fields
+                        $existingDay = $existingDays[$dayNumber];
+                        $updates = [];
+
+                        if (empty($existingDay->location) && !empty($dayData['location'])) {
+                            $updates['location'] = $dayData['location'];
+                        }
+                        if (empty($existingDay->lodge) && !empty($dayData['lodge'])) {
+                            $updates['lodge'] = $dayData['lodge'];
+                        }
+                        if (empty($existingDay->morning_activity) && !empty($dayData['morning_activity'])) {
+                            $updates['morning_activity'] = $dayData['morning_activity'];
+                        }
+                        if (empty($existingDay->midday_activity) && !empty($dayData['midday_activity'])) {
+                            $updates['midday_activity'] = $dayData['midday_activity'];
+                        }
+                        if (empty($existingDay->afternoon_activity) && !empty($dayData['afternoon_activity'])) {
+                            $updates['afternoon_activity'] = $dayData['afternoon_activity'];
+                        }
+                        if (empty($existingDay->other_activities) && !empty($dayData['other_activities'])) {
+                            $updates['other_activities'] = $dayData['other_activities'];
+                        }
+                        if (empty($existingDay->meal_plan) && !empty($dayData['meal_plan'])) {
+                            $updates['meal_plan'] = $dayData['meal_plan'];
+                        }
+                        if (empty($existingDay->drink_plan) && !empty($dayData['drink_plan'])) {
+                            $updates['drink_plan'] = $dayData['drink_plan'];
+                        }
+
+                        if (!empty($updates)) {
+                            $existingDay->update($updates);
+                            $updatedCount++;
+                        }
+                    }
+                }
+            });
+
+            // Store the URL in a note field or as activity log
+            $booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action' => 'url_imported',
+                'description' => "Safari Office URL imported. {$updatedCount} days updated with itinerary data. URL: {$request->safari_office_url}",
+            ]);
+
+            // Also store the URL in the booking's notes for reference
+            if (empty($booking->safari_office_url)) {
+                $booking->update(['safari_office_url' => $request->safari_office_url]);
+            }
+
+            return redirect()->route('bookings.show', $booking)
+                ->with('success', "Safari Office itinerary imported successfully! {$updatedCount} safari days were updated.");
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('Safari Office URL import failed', [
+                'booking_id' => $booking->id,
+                'url' => $request->safari_office_url,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('bookings.show', $booking)
+                ->with('error', 'Failed to import from Safari Office: ' . $e->getMessage());
         }
     }
 }

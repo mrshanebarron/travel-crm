@@ -19,6 +19,7 @@ class Booking extends Model
         'status',
         'guides',
         'created_by',
+        'safari_office_url',
     ];
 
     protected $casts = [

@@ -1,16 +1,8 @@
 <x-app-layout>
     <!-- Page Title -->
-    <div class="mb-8 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
-            <p class="text-slate-500">Welcome back, {{ Auth::user()->name }}. Here is your booking overview.</p>
-        </div>
-        <a href="{{ route('bookings.create') }}" class="btn btn-primary">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            New Booking
-        </a>
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p class="text-slate-500">Welcome back, {{ Auth::user()->name }}. Here is your booking overview.</p>
     </div>
 
     <!-- Stats Cards - 5 columns -->
@@ -72,15 +64,23 @@
     </div>
 
     <!-- Upcoming Bookings Table -->
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-slate-900">Upcoming Bookings</h2>
-            <a href="{{ route('bookings.index') }}" class="text-orange-600 hover:text-orange-800 text-sm font-medium flex items-center gap-1">
-                View All
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('bookings.index') }}" class="text-orange-600 hover:text-orange-800 text-sm font-medium flex items-center gap-1">
+                    View All
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="{{ route('bookings.create') }}" class="btn btn-primary text-sm py-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Booking
+                </a>
+            </div>
         </div>
 
         <table class="data-table">
@@ -144,7 +144,13 @@
                 @empty
                     <tr>
                         <td colspan="6" class="py-12 text-center text-slate-500">
-                            No upcoming bookings
+                            <p class="mb-4">No upcoming bookings</p>
+                            <a href="{{ route('bookings.create') }}" class="btn btn-primary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Create Your First Booking
+                            </a>
                         </td>
                     </tr>
                 @endforelse
