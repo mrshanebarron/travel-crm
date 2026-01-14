@@ -1,15 +1,14 @@
 <x-app-layout>
     <!-- Page Title -->
-    <div class="mb-8 flex items-center gap-4">
-        <a href="{{ route('transfers.show', $transfer) }}" class="text-slate-400 hover:text-slate-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-6 sm:mb-8">
+        <a href="{{ route('transfers.show', $transfer) }}" class="text-orange-600 hover:text-orange-800 text-sm flex items-center gap-1 mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
+            Back to Transfer
         </a>
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">Edit {{ $transfer->transfer_number }}</h1>
-            <p class="text-slate-500">Update transfer details and manage expenses</p>
-        </div>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Edit {{ $transfer->transfer_number }}</h1>
+        <p class="text-slate-500 text-sm sm:text-base">Update transfer details and manage expenses</p>
     </div>
 
     @if(session('success'))
@@ -18,26 +17,26 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <!-- Transfer Details -->
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200">
+            <div class="px-4 sm:px-6 py-4 border-b border-slate-200">
                 <h3 class="text-lg font-semibold text-slate-900">Transfer Details</h3>
             </div>
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <form method="POST" action="{{ route('transfers.update', $transfer) }}">
                     @csrf
                     @method('PUT')
 
                     <div class="space-y-4">
                         <div>
-                            <label for="request_date" class="block text-sm font-medium text-slate-700 mb-1">Request Date</label>
+                            <label for="request_date" class="text-xs font-medium text-slate-500 uppercase tracking-wide">Request Date *</label>
                             <input type="date" name="request_date" id="request_date" value="{{ $transfer->request_date->format('Y-m-d') }}"
                                 class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                         </div>
 
                         <div>
-                            <label for="status" class="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                            <label for="status" class="text-xs font-medium text-slate-500 uppercase tracking-wide">Status *</label>
                             <select name="status" id="status" class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                 <option value="draft" {{ $transfer->status === 'draft' ? 'selected' : '' }}>Draft</option>
                                 <option value="sent" {{ $transfer->status === 'sent' ? 'selected' : '' }}>Sent</option>
@@ -77,10 +76,10 @@
 
         <!-- Expenses -->
         <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200">
+            <div class="px-4 sm:px-6 py-4 border-b border-slate-200">
                 <h3 class="text-lg font-semibold text-slate-900">Expenses</h3>
             </div>
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <!-- Validation Errors -->
                 @if($errors->any())
                     <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -94,9 +93,9 @@
                 @endif
 
                 <!-- Add Expense Form -->
-                <form method="POST" action="{{ route('transfer-expenses.store', $transfer) }}" class="mb-6 p-4 bg-slate-50 rounded-lg">
+                <form method="POST" action="{{ route('transfer-expenses.store', $transfer) }}" class="mb-6 p-3 sm:p-4 bg-slate-50 rounded-lg">
                     @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <select name="booking_id" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('booking_id') border-red-500 @enderror" required>
                             <option value="">Select Booking</option>
                             @foreach($bookings as $booking)
@@ -119,7 +118,7 @@
                             <option value="other" {{ old('payment_type') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
                         <input type="number" name="amount" placeholder="Amount" step="0.01" min="0" value="{{ old('amount') }}" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('amount') border-red-500 @enderror" required>
-                        <button type="submit" class="btn btn-primary text-sm">Add</button>
+                        <button type="submit" class="btn btn-primary text-sm w-full justify-center">Add Expense</button>
                     </div>
                     <div class="mt-3">
                         <input type="text" name="notes" placeholder="Notes (optional)" value="{{ old('notes') }}" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
@@ -127,45 +126,79 @@
                 </form>
 
                 @if($transfer->expenses->count() > 0)
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Booking</th>
-                                <th>Category</th>
-                                <th>Vendor</th>
-                                <th class="text-right">Amount</th>
-                                <th class="text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($transfer->expenses as $expense)
-                                <tr>
-                                    <td>
+                    <!-- Mobile Card View -->
+                    <div class="md:hidden divide-y divide-slate-100">
+                        @foreach($transfer->expenses as $expense)
+                            <div class="py-3">
+                                <div class="flex items-start justify-between gap-3 mb-2">
+                                    <div>
                                         <a href="{{ route('bookings.show', $expense->booking) }}" class="text-orange-600 hover:text-orange-800 font-medium">
                                             {{ $expense->booking->booking_number }}
                                         </a>
-                                    </td>
-                                    <td class="text-slate-900">{{ ucfirst(str_replace('_', ' ', $expense->category)) }}</td>
-                                    <td class="text-slate-900">{{ $expense->vendor_name ?? '-' }}</td>
-                                    <td class="text-right font-medium text-slate-900">${{ number_format($expense->amount, 2) }}</td>
-                                    <td class="text-right">
-                                        <form method="POST" action="{{ route('transfer-expenses.destroy', $expense) }}" class="inline" onsubmit="return confirm('Remove this expense?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
-                                        </form>
-                                    </td>
+                                        <p class="text-sm text-slate-500">{{ ucfirst(str_replace('_', ' ', $expense->category)) }}</p>
+                                    </div>
+                                    <span class="text-lg font-bold text-slate-900">${{ number_format($expense->amount, 2) }}</span>
+                                </div>
+                                @if($expense->vendor_name)
+                                    <p class="text-sm text-slate-600 mb-2">{{ $expense->vendor_name }}</p>
+                                @endif
+                                <form method="POST" action="{{ route('transfer-expenses.destroy', $expense) }}" onsubmit="return confirm('Remove this expense?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
+                                </form>
+                            </div>
+                        @endforeach
+                        <div class="py-3 bg-slate-50 -mx-4 px-4 sm:-mx-6 sm:px-6">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-slate-900">Total:</span>
+                                <span class="text-xl font-bold text-slate-900">${{ number_format($transfer->total_amount, 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Table View -->
+                    <div class="hidden md:block">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Booking</th>
+                                    <th>Category</th>
+                                    <th>Vendor</th>
+                                    <th class="text-right">Amount</th>
+                                    <th class="text-right">Actions</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-slate-50">
-                                <td colspan="3" class="text-right font-semibold text-slate-900">Total:</td>
-                                <td class="text-right font-bold text-slate-900">${{ number_format($transfer->total_amount, 2) }}</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach($transfer->expenses as $expense)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('bookings.show', $expense->booking) }}" class="text-orange-600 hover:text-orange-800 font-medium">
+                                                {{ $expense->booking->booking_number }}
+                                            </a>
+                                        </td>
+                                        <td class="text-slate-900">{{ ucfirst(str_replace('_', ' ', $expense->category)) }}</td>
+                                        <td class="text-slate-900">{{ $expense->vendor_name ?? '-' }}</td>
+                                        <td class="text-right font-medium text-slate-900">${{ number_format($expense->amount, 2) }}</td>
+                                        <td class="text-right">
+                                            <form method="POST" action="{{ route('transfer-expenses.destroy', $expense) }}" class="inline" onsubmit="return confirm('Remove this expense?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-slate-50">
+                                    <td colspan="3" class="text-right font-semibold text-slate-900">Total:</td>
+                                    <td class="text-right font-bold text-slate-900">${{ number_format($transfer->total_amount, 2) }}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 @else
                     <p class="text-slate-500 text-center py-8">No expenses added yet. Use the form above to add expenses.</p>
                 @endif

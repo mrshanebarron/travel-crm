@@ -1,39 +1,41 @@
 <x-app-layout>
     <div class="max-w-4xl mx-auto">
         <!-- Page Header -->
-        <div class="mb-8 flex items-center justify-between">
-            <div>
-                <a href="{{ route('vendors.index') }}" class="text-orange-600 hover:text-orange-800 text-sm flex items-center gap-1 mb-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to Vendors
-                </a>
-                <h1 class="text-2xl font-bold text-slate-900">{{ $vendor->name }}</h1>
-                <div class="flex items-center gap-3 mt-1">
-                    <span class="badge badge-info">{{ App\Models\Vendor::CATEGORIES[$vendor->category] ?? $vendor->category }}</span>
-                    @if($vendor->is_active)
-                        <span class="badge badge-success">Active</span>
-                    @else
-                        <span class="badge" style="background: #f1f5f9; color: #475569;">Inactive</span>
-                    @endif
-                </div>
-            </div>
-            <a href="{{ route('vendors.edit', $vendor) }}" class="btn btn-primary">
+        <div class="mb-6 sm:mb-8">
+            <a href="{{ route('vendors.index') }}" class="text-orange-600 hover:text-orange-800 text-sm flex items-center gap-1 mb-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                Edit Vendor
+                Back to Vendors
             </a>
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900">{{ $vendor->name }}</h1>
+                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                        <span class="badge badge-info">{{ App\Models\Vendor::CATEGORIES[$vendor->category] ?? $vendor->category }}</span>
+                        @if($vendor->is_active)
+                            <span class="badge badge-success">Active</span>
+                        @else
+                            <span class="badge" style="background: #f1f5f9; color: #475569;">Inactive</span>
+                        @endif
+                    </div>
+                </div>
+                <a href="{{ route('vendors.edit', $vendor) }}" class="btn btn-primary w-full sm:w-auto justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit Vendor
+                </a>
+            </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <!-- Contact Information -->
             <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200">
+                <div class="px-4 sm:px-6 py-4 border-b border-slate-200">
                     <h2 class="text-lg font-semibold text-slate-900">Contact Information</h2>
                 </div>
-                <div class="p-6 space-y-4">
+                <div class="p-4 sm:p-6 space-y-4">
                     @if($vendor->contact_name)
                         <div>
                             <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Contact Person</label>
@@ -78,10 +80,10 @@
 
             <!-- Banking Information -->
             <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200">
+                <div class="px-4 sm:px-6 py-4 border-b border-slate-200">
                     <h2 class="text-lg font-semibold text-slate-900">Banking Information</h2>
                 </div>
-                <div class="p-6 space-y-4">
+                <div class="p-4 sm:p-6 space-y-4">
                     @if($vendor->bank_name)
                         <div>
                             <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Bank Name</label>
@@ -114,18 +116,18 @@
         </div>
 
         @if($vendor->notes)
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mt-6">
-                <div class="px-6 py-4 border-b border-slate-200">
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mt-4 sm:mt-6">
+                <div class="px-4 sm:px-6 py-4 border-b border-slate-200">
                     <h2 class="text-lg font-semibold text-slate-900">Notes</h2>
                 </div>
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <p class="text-slate-700 whitespace-pre-line">{{ $vendor->notes }}</p>
                 </div>
             </div>
         @endif
 
         <!-- Timestamps -->
-        <div class="mt-6 text-sm text-slate-500">
+        <div class="mt-4 sm:mt-6 text-sm text-slate-500">
             <p>Created: {{ $vendor->created_at->format('M j, Y g:i A') }}</p>
             @if($vendor->updated_at->ne($vendor->created_at))
                 <p>Updated: {{ $vendor->updated_at->format('M j, Y g:i A') }}</p>

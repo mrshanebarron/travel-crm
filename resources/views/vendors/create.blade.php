@@ -1,25 +1,25 @@
 <x-app-layout>
     <div class="max-w-3xl mx-auto">
         <!-- Page Title -->
-        <div class="mb-8">
+        <div class="mb-6 sm:mb-8">
             <a href="{{ route('vendors.index') }}" class="text-orange-600 hover:text-orange-800 text-sm flex items-center gap-1 mb-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
                 Back to Vendors
             </a>
-            <h1 class="text-2xl font-bold text-slate-900">Add New Vendor</h1>
-            <p class="text-slate-500">Create a new vendor record for lodges, guides, or service providers</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Add New Vendor</h1>
+            <p class="text-slate-500 text-sm sm:text-base">Create a new vendor record for lodges, guides, or service providers</p>
         </div>
 
         <!-- Form -->
         <form method="POST" action="{{ route('vendors.store') }}">
             @csrf
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Basic Information</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Vendor Name *</label>
                         <input type="text" name="name" value="{{ old('name') }}" required
                             class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500"
@@ -45,9 +45,9 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Contact Information</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Contact Person</label>
                         <input type="text" name="contact_name" value="{{ old('contact_name') }}"
@@ -72,7 +72,7 @@
                             class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500"
                             placeholder="+254 xxx xxx xxx">
                     </div>
-                    <div class="col-span-2">
+                    <div class="sm:col-span-2">
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Address</label>
                         <textarea name="address" rows="2"
                             class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500"
@@ -81,9 +81,9 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Banking Information</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Bank Name</label>
                         <input type="text" name="bank_name" value="{{ old('bank_name') }}"
@@ -108,7 +108,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Additional Information</h2>
                 <div>
                     <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes</label>
@@ -125,9 +125,9 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3">
-                <a href="{{ route('vendors.index') }}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Create Vendor</button>
+            <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+                <a href="{{ route('vendors.index') }}" class="btn btn-secondary w-full sm:w-auto justify-center">Cancel</a>
+                <button type="submit" class="btn btn-primary w-full sm:w-auto justify-center">Create Vendor</button>
             </div>
         </form>
     </div>

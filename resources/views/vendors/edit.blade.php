@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="max-w-3xl mx-auto">
         <!-- Page Title -->
-        <div class="mb-8">
+        <div class="mb-6 sm:mb-8">
             <a href="{{ route('vendors.show', $vendor) }}" class="text-orange-600 hover:text-orange-800 text-sm flex items-center gap-1 mb-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
                 Back to Vendor
             </a>
-            <h1 class="text-2xl font-bold text-slate-900">Edit {{ $vendor->name }}</h1>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Edit {{ $vendor->name }}</h1>
         </div>
 
         <!-- Form -->
@@ -16,10 +16,10 @@
             @csrf
             @method('PUT')
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Basic Information</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Vendor Name *</label>
                         <input type="text" name="name" value="{{ old('name', $vendor->name) }}" required
                             class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
@@ -41,9 +41,9 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Contact Information</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Contact Person</label>
                         <input type="text" name="contact_name" value="{{ old('contact_name', $vendor->contact_name) }}"
@@ -64,7 +64,7 @@
                         <input type="text" name="whatsapp" value="{{ old('whatsapp', $vendor->whatsapp) }}"
                             class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
                     </div>
-                    <div class="col-span-2">
+                    <div class="sm:col-span-2">
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Address</label>
                         <textarea name="address" rows="2"
                             class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">{{ old('address', $vendor->address) }}</textarea>
@@ -72,9 +72,9 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Banking Information</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Bank Name</label>
                         <input type="text" name="bank_name" value="{{ old('bank_name', $vendor->bank_name) }}"
@@ -98,7 +98,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">Additional Information</h2>
                 <div>
                     <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes</label>
@@ -114,15 +114,15 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between">
-                <form method="POST" action="{{ route('vendors.destroy', $vendor) }}" onsubmit="return confirm('Are you sure you want to delete this vendor?')">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <form method="POST" action="{{ route('vendors.destroy', $vendor) }}" onsubmit="return confirm('Are you sure you want to delete this vendor?')" class="order-2 sm:order-1">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Delete Vendor</button>
+                    <button type="submit" class="text-red-600 hover:text-red-800 font-medium text-sm">Delete Vendor</button>
                 </form>
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('vendors.show', $vendor) }}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-3 order-1 sm:order-2">
+                    <a href="{{ route('vendors.show', $vendor) }}" class="btn btn-secondary w-full sm:w-auto justify-center">Cancel</a>
+                    <button type="submit" class="btn btn-primary w-full sm:w-auto justify-center">Save Changes</button>
                 </div>
             </div>
         </form>

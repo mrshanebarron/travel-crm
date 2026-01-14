@@ -1,20 +1,19 @@
 <x-app-layout>
     <!-- Page Title -->
-    <div class="mb-8 flex items-center gap-4">
-        <a href="{{ route('bookings.index') }}" class="text-slate-400 hover:text-slate-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-6 sm:mb-8">
+        <a href="{{ route('bookings.index') }}" class="text-orange-600 hover:text-orange-800 text-sm flex items-center gap-1 mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
+            Back to Bookings
         </a>
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">New Booking</h1>
-            <p class="text-slate-500">Create a new safari booking</p>
-        </div>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900">New Booking</h1>
+        <p class="text-slate-500 text-sm sm:text-base">Create a new safari booking</p>
     </div>
 
-    <div class="max-w-4xl">
+    <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <form method="POST" action="{{ route('bookings.store') }}" x-data="bookingForm()">
                     @csrf
 
@@ -29,12 +28,12 @@
                     @endif
 
                     <!-- Trip Details -->
-                    <div class="mb-8">
+                    <div class="mb-6 sm:mb-8">
                         <h3 class="text-lg font-semibold text-slate-900 mb-4">Trip Details</h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label for="country" class="block text-sm font-medium text-slate-700 mb-1">Country</label>
+                                <label for="country" class="text-xs font-medium text-slate-500 uppercase tracking-wide">Country *</label>
                                 <select name="country" id="country" class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                     <option value="">Select a country</option>
                                     <option value="Tanzania" {{ old('country') === 'Tanzania' ? 'selected' : '' }}>Tanzania</option>
@@ -49,16 +48,14 @@
                                 </select>
                             </div>
 
-                            <div></div>
-
                             <div>
-                                <label for="start_date" class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                                <label for="start_date" class="text-xs font-medium text-slate-500 uppercase tracking-wide">Start Date *</label>
                                 <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}"
                                     class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                             </div>
 
                             <div>
-                                <label for="end_date" class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                                <label for="end_date" class="text-xs font-medium text-slate-500 uppercase tracking-wide">End Date *</label>
                                 <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}"
                                     class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                             </div>
@@ -66,10 +63,10 @@
                     </div>
 
                     <!-- Travelers -->
-                    <div class="mb-8">
-                        <div class="flex justify-between items-center mb-4">
+                    <div class="mb-6 sm:mb-8">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                             <h3 class="text-lg font-semibold text-slate-900">Travelers</h3>
-                            <button type="button" @click="addTraveler()" class="btn btn-secondary text-sm py-2 px-3">
+                            <button type="button" @click="addTraveler()" class="btn btn-secondary text-sm py-2 px-3 w-full sm:w-auto justify-center">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
@@ -78,7 +75,7 @@
                         </div>
 
                         <template x-for="(traveler, index) in travelers" :key="index">
-                            <div class="p-4 border border-slate-200 rounded-lg mb-4 relative">
+                            <div class="p-3 sm:p-4 border border-slate-200 rounded-lg mb-4 relative">
                                 <button type="button" x-show="travelers.length > 1" @click="removeTraveler(index)"
                                     class="absolute top-3 right-3 text-red-500 hover:text-red-700">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,33 +85,33 @@
 
                                 <div class="text-sm font-medium text-slate-500 mb-3" x-text="index === 0 ? 'Lead Traveler' : 'Traveler ' + (index + 1)"></div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">First Name *</label>
                                         <input type="text" :name="'travelers[' + index + '][first_name]'" x-model="traveler.first_name"
                                             class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Last Name *</label>
                                         <input type="text" :name="'travelers[' + index + '][last_name]'" x-model="traveler.last_name"
                                             class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</label>
                                         <input type="email" :name="'travelers[' + index + '][email]'" x-model="traveler.email"
                                             class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Phone</label>
                                         <input type="text" :name="'travelers[' + index + '][phone]'" x-model="traveler.phone"
                                             class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Date of Birth</label>
                                         <input type="date" :name="'travelers[' + index + '][dob]'" x-model="traveler.dob"
                                             class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
                                     </div>
@@ -123,11 +120,9 @@
                         </template>
                     </div>
 
-                    <div class="flex justify-end gap-4 pt-4 border-t border-slate-200">
-                        <a href="{{ route('bookings.index') }}" class="btn btn-secondary">
-                            Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary">
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-200">
+                        <a href="{{ route('bookings.index') }}" class="btn btn-secondary w-full sm:w-auto justify-center">Cancel</a>
+                        <button type="submit" class="btn btn-primary w-full sm:w-auto justify-center">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
