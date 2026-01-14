@@ -29,7 +29,7 @@ class ClientController extends Controller
 
     public function show(Traveler $client)
     {
-        $client->load(['group.booking', 'flights', 'payment']);
+        $client->load(['group.booking', 'flights', 'payment', 'notes.creator']);
 
         return view('clients.show', compact('client'));
     }

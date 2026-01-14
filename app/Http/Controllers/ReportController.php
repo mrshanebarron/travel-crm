@@ -6,8 +6,11 @@ use App\Models\Booking;
 use App\Models\Traveler;
 use App\Models\LedgerEntry;
 use App\Models\Transfer;
+use App\Exports\BookingsExport;
+use App\Exports\FinancialReportExport;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -79,5 +82,31 @@ class ReportController extends Controller
             'topCountries',
             'transfers'
         ));
+    }
+
+    /**
+     * Export bookings report to Excel.
+     */
+    public function exportBookings(Request $request)
+    {
+        $startDate = $request->get('start_date') ? Carbon::parse($request->start_date) : now()->startOfYear();
+        $endDate = $request->get('end_date') ? Carbon::parse($request->end_date) : now()->endOfYear();
+
+        $filename = 'bookings-report-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new BookingsExport($startDate, $endDate), $filename);
+    }
+
+    /**
+     * Export financial report to Excel.
+     */
+    public function exportFinancial(Request $request)
+    {
+        $startDate = $request->get('start_date') ? Carbon::parse($request->start_date) : now()->startOfYear();
+        $endDate = $request->get('end_date') ? Carbon::parse($request->end_date) : now()->endOfYear();
+
+        $filename = 'financial-report-' . $startDate->format('Y-m-d') . '-to-' . $endDate->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new FinancialReportExport($startDate, $endDate), $filename);
     }
 }

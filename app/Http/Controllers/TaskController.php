@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
@@ -42,6 +43,8 @@ class TaskController extends Controller
 
     public function store(Request $request, Booking $booking)
     {
+        $this->authorize('update', $booking);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -60,6 +63,11 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
+        // Users can update tasks assigned to them, or if they have booking access
+        if ($task->assigned_to !== auth()->id()) {
+            Gate::authorize('update', $task->booking);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -79,6 +87,8 @@ class TaskController extends Controller
 
     public function destroy(Task $task)
     {
+        Gate::authorize('update', $task->booking);
+
         $task->delete();
 
         return redirect()->back()->with('success', 'Task deleted successfully.');

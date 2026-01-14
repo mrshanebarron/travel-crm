@@ -18,6 +18,11 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VendorController;
+use App\Http\Controllers\EmailNotificationController;
+use App\Http\Controllers\ClientNoteController;
+use App\Http\Controllers\ReconciliationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -37,10 +42,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export/bookings', [ReportController::class, 'exportBookings'])->name('reports.export.bookings');
+    Route::get('/reports/export/financial', [ReportController::class, 'exportFinancial'])->name('reports.export.financial');
 
     // Bookings
     Route::resource('bookings', BookingController::class);
     Route::post('/bookings/{booking}/import-pdf', [BookingController::class, 'importPdf'])->name('bookings.import-pdf');
+    Route::post('/bookings/bulk-export', [BookingController::class, 'bulkExport'])->name('bookings.bulk-export');
+    Route::post('/bookings/bulk-status', [BookingController::class, 'bulkStatus'])->name('bookings.bulk-status');
 
     // Groups
     Route::post('/bookings/{booking}/groups', [GroupController::class, 'store'])->name('groups.store');
@@ -97,6 +106,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Team Management (Admin only)
+    Route::resource('users', UserController::class)->except(['show']);
+
+    // Vendors
+    Route::resource('vendors', VendorController::class);
+
+    // Email Notifications
+    Route::post('/bookings/{booking}/travelers/{traveler}/email/confirmation', [EmailNotificationController::class, 'sendConfirmation'])->name('emails.confirmation');
+    Route::post('/bookings/{booking}/travelers/{traveler}/email/payment-reminder', [EmailNotificationController::class, 'sendPaymentReminder'])->name('emails.payment-reminder');
+    Route::post('/bookings/{booking}/travelers/{traveler}/email/document-request', [EmailNotificationController::class, 'sendDocumentRequest'])->name('emails.document-request');
+    Route::post('/bookings/{booking}/travelers/{traveler}/email/itinerary', [EmailNotificationController::class, 'sendItinerary'])->name('emails.itinerary');
+    Route::post('/bookings/{booking}/email/bulk', [EmailNotificationController::class, 'sendBulkEmails'])->name('emails.bulk');
+
+    // Client Notes
+    Route::post('/travelers/{traveler}/notes', [ClientNoteController::class, 'store'])->name('client-notes.store');
+    Route::delete('/client-notes/{clientNote}', [ClientNoteController::class, 'destroy'])->name('client-notes.destroy');
+
+    // Payment Reconciliation
+    Route::get('/reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
 });
 
 require __DIR__.'/auth.php';

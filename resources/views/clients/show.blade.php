@@ -126,6 +126,63 @@
         </div>
     </div>
 
+    <!-- Communication History -->
+    <div class="mt-6 bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-slate-900">Communication History</h2>
+            <button type="button" onclick="document.getElementById('add-note-modal').classList.remove('hidden')" class="btn btn-secondary text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Note
+            </button>
+        </div>
+        <div class="p-6">
+            @if($client->notes->count() > 0)
+                <div class="space-y-4">
+                    @foreach($client->notes->sortByDesc('contacted_at') as $note)
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 {{ $note->getTypeColor() }} rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $note->getTypeIcon() }}" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex-1 bg-slate-50 rounded-xl p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $note->getTypeColor() }}">
+                                            {{ $note->getTypeLabel() }}
+                                        </span>
+                                        <span class="text-xs text-slate-500 ml-2">{{ $note->contacted_at->format('M j, Y g:i A') }}</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('client-notes.destroy', $note) }}" onsubmit="return confirm('Delete this note?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
+                                    </form>
+                                </div>
+                                <div class="mt-2 text-slate-700 whitespace-pre-line">{{ $note->content }}</div>
+                                <div class="mt-2 text-xs text-slate-400">
+                                    Added by {{ $note->creator->name ?? 'Unknown' }} on {{ $note->created_at->format('M j, Y') }}
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-8 text-slate-500">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                    <p>No communication history</p>
+                    <p class="text-sm">Click "Add Note" to start tracking interactions</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
     <!-- Flight Information -->
     @if($client->flights->count() > 0)
         <div class="mt-6 bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -167,4 +224,52 @@
             </div>
         </div>
     @endif
+
+    <!-- Add Note Modal -->
+    <div id="add-note-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Add Communication Note</h3>
+            <form method="POST" action="{{ route('client-notes.store', $client) }}">
+                @csrf
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type *</label>
+                            <select name="type" required class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                @foreach(\App\Models\ClientNote::TYPES as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Contact Date/Time</label>
+                            <input type="datetime-local" name="contacted_at" value="{{ now()->format('Y-m-d\TH:i') }}"
+                                class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes *</label>
+                        <textarea name="content" rows="4" required
+                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500"
+                            placeholder="Describe the communication or interaction..."></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('add-note-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Close modals when clicking outside
+        document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+        });
+    </script>
 </x-app-layout>

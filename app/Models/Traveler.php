@@ -45,6 +45,11 @@ class Traveler extends Model
         return $this->hasOne(Payment::class);
     }
 
+    public function notes(): HasMany
+    {
+        return $this->hasMany(ClientNote::class);
+    }
+
     public function arrivalFlight()
     {
         return $this->flights()->where('type', 'arrival')->first();

@@ -72,6 +72,11 @@ class Booking extends Model
         return $this->hasMany(TransferExpense::class);
     }
 
+    public function emailLogs(): HasMany
+    {
+        return $this->hasMany(EmailLog::class);
+    }
+
     // Get all travelers through groups
     public function travelers()
     {

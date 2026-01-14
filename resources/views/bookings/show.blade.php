@@ -86,6 +86,12 @@
                 </svg>
                 <span>Activity Log</span>
             </button>
+            <button class="tab flex items-center gap-2" data-tab="email-history">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>Email History</span>
+            </button>
         </div>
     </div>
 
@@ -164,6 +170,34 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
+                                        @if($traveler->email)
+                                            <div class="relative" x-data="{ open: false }">
+                                                <button @click="open = !open" class="btn btn-secondary text-sm py-1 px-2 flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Email
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10">
+                                                    <form method="POST" action="{{ route('emails.confirmation', [$booking, $traveler]) }}">
+                                                        @csrf
+                                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Booking Confirmation</button>
+                                                    </form>
+                                                    <button type="button" onclick="openPaymentReminderModal({{ $booking->id }}, {{ $traveler->id }}, '{{ $traveler->full_name }}', {{ $traveler->total_cost ?? 0 }})" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Payment Reminder</button>
+                                                    <form method="POST" action="{{ route('emails.document-request', [$booking, $traveler]) }}">
+                                                        @csrf
+                                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Document Request</button>
+                                                    </form>
+                                                    <form method="POST" action="{{ route('emails.itinerary', [$booking, $traveler]) }}">
+                                                        @csrf
+                                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Itinerary Summary</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        @endif
                                         <a href="{{ route('clients.show', $traveler) }}" class="btn btn-secondary text-sm py-1 px-2">View</a>
                                         <form method="POST" action="{{ route('travelers.destroy', $traveler) }}" onsubmit="return confirm('Remove this traveler?')">
                                             @csrf
@@ -380,46 +414,79 @@
         <div class="tab-content p-6" id="master-checklist">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Master Checklist</h2>
-                <form method="POST" action="{{ route('tasks.store', $booking) }}" class="flex gap-2">
-                    @csrf
-                    <input type="text" name="name" placeholder="New task..." class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                    <input type="date" name="due_date" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    <button type="submit" class="btn btn-primary text-sm">Add Task</button>
-                </form>
+                <button type="button" onclick="document.getElementById('add-task-modal').classList.remove('hidden')" class="btn btn-primary text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Task
+                </button>
             </div>
 
             <div class="space-y-4">
                 <!-- Pending Tasks -->
                 <div class="border border-slate-200 rounded-xl overflow-hidden">
                     <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
-                        <h3 class="font-medium text-slate-900">Pending Tasks</h3>
+                        <h3 class="font-medium text-slate-900">Pending Tasks ({{ $booking->tasks->where('status', '!=', 'completed')->count() }})</h3>
                     </div>
                     <div class="divide-y divide-slate-200">
-                        @forelse($booking->tasks->where('status', '!=', 'completed') as $task)
-                            <div class="p-4 flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <form method="POST" action="{{ route('tasks.update', $task) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="name" value="{{ $task->name }}">
-                                        <input type="hidden" name="status" value="completed">
-                                        <button type="submit" class="w-5 h-5 border-2 border-slate-300 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors"></button>
-                                    </form>
-                                    <div>
-                                        <div class="font-medium text-slate-900">{{ $task->name }}</div>
-                                        @if($task->due_date)
-                                            <div class="text-sm {{ $task->due_date->isPast() ? 'text-red-600 font-medium' : 'text-slate-500' }}">
-                                                Due: {{ $task->due_date->format('M j, Y') }}
-                                                @if($task->due_date->isPast()) (overdue) @endif
+                        @forelse($booking->tasks->where('status', '!=', 'completed')->sortBy('due_date') as $task)
+                            <div class="p-4 hover:bg-slate-50">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div class="flex items-start gap-3">
+                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="mt-1">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="name" value="{{ $task->name }}">
+                                            <input type="hidden" name="status" value="completed">
+                                            <button type="submit" class="w-5 h-5 border-2 border-slate-300 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors" title="Mark complete"></button>
+                                        </form>
+                                        <div class="flex-1">
+                                            <div class="font-medium text-slate-900">{{ $task->name }}</div>
+                                            <div class="flex flex-wrap gap-3 mt-1 text-sm">
+                                                @if($task->due_date)
+                                                    <span class="{{ $task->due_date->isPast() ? 'text-red-600 font-medium' : 'text-slate-500' }}">
+                                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        {{ $task->due_date->format('M j, Y') }}
+                                                        @if($task->due_date->isPast()) (overdue) @endif
+                                                    </span>
+                                                @endif
+                                                @if($task->assignedTo)
+                                                    <span class="text-slate-500">
+                                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        {{ $task->assignedTo->name }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-amber-600">
+                                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        Unassigned
+                                                    </span>
+                                                @endif
                                             </div>
-                                        @endif
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="openEditTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->due_date?->format('Y-m-d') }}', {{ $task->assigned_to ?? 'null' }})" class="text-slate-400 hover:text-slate-600" title="Edit task">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-slate-400 hover:text-red-600" title="Delete task">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
-                                <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
-                                </form>
                             </div>
                         @empty
                             <div class="p-6 text-center text-slate-500">
@@ -436,18 +503,27 @@
                             <h3 class="font-medium text-green-800">Completed Tasks ({{ $booking->tasks->where('status', 'completed')->count() }})</h3>
                         </div>
                         <div class="divide-y divide-slate-200">
-                            @foreach($booking->tasks->where('status', 'completed') as $task)
+                            @foreach($booking->tasks->where('status', 'completed')->sortByDesc('completed_at') as $task)
                                 <div class="p-4 flex justify-between items-center bg-slate-50">
                                     <div class="flex items-center gap-3">
                                         <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                         </svg>
-                                        <span class="text-slate-500 line-through">{{ $task->name }}</span>
+                                        <div>
+                                            <span class="text-slate-500 line-through">{{ $task->name }}</span>
+                                            @if($task->completed_at)
+                                                <span class="text-xs text-slate-400 ml-2">{{ $task->completed_at->diffForHumans() }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                     <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
+                                        <button type="submit" class="text-slate-400 hover:text-red-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
                                     </form>
                                 </div>
                             @endforeach
@@ -961,6 +1037,61 @@
                 @endforelse
             </div>
         </div>
+
+        <!-- Email History Tab -->
+        <div class="tab-content p-6" id="email-history">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-semibold text-slate-900">Email Communications</h2>
+            </div>
+
+            <!-- Email History Table -->
+            <div class="space-y-4">
+                @forelse($booking->emailLogs->sortByDesc('sent_at') as $email)
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-white border border-slate-200 rounded-xl p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-medium text-slate-900">
+                                        {{ $email->getTypeLabel() }}
+                                    </div>
+                                    <div class="text-sm text-slate-600 mt-1">
+                                        To: {{ $email->recipient_name ?? 'Unknown' }} &lt;{{ $email->recipient_email }}&gt;
+                                    </div>
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        Subject: {{ $email->subject }}
+                                    </div>
+                                    @if($email->notes)
+                                        <div class="text-xs text-slate-400 mt-1">{{ $email->notes }}</div>
+                                    @endif
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-500">{{ $email->sent_at->format('M j, Y g:i A') }}</div>
+                                    <div class="text-xs text-slate-400">{{ $email->sent_at->diffForHumans() }}</div>
+                                    @if($email->sender)
+                                        <div class="text-xs text-slate-400 mt-1">by {{ $email->sender->name }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-12 text-slate-500">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <p>No emails sent yet</p>
+                        <p class="text-sm">Send emails to travelers using the Email button on their profile</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
     </div>
 
     <!-- Add Traveler Modal -->
@@ -1099,6 +1230,119 @@
         </div>
     </div>
 
+    <!-- Add Task Modal -->
+    <div id="add-task-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Add New Task</h3>
+            <form method="POST" action="{{ route('tasks.store', $booking) }}">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Task Name</label>
+                        <input type="text" name="name" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500" placeholder="Enter task name..." required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Due Date</label>
+                        <input type="date" name="due_date" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Assign To</label>
+                        <select name="assigned_to" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">-- Unassigned --</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ $user->id === auth()->id() ? 'selected' : '' }}>{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('add-task-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="edit-task-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Edit Task</h3>
+            <form id="edit-task-form" method="POST" action="">
+                @csrf
+                @method('PATCH')
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Task Name</label>
+                        <input type="text" name="name" id="edit-task-name" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Due Date</label>
+                        <input type="date" name="due_date" id="edit-task-due-date" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Assign To</label>
+                        <select name="assigned_to" id="edit-task-assigned-to" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">-- Unassigned --</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Status</label>
+                        <select name="status" id="edit-task-status" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('edit-task-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Reminder Modal -->
+    <div id="payment-reminder-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Send Payment Reminder</h3>
+            <form id="payment-reminder-form" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Recipient</label>
+                        <p id="payment-reminder-recipient" class="text-slate-900 font-medium"></p>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Payment Type *</label>
+                        <select name="payment_type" required class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                            <option value="deposit">25% Deposit</option>
+                            <option value="second">Second Payment (25%)</option>
+                            <option value="final">Final Payment (50%)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Amount Due *</label>
+                        <input type="number" name="amount_due" id="payment-reminder-amount" step="0.01" required
+                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Due Date *</label>
+                        <input type="date" name="due_date" required
+                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('payment-reminder-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Reminder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Tab switching
         document.querySelectorAll('#booking-tabs .tab').forEach(tab => {
@@ -1127,6 +1371,26 @@
             const form = document.getElementById('add-flight-form');
             form.action = `/travelers/${travelerId}/flights`;
             document.getElementById('add-flight-modal').classList.remove('hidden');
+        }
+
+        // Payment Reminder Modal
+        function openPaymentReminderModal(bookingId, travelerId, travelerName, totalCost) {
+            const form = document.getElementById('payment-reminder-form');
+            form.action = `/bookings/${bookingId}/travelers/${travelerId}/email/payment-reminder`;
+            document.getElementById('payment-reminder-recipient').textContent = travelerName;
+            document.getElementById('payment-reminder-amount').value = totalCost > 0 ? (totalCost * 0.25).toFixed(2) : '';
+            document.getElementById('payment-reminder-modal').classList.remove('hidden');
+        }
+
+        // Edit Task Modal
+        function openEditTaskModal(taskId, name, dueDate, assignedTo) {
+            const form = document.getElementById('edit-task-form');
+            form.action = `/tasks/${taskId}`;
+            document.getElementById('edit-task-name').value = name;
+            document.getElementById('edit-task-due-date').value = dueDate || '';
+            document.getElementById('edit-task-assigned-to').value = assignedTo || '';
+            document.getElementById('edit-task-status').value = 'pending';
+            document.getElementById('edit-task-modal').classList.remove('hidden');
         }
 
         // Close modals when clicking outside

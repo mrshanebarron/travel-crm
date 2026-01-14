@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class RoomController extends Controller
 {
     public function store(Request $request, Booking $booking)
     {
+        $this->authorize('update', $booking);
+
         $validated = $request->validate([
             'type' => 'required|in:double,triple,single,family,other',
             'custom_type' => 'nullable|required_if:type,other|string|max:255',
@@ -27,6 +30,8 @@ class RoomController extends Controller
 
     public function update(Request $request, Room $room)
     {
+        Gate::authorize('update', $room->booking);
+
         $validated = $request->validate([
             'type' => 'required|in:double,triple,single,family,other',
             'custom_type' => 'nullable|required_if:type,other|string|max:255',
@@ -43,6 +48,8 @@ class RoomController extends Controller
 
     public function destroy(Room $room)
     {
+        Gate::authorize('update', $room->booking);
+
         $room->delete();
 
         return redirect()->back()->with('success', 'Room removed successfully.');

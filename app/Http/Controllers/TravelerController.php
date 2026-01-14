@@ -3,14 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Booking;
 use App\Models\Traveler;
 use App\Models\Group;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TravelerController extends Controller
 {
     public function store(Request $request, Group $group)
     {
+        // Authorize via parent booking
+        Gate::authorize('update', $group->booking);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -40,6 +45,9 @@ class TravelerController extends Controller
 
     public function update(Request $request, Traveler $traveler)
     {
+        // Authorize via parent booking
+        Gate::authorize('update', $traveler->group->booking);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -55,6 +63,9 @@ class TravelerController extends Controller
 
     public function destroy(Traveler $traveler)
     {
+        // Authorize via parent booking
+        Gate::authorize('update', $traveler->group->booking);
+
         $traveler->delete();
 
         return redirect()->back()->with('success', 'Traveler removed successfully.');

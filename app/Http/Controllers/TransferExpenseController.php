@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\TransferExpense;
 use App\Models\Transfer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TransferExpenseController extends Controller
 {
     public function store(Request $request, Transfer $transfer)
     {
+        Gate::authorize('update', $transfer);
+
         $validated = $request->validate([
             'booking_id' => 'required|exists:bookings,id',
             'category' => 'required|in:lodge,guide_vehicle,park_entry,misc',
@@ -27,6 +30,8 @@ class TransferExpenseController extends Controller
 
     public function update(Request $request, TransferExpense $transferExpense)
     {
+        Gate::authorize('update', $transferExpense->transfer);
+
         $validated = $request->validate([
             'booking_id' => 'required|exists:bookings,id',
             'category' => 'required|in:lodge,guide_vehicle,park_entry,misc',
@@ -44,6 +49,8 @@ class TransferExpenseController extends Controller
 
     public function destroy(TransferExpense $transferExpense)
     {
+        Gate::authorize('update', $transferExpense->transfer);
+
         $transfer = $transferExpense->transfer;
         $transferExpense->delete();
         $transfer->recalculateTotal();

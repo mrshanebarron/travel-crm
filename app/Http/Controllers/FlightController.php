@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Flight;
 use App\Models\Traveler;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class FlightController extends Controller
 {
     public function store(Request $request, Traveler $traveler)
     {
+        Gate::authorize('update', $traveler->group->booking);
+
         $validated = $request->validate([
             'type' => 'required|in:arrival,departure',
             'airport' => 'required|string|max:255',
@@ -28,6 +31,8 @@ class FlightController extends Controller
 
     public function update(Request $request, Flight $flight)
     {
+        Gate::authorize('update', $flight->traveler->group->booking);
+
         $validated = $request->validate([
             'type' => 'required|in:arrival,departure',
             'airport' => 'required|string|max:255',
@@ -46,6 +51,8 @@ class FlightController extends Controller
 
     public function destroy(Flight $flight)
     {
+        Gate::authorize('update', $flight->traveler->group->booking);
+
         $flight->delete();
 
         return redirect()->back()->with('success', 'Flight removed successfully.');

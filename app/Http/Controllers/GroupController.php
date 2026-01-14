@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Group;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class GroupController extends Controller
 {
     public function store(Request $request, Booking $booking)
     {
+        $this->authorize('update', $booking);
+
         // Get the next group number for this booking
         $nextGroupNumber = $booking->groups()->max('group_number') + 1;
 
@@ -23,6 +26,8 @@ class GroupController extends Controller
 
     public function destroy(Group $group)
     {
+        Gate::authorize('update', $group->booking);
+
         $booking = $group->booking;
 
         // Delete all travelers in the group first

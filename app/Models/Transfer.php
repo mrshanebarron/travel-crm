@@ -49,6 +49,25 @@ class Transfer extends Model
         return $this->hasMany(TransferExpense::class);
     }
 
+    /**
+     * Get both tasks associated with this transfer.
+     */
+    public function tasks()
+    {
+        return Task::whereIn('id', array_filter([
+            $this->transfer_task_id,
+            $this->vendor_task_id,
+        ]));
+    }
+
+    /**
+     * Get unique bookings associated with this transfer through expenses.
+     */
+    public function getBookingsAttribute()
+    {
+        return Booking::whereIn('id', $this->expenses()->pluck('booking_id')->unique())->get();
+    }
+
     public function recalculateTotal(): void
     {
         $this->update([

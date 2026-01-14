@@ -6,12 +6,15 @@ use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
     public function store(Request $request, Booking $booking)
     {
+        $this->authorize('update', $booking);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'file' => 'required|file|max:10240', // 10MB max
@@ -40,11 +43,15 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
+        Gate::authorize('view', $document->booking);
+
         return Storage::disk('public')->download($document->file_path, $document->name);
     }
 
     public function destroy(Document $document)
     {
+        Gate::authorize('update', $document->booking);
+
         Storage::disk('public')->delete($document->file_path);
         $document->delete();
 

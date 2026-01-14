@@ -8,8 +8,12 @@ use App\Models\Traveler;
 use App\Models\SafariDay;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\SafariPdfParser;
+use App\Exports\SelectedBookingsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BookingController extends Controller
 {
@@ -108,15 +112,20 @@ class BookingController extends Controller
             'groups.travelers.flights',
             'groups.travelers.payment',
             'safariDays',
-            'tasks',
+            'tasks.assignedTo',
             'documents',
             'rooms',
             'activityLogs.user',
             'ledgerEntries',
             'creator',
+            'emailLogs.traveler',
+            'emailLogs.sender',
         ]);
 
-        return view('bookings.show', compact('booking'));
+        // Get all users for task assignment dropdown
+        $users = User::orderBy('name')->get();
+
+        return view('bookings.show', compact('booking', 'users'));
     }
 
     public function edit(Booking $booking)
@@ -209,22 +218,180 @@ class BookingController extends Controller
 
     public function importPdf(Request $request, Booking $booking)
     {
+        $this->authorize('update', $booking);
+
         $request->validate([
             'pdf' => 'required|file|mimes:pdf|max:10240',
         ]);
 
         // Store the uploaded PDF
         $path = $request->file('pdf')->store('safari-pdfs', 'local');
+        $fullPath = Storage::disk('local')->path($path);
 
-        // For now, we'll add a placeholder message. PDF parsing to be implemented.
-        // The Safari Office PDF format has been analyzed and can be parsed for:
-        // - Day-by-day itinerary
-        // - Accommodations
-        // - Activities
-        // - Meal plans
+        try {
+            $parser = new SafariPdfParser();
+            $parsedDays = $parser->parse($fullPath);
 
-        return redirect()->route('bookings.show', $booking)
-            ->with('info', 'PDF uploaded. Automatic parsing coming soon - please enter itinerary manually for now.');
+            if (empty($parsedDays)) {
+                // Store file as document for manual review
+                $booking->documents()->create([
+                    'filename' => $request->file('pdf')->getClientOriginalName(),
+                    'path' => $path,
+                    'category' => 'Miscellaneous',
+                    'uploaded_by' => auth()->id(),
+                ]);
+
+                // Log activity
+                $booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action' => 'pdf_imported',
+                    'description' => 'PDF uploaded but could not be parsed automatically. Saved for manual review.',
+                ]);
+
+                return redirect()->route('bookings.show', $booking)
+                    ->with('warning', 'PDF uploaded but we could not extract itinerary data automatically. The file has been saved to Documents for manual review.');
+            }
+
+            // Get existing safari days
+            $existingDays = $booking->safariDays()->orderBy('day_number')->get()->keyBy('day_number');
+            $updatedCount = 0;
+
+            DB::transaction(function () use ($parsedDays, $booking, $existingDays, &$updatedCount) {
+                foreach ($parsedDays as $dayData) {
+                    $dayNumber = $dayData['day_number'];
+
+                    if ($existingDays->has($dayNumber)) {
+                        // Update existing day - only fill in empty fields
+                        $existingDay = $existingDays[$dayNumber];
+                        $updates = [];
+
+                        if (empty($existingDay->location) && !empty($dayData['location'])) {
+                            $updates['location'] = $dayData['location'];
+                        }
+                        if (empty($existingDay->lodge) && !empty($dayData['lodge'])) {
+                            $updates['lodge'] = $dayData['lodge'];
+                        }
+                        if (empty($existingDay->morning_activity) && !empty($dayData['morning_activity'])) {
+                            $updates['morning_activity'] = $dayData['morning_activity'];
+                        }
+                        if (empty($existingDay->midday_activity) && !empty($dayData['midday_activity'])) {
+                            $updates['midday_activity'] = $dayData['midday_activity'];
+                        }
+                        if (empty($existingDay->afternoon_activity) && !empty($dayData['afternoon_activity'])) {
+                            $updates['afternoon_activity'] = $dayData['afternoon_activity'];
+                        }
+                        if (empty($existingDay->other_activities) && !empty($dayData['other_activities'])) {
+                            $updates['other_activities'] = $dayData['other_activities'];
+                        }
+                        if (empty($existingDay->meal_plan) && !empty($dayData['meal_plan'])) {
+                            $updates['meal_plan'] = $dayData['meal_plan'];
+                        }
+                        if (empty($existingDay->drink_plan) && !empty($dayData['drink_plan'])) {
+                            $updates['drink_plan'] = $dayData['drink_plan'];
+                        }
+
+                        if (!empty($updates)) {
+                            $existingDay->update($updates);
+                            $updatedCount++;
+                        }
+                    }
+                }
+            });
+
+            // Store the PDF as a document
+            $booking->documents()->create([
+                'filename' => $request->file('pdf')->getClientOriginalName(),
+                'path' => $path,
+                'category' => 'Miscellaneous',
+                'uploaded_by' => auth()->id(),
+            ]);
+
+            // Log activity
+            $booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action' => 'pdf_imported',
+                'description' => "Safari Office PDF imported. {$updatedCount} days updated with itinerary data.",
+            ]);
+
+            return redirect()->route('bookings.show', $booking)
+                ->with('success', "PDF imported successfully! {$updatedCount} safari days were updated with itinerary information.");
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('PDF import failed', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Still save the file for manual review
+            $booking->documents()->create([
+                'filename' => $request->file('pdf')->getClientOriginalName(),
+                'path' => $path,
+                'category' => 'Miscellaneous',
+                'uploaded_by' => auth()->id(),
+            ]);
+
+            return redirect()->route('bookings.show', $booking)
+                ->with('warning', 'There was an issue parsing the PDF automatically. The file has been saved to Documents for manual review.');
+        }
+    }
+
+    /**
+     * Export selected bookings to Excel.
+     */
+    public function bulkExport(Request $request)
+    {
+        $request->validate([
+            'booking_ids' => 'required|string',
+        ]);
+
+        $ids = array_filter(explode(',', $request->booking_ids));
+
+        if (empty($ids)) {
+            return back()->with('error', 'No bookings selected for export.');
+        }
+
+        // Check authorization for each booking
+        $bookings = Booking::whereIn('id', $ids)->get();
+        foreach ($bookings as $booking) {
+            $this->authorize('view', $booking);
+        }
+
+        return Excel::download(new SelectedBookingsExport($ids), 'selected-bookings-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    /**
+     * Update status of multiple bookings.
+     */
+    public function bulkStatus(Request $request)
+    {
+        $request->validate([
+            'booking_ids' => 'required|string',
+            'status' => 'required|in:upcoming,active,completed',
+        ]);
+
+        $ids = array_filter(explode(',', $request->booking_ids));
+
+        if (empty($ids)) {
+            return back()->with('error', 'No bookings selected.');
+        }
+
+        $bookings = Booking::whereIn('id', $ids)->get();
+        $updatedCount = 0;
+
+        foreach ($bookings as $booking) {
+            $this->authorize('update', $booking);
+            $booking->update(['status' => $request->status]);
+            $updatedCount++;
+        }
+
+        $statusLabels = [
+            'upcoming' => 'Upcoming',
+            'active' => 'Active',
+            'completed' => 'Completed',
+        ];
+
+        return back()->with('success', "{$updatedCount} booking(s) marked as {$statusLabels[$request->status]}.");
     }
 
     /**

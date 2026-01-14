@@ -10,7 +10,7 @@
                     name="q"
                     value="{{ request('q') }}"
                     placeholder="Search bookings, travelers..."
-                    class="pl-10 pr-4 py-2 w-80 border border-slate-200 rounded-lg focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                    class="pl-10 pr-4 py-2 w-80 border border-slate-200 rounded-lg focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none"
                 />
             </form>
         </div>

@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\SafariDay;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class SafariDayController extends Controller
 {
     public function update(Request $request, SafariDay $safariDay)
     {
+        Gate::authorize('update', $safariDay->booking);
+
         $validated = $request->validate([
             'location' => 'required|string|max:255',
             'lodge' => 'nullable|string|max:255',

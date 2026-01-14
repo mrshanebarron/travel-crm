@@ -35,7 +35,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="country" class="block text-sm font-medium text-slate-700 mb-1">Country</label>
-                                <select name="country" id="country" class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                <select name="country" id="country" class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                     <option value="">Select a country</option>
                                     <option value="Tanzania" {{ old('country') === 'Tanzania' ? 'selected' : '' }}>Tanzania</option>
                                     <option value="Kenya" {{ old('country') === 'Kenya' ? 'selected' : '' }}>Kenya</option>
@@ -54,13 +54,13 @@
                             <div>
                                 <label for="start_date" class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
                                 <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}"
-                                    class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                    class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                             </div>
 
                             <div>
                                 <label for="end_date" class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
                                 <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}"
-                                    class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                    class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                             </div>
                         </div>
                     </div>
@@ -92,31 +92,31 @@
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
                                         <input type="text" :name="'travelers[' + index + '][first_name]'" x-model="traveler.first_name"
-                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
                                         <input type="text" :name="'travelers[' + index + '][last_name]'" x-model="traveler.last_name"
-                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
                                         <input type="email" :name="'travelers[' + index + '][email]'" x-model="traveler.email"
-                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
                                         <input type="text" :name="'travelers[' + index + '][phone]'" x-model="traveler.phone"
-                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
                                         <input type="date" :name="'travelers[' + index + '][dob]'" x-model="traveler.dob"
-                                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500">
+                                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
                                     </div>
                                 </div>
                             </div>

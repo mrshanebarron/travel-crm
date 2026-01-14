@@ -6,11 +6,14 @@ use App\Models\ActivityLog;
 use App\Models\LedgerEntry;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class LedgerEntryController extends Controller
 {
     public function store(Request $request, Booking $booking)
     {
+        $this->authorize('update', $booking);
+
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'nullable|string|max:255',
@@ -75,6 +78,8 @@ class LedgerEntryController extends Controller
 
     public function destroy(LedgerEntry $ledgerEntry)
     {
+        Gate::authorize('update', $ledgerEntry->booking);
+
         $booking = $ledgerEntry->booking;
         $ledgerEntry->delete();
 
