@@ -1,0 +1,90 @@
+# Safari CRM - Project Context
+
+## Client: Dr. Matthew Jensen / Tapestry of Africa
+
+**Company:** Tapestry of Africa (Safari Company)
+**Location:** Arizona, USA
+**Website:** tapestryofafrica.com
+**Upwork Job:** #481 (Custom Safari Booking CRM)
+
+### Background Story (ABC 15 News Segment)
+
+Dr. Matthew Jensen is a dentist from Arizona who first visited East Africa 5 years ago. He set up a mobile dental clinic with 3 other providers:
+- **Year 1:** Treated 500 patients
+- **Year 2:** Doubled to 1,000+ patients
+
+The need was massive - dental care in remote villages is "almost non-existent." They were removing diseased teeth and ending pain people had lived with for years.
+
+**The Problem:** The cost of continuing care was unsustainable through donations alone.
+
+**The Solution:** Dr. Jensen launched **Tapestry of Africa** - a safari company where **every trip funds dental care** for the communities they visit.
+
+### Business Model
+
+- Premium safari experiences in Kenya and Uganda
+- Approximately $25,000/person trips
+- Every safari funds permanent dental clinics in remote villages
+- "Wanderlust with a purpose" - adventure tourism meets humanitarian impact
+- Travelers see the communities they're helping (children waving, visiting clinics)
+
+### What They've Built
+
+- Started with mobile dental clinics
+- Now building **permanent dental clinics and facilities** in the areas that need them
+- Multi-generational family trips (example: mother booking for twins to show them "lasting impact of giving back")
+
+### Why This CRM Matters
+
+This is an **enterprise-grade booking system** for a high-stakes operation:
+- $326K+ spent on Upwork (serious client)
+- Complex multi-group safari bookings
+- Vendor payment tracking (lodges, guides, flights, park fees)
+- Financial ledger for payment schedules (25% deposit, 25% at 90 days, 50% at 45 days)
+- Document management for travel logistics
+- The CRM helps run a business that literally funds healthcare in East Africa
+
+### Key Quote
+
+> "It started as a mission to end pain. But what he's now built is bringing smiles to faces all across the globe and showing just how far compassion can travel."
+
+---
+
+## Technical Notes
+
+- **Stack:** Laravel 11, Blade components, Vite (NO CDN)
+- **Local Dev:** Laravel Herd
+- **Database:** MySQL (NEVER SQLite for deployment)
+- **Deployment:** Git-based (NEVER rsync for Laravel)
+
+## Audit Status
+
+### Initial Audit (January 13, 2026)
+All 8 audit items from gap analysis completed:
+- Dashboard cleanup ✓
+- Ledger category dropdowns ✓
+- Document categories ✓
+- Room age breakdown ✓
+- Safari Plan fields ✓
+- Room assignment per group ✓
+- Arrival/Departure by group ✓
+- Activity Log auto-logging ✓
+
+### Second Pass Audit (January 13, 2026)
+Deep review against 19-page spec - additional improvements:
+- **Master Checklist**: Now auto-populates 22 default tasks when booking created (payment reminders, document collection, vendor confirmations, pre/post-trip tasks)
+- **Transfer Workflow**: Auto-creates tasks when status changes:
+  - Draft → Sent: Creates "Make transfer" task
+  - Sent → Transfer Completed: Marks task 1 complete, creates "Make vendor payments" task
+  - Transfer Completed → Vendor Payments Complete: Marks task 2 complete, auto-posts ledger entries
+- **Transfer Booking Dropdown**: Now shows "Last Name, First Name (Start Date)" format per spec
+- **Transfer Expense Description**: Added accessor for proper ledger entry descriptions
+- **Transfer Show Page**: Added "Associated Tasks" section to track workflow progress
+- **UI Consistency**: Updated all teal focus colors to orange across transfer views
+
+### Security & Code Quality Pass (January 13, 2026)
+Based on external audit feedback:
+- **XSS Fix**: Changed `{!! json_encode() !!}` to `@json()` in bookings/edit.blade.php
+- **Authorization Policies**: Added BookingPolicy and TransferPolicy
+  - Bookings: Can't delete if payments received, no force delete
+  - Transfers: Can't modify completed transfers, can only delete drafts
+- **Config Externalization**: Moved default task list to `config/booking_tasks.php`

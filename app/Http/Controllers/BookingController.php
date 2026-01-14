@@ -6,11 +6,18 @@ use App\Models\Booking;
 use App\Models\Group;
 use App\Models\Traveler;
 use App\Models\SafariDay;
+use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Booking::class, 'booking');
+    }
+
     public function index(Request $request)
     {
         $query = Booking::with(['groups.travelers', 'creator']);
@@ -82,6 +89,9 @@ class BookingController extends Controller
                     'location' => '',
                 ]);
             }
+
+            // Auto-populate Master Checklist with default tasks
+            $this->createDefaultTasks($booking);
 
             return $booking;
         });
@@ -208,5 +218,41 @@ class BookingController extends Controller
 
         return redirect()->route('bookings.show', $booking)
             ->with('info', 'PDF uploaded. Automatic parsing coming soon - please enter itinerary manually for now.');
+    }
+
+    /**
+     * Create default tasks for a new booking based on the Master Checklist template.
+     * Tasks are triggered based on timing relative to the safari start date.
+     */
+    private function createDefaultTasks(Booking $booking): void
+    {
+        $defaultTasks = config('booking_tasks.default_tasks', []);
+
+        $safariStartDate = $booking->start_date;
+        $safariEndDate = $booking->end_date;
+
+        foreach ($defaultTasks as $taskData) {
+            $dueDate = null;
+
+            if (!empty($taskData['on_create'])) {
+                $dueDate = now()->addDays(1);
+            } elseif (!empty($taskData['days_before'])) {
+                $dueDate = $safariStartDate->copy()->subDays($taskData['days_before']);
+                // Don't create tasks with due dates in the past
+                if ($dueDate->lt(now())) {
+                    $dueDate = now();
+                }
+            } elseif (!empty($taskData['days_after'])) {
+                $dueDate = $safariEndDate->copy()->addDays($taskData['days_after']);
+            }
+
+            $booking->tasks()->create([
+                'name' => $taskData['name'],
+                'status' => 'pending',
+                'due_date' => $dueDate,
+                'days_before_safari' => $taskData['days_before'] ?? null,
+                'assigned_by' => auth()->id(),
+            ]);
+        }
     }
 }

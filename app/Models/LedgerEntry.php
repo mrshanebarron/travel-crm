@@ -16,6 +16,9 @@ class LedgerEntry extends Model
         'balance',
         'transfer_expense_id',
         'created_by',
+        'received_category',
+        'paid_category',
+        'vendor_name',
     ];
 
     protected $casts = [

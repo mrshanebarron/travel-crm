@@ -15,6 +15,8 @@ class Flight extends Model
         'date',
         'time',
         'notes',
+        'pickup_instructions',
+        'dropoff_instructions',
     ];
 
     protected $casts = [

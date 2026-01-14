@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\Booking;
 use Illuminate\Http\Request;
@@ -14,17 +15,25 @@ class DocumentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'file' => 'required|file|max:10240', // 10MB max
-            'category' => 'required|in:flight,lodge,passport,misc',
+            'category' => 'required|in:lodge,arrival_departure_flight,internal_flight,passport,safari_guide_invoice,misc',
         ]);
 
         $path = $request->file('file')->store('documents/' . $booking->id, 'public');
 
-        $booking->documents()->create([
+        $document = $booking->documents()->create([
             'name' => $validated['name'],
             'file_path' => $path,
             'category' => $validated['category'],
             'uploaded_by' => auth()->id(),
         ]);
+
+        ActivityLog::logAction(
+            $booking->id,
+            'document_uploaded',
+            "Uploaded document: {$validated['name']} ({$validated['category']})",
+            'Document',
+            $document->id
+        );
 
         return redirect()->back()->with('success', 'Document uploaded successfully.');
     }

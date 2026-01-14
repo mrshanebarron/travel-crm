@@ -183,7 +183,7 @@
     <script>
         function bookingEditForm() {
             return {
-                travelers: {!! json_encode($travelersJson) !!},
+                travelers: @json($travelersJson),
                 addTraveler() {
                     this.travelers.push({ id: '', first_name: '', last_name: '', email: '', phone: '', dob: '', is_lead: false });
                 },

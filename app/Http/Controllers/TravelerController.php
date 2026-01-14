@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Traveler;
 use App\Models\Group;
 use Illuminate\Http\Request;
@@ -25,6 +26,14 @@ class TravelerController extends Controller
             'is_lead' => false,
             'order' => $maxOrder + 1,
         ]);
+
+        ActivityLog::logAction(
+            $group->booking_id,
+            'traveler_added',
+            "Added traveler: {$traveler->first_name} {$traveler->last_name} to Group {$group->group_number}",
+            'Traveler',
+            $traveler->id
+        );
 
         return redirect()->back()->with('success', 'Traveler added successfully.');
     }

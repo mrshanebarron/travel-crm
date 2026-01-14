@@ -105,17 +105,33 @@
 
             @forelse($booking->groups as $group)
                 <div class="border border-slate-200 rounded-xl mb-6 overflow-hidden">
-                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-semibold text-slate-900">Group {{ $group->group_number }}</h3>
-                            <p class="text-sm text-slate-500">{{ $group->travelers->count() }} traveler(s)</p>
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <div>
+                                <h3 class="font-semibold text-slate-900">Group {{ $group->group_number }}</h3>
+                                <p class="text-sm text-slate-500">{{ $group->travelers->count() }} traveler(s)</p>
+                            </div>
+                            <button type="button" onclick="openAddTravelerModal({{ $group->id }})" class="btn btn-secondary text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                </svg>
+                                Add Traveler
+                            </button>
                         </div>
-                        <button type="button" onclick="openAddTravelerModal({{ $group->id }})" class="btn btn-secondary text-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                            </svg>
-                            Add Traveler
-                        </button>
+                        @if($group->rooms->count() > 0)
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($group->rooms as $room)
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                        </svg>
+                                        {{ $room->display_type }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-400">No rooms assigned to this group</p>
+                        @endif
                     </div>
                     <div class="divide-y divide-slate-200">
                         @forelse($group->travelers as $traveler)
@@ -209,23 +225,29 @@
                                         <span class="text-sm font-medium text-slate-900">{{ $day->lodge }}</span>
                                     </div>
                                 @endif
-                                @if($day->morning_activity || $day->afternoon_activity)
-                                    <div class="ml-13 mt-2 text-sm">
+                                @if($day->morning_activity || $day->midday_activity || $day->afternoon_activity || $day->other_activities)
+                                    <div class="ml-13 mt-2 text-sm space-y-1">
                                         @if($day->morning_activity)
                                             <div class="text-slate-600"><span class="text-slate-500">Morning:</span> {{ $day->morning_activity }}</div>
+                                        @endif
+                                        @if($day->midday_activity)
+                                            <div class="text-slate-600"><span class="text-slate-500">Midday:</span> {{ $day->midday_activity }}</div>
                                         @endif
                                         @if($day->afternoon_activity)
                                             <div class="text-slate-600"><span class="text-slate-500">Afternoon:</span> {{ $day->afternoon_activity }}</div>
                                         @endif
+                                        @if($day->other_activities)
+                                            <div class="text-slate-600"><span class="text-slate-500">Other:</span> {{ $day->other_activities }}</div>
+                                        @endif
                                     </div>
                                 @endif
-                                @if($day->notes)
-                                    <div class="ml-13 mt-2 text-sm text-slate-500 italic">{{ $day->notes }}</div>
-                                @endif
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-col items-end gap-2">
                                 @if($day->meal_plan)
                                     <span class="badge badge-info">{{ $day->meal_plan }}</span>
+                                @endif
+                                @if($day->drink_plan)
+                                    <span class="badge badge-success">{{ $day->drink_plan }}</span>
                                 @endif
                             </div>
                         </div>
@@ -437,69 +459,102 @@
 
         <!-- Arrival/Departure Tab -->
         <div class="tab-content p-6" id="arrival-departure">
-            <h2 class="text-lg font-semibold text-slate-900 mb-6">Flight Details by Traveler</h2>
+            <h2 class="text-lg font-semibold text-slate-900 mb-6">Flight Details by Group</h2>
 
             @foreach($booking->groups as $group)
-                @foreach($group->travelers as $traveler)
-                    <div class="border border-slate-200 rounded-xl mb-6 overflow-hidden">
-                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <div class="border border-slate-200 rounded-xl mb-6 overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <h3 class="font-semibold text-slate-900">{{ $traveler->first_name }} {{ $traveler->last_name }}</h3>
-                                <p class="text-sm text-slate-500">Group {{ $group->group_number }}</p>
-                            </div>
-                            <button type="button" onclick="openAddFlightModal({{ $traveler->id }})" class="btn btn-secondary text-sm">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add Flight
-                            </button>
-                        </div>
-                        <div class="p-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                @foreach($traveler->flights as $flight)
-                                    <div class="p-4 border border-slate-200 rounded-lg {{ $flight->type === 'arrival' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-blue-500' }}">
-                                        <div class="flex justify-between items-start mb-3">
-                                            @if($flight->type === 'arrival')
-                                                <span class="badge badge-success">Arrival</span>
-                                            @else
-                                                <span class="badge badge-info">Departure</span>
-                                            @endif
-                                            <form method="POST" action="{{ route('flights.destroy', $flight) }}" onsubmit="return confirm('Delete this flight?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Remove</button>
-                                            </form>
-                                        </div>
-                                        <div class="space-y-2 text-sm">
-                                            <div class="flex justify-between">
-                                                <span class="text-slate-500">Airport</span>
-                                                <span class="text-slate-900 font-medium">{{ $flight->airport }}</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-slate-500">Flight #</span>
-                                                <span class="text-slate-900 font-medium">{{ $flight->flight_number ?: '-' }}</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-slate-500">Date</span>
-                                                <span class="text-slate-900 font-medium">{{ $flight->date ? $flight->date->format('M j, Y') : '-' }}</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-slate-500">Time</span>
-                                                <span class="text-slate-900 font-medium">{{ $flight->time ?: '-' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-
-                                @if($traveler->flights->count() === 0)
-                                    <div class="col-span-2 text-center py-6 text-slate-500">
-                                        No flight details added for this traveler
-                                    </div>
-                                @endif
+                                <h3 class="font-semibold text-slate-900">Group {{ $group->group_number }}</h3>
+                                <p class="text-sm text-slate-500">{{ $group->travelers->count() }} traveler(s)</p>
                             </div>
                         </div>
                     </div>
-                @endforeach
+
+                    @foreach($group->travelers as $traveler)
+                        <div class="border-b border-slate-100 last:border-b-0">
+                            <div class="px-6 py-4 bg-white">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                            <span class="text-orange-600 font-bold text-sm">
+                                                {{ strtoupper(substr($traveler->first_name, 0, 1) . substr($traveler->last_name, 0, 1)) }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-slate-900">{{ $traveler->first_name }} {{ $traveler->last_name }}</span>
+                                            @if($traveler->is_lead)
+                                                <span class="ml-2 badge badge-orange text-xs">Lead</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="openAddFlightModal({{ $traveler->id }})" class="btn btn-secondary text-sm py-1 px-3">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Flight
+                                    </button>
+                                </div>
+
+                                @if($traveler->flights->count() > 0)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        @foreach($traveler->flights as $flight)
+                                            <div class="p-4 border border-slate-200 rounded-lg {{ $flight->type === 'arrival' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-blue-500' }}">
+                                                <div class="flex justify-between items-start mb-3">
+                                                    @if($flight->type === 'arrival')
+                                                        <span class="badge badge-success">Arrival</span>
+                                                    @else
+                                                        <span class="badge badge-info">Departure</span>
+                                                    @endif
+                                                    <form method="POST" action="{{ route('flights.destroy', $flight) }}" onsubmit="return confirm('Delete this flight?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Remove</button>
+                                                    </form>
+                                                </div>
+                                                <div class="space-y-2 text-sm">
+                                                    <div class="flex justify-between">
+                                                        <span class="text-slate-500">Airport</span>
+                                                        <span class="text-slate-900 font-medium">{{ $flight->airport }}</span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-slate-500">Flight #</span>
+                                                        <span class="text-slate-900 font-medium">{{ $flight->flight_number ?: '-' }}</span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-slate-500">Date</span>
+                                                        <span class="text-slate-900 font-medium">{{ $flight->date ? $flight->date->format('M j, Y') : '-' }}</span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-slate-500">Time</span>
+                                                        <span class="text-slate-900 font-medium">{{ $flight->time ?: '-' }}</span>
+                                                    </div>
+                                                </div>
+                                                @if($flight->pickup_instructions || $flight->dropoff_instructions)
+                                                    <div class="mt-3 pt-3 border-t border-slate-200 text-xs">
+                                                        @if($flight->type === 'arrival' && $flight->pickup_instructions)
+                                                            <div class="text-slate-600">
+                                                                <span class="font-medium text-slate-500">Pickup:</span> {{ $flight->pickup_instructions }}
+                                                            </div>
+                                                        @endif
+                                                        @if($flight->type === 'departure' && $flight->dropoff_instructions)
+                                                            <div class="text-slate-600">
+                                                                <span class="font-medium text-slate-500">Dropoff:</span> {{ $flight->dropoff_instructions }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-sm text-slate-400 italic">No flight details added</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             @endforeach
         </div>
 
@@ -520,12 +575,12 @@
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Category</label>
                         <select name="category" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                            <option value="flight">Flight</option>
-                            <option value="lodge">Lodge</option>
+                            <option value="lodge">Lodges/Camps</option>
+                            <option value="arrival_departure_flight">Arrival/Departure Flight</option>
+                            <option value="internal_flight">Internal Flights</option>
                             <option value="passport">Passport</option>
-                            <option value="visa">Visa</option>
-                            <option value="insurance">Insurance</option>
-                            <option value="misc">Other</option>
+                            <option value="safari_guide_invoice">Safari Guide Invoices</option>
+                            <option value="misc">Miscellaneous</option>
                         </select>
                     </div>
                     <div>
@@ -554,7 +609,17 @@
                                         <a href="{{ route('documents.download', $doc) }}" class="font-medium text-orange-600 hover:text-orange-800">
                                             {{ $doc->name }}
                                         </a>
-                                        <div class="text-xs text-slate-500">{{ ucfirst($doc->category) }}</div>
+                                        @php
+                                            $categoryLabels = [
+                                                'lodge' => 'Lodges/Camps',
+                                                'arrival_departure_flight' => 'Arrival/Departure Flight',
+                                                'internal_flight' => 'Internal Flights',
+                                                'passport' => 'Passport',
+                                                'safari_guide_invoice' => 'Safari Guide Invoices',
+                                                'misc' => 'Miscellaneous',
+                                            ];
+                                        @endphp
+                                        <div class="text-xs text-slate-500">{{ $categoryLabels[$doc->category] ?? ucfirst($doc->category) }}</div>
                                     </div>
                                 </div>
                                 <form method="POST" action="{{ route('documents.destroy', $doc) }}" onsubmit="return confirm('Delete this document?')">
@@ -583,27 +648,52 @@
             </div>
 
             <!-- Add Entry Form -->
-            <form method="POST" action="{{ route('ledger-entries.store', $booking) }}" class="mb-6 p-4 bg-slate-50 rounded-xl">
+            <form method="POST" action="{{ route('ledger-entries.store', $booking) }}" class="mb-6 p-4 bg-slate-50 rounded-xl" id="ledger-entry-form">
                 @csrf
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Date</label>
                         <input type="date" name="date" value="{{ date('Y-m-d') }}" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Description</label>
-                        <input type="text" name="description" placeholder="Description" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                    </div>
-                    <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type</label>
-                        <select name="type" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                        <select name="type" id="ledger-type" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required onchange="toggleLedgerFields()">
                             <option value="received">Received</option>
                             <option value="paid">Paid</option>
                         </select>
                     </div>
+                    <div id="received-category-field">
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Payment Type</label>
+                        <select name="received_category" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="deposit">Deposit (25%)</option>
+                            <option value="90_day">90-Day Payment (25%)</option>
+                            <option value="45_day">45-Day Payment (50%)</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div id="paid-category-field" class="hidden">
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Expense Category</label>
+                        <select name="paid_category" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="lodge">Lodge/Camp</option>
+                            <option value="transport">Transport</option>
+                            <option value="flights">Internal Flights</option>
+                            <option value="park_fees">Park Fees</option>
+                            <option value="guide">Safari Guide</option>
+                            <option value="meals">Meals</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div id="vendor-field" class="hidden">
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Vendor Name</label>
+                        <input type="text" name="vendor_name" placeholder="Vendor name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</label>
                         <input type="number" name="amount" placeholder="0.00" step="0.01" min="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes</label>
+                        <input type="text" name="description" placeholder="Optional notes" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                     </div>
                     <div>
                         <button type="submit" class="btn btn-primary w-full">Add Entry</button>
@@ -689,7 +779,7 @@
             <!-- Add Room Form -->
             <form method="POST" action="{{ route('rooms.store', $booking) }}" class="mb-6 p-4 bg-slate-50 rounded-xl">
                 @csrf
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Room Type</label>
                         <select name="type" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
@@ -697,15 +787,33 @@
                             <option value="single">Single</option>
                             <option value="triple">Triple</option>
                             <option value="family">Family</option>
+                            <option value="other">Other</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Adults</label>
-                        <input type="number" name="adults" placeholder="2" min="1" max="6" value="2" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Assign to Group</label>
+                        <select name="group_id" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">-- Unassigned --</option>
+                            @foreach($booking->groups as $grp)
+                                <option value="{{ $grp->id }}">Group {{ $grp->group_number }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Children</label>
-                        <input type="number" name="children" placeholder="0" min="0" max="6" value="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Adults (18+)</label>
+                        <input type="number" name="adults" placeholder="2" min="0" max="6" value="2" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Children 12-17</label>
+                        <input type="number" name="children_12_17" placeholder="0" min="0" max="6" value="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Children 2-11</label>
+                        <input type="number" name="children_2_11" placeholder="0" min="0" max="6" value="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Under 2</label>
+                        <input type="number" name="children_under_2" placeholder="0" min="0" max="6" value="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                     </div>
                     <div>
                         <button type="submit" class="btn btn-primary w-full">Add Room</button>
@@ -718,7 +826,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($booking->rooms as $room)
                         <div class="border border-slate-200 rounded-xl p-4">
-                            <div class="flex items-start justify-between">
+                            <div class="flex items-start justify-between mb-3">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                                         <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -727,7 +835,16 @@
                                     </div>
                                     <div>
                                         <div class="font-medium text-slate-900">{{ $room->display_type }}</div>
-                                        <div class="text-sm text-slate-500">{{ $room->adults }} adult(s){{ $room->children ? ', ' . $room->children . ' child(ren)' : '' }}</div>
+                                        <div class="text-sm text-slate-500">{{ $room->total_occupants }} occupant(s)</div>
+                                        @if($room->group)
+                                            <span class="inline-block mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-medium">
+                                                Group {{ $room->group->group_number }}
+                                            </span>
+                                        @else
+                                            <span class="inline-block mt-1 px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">
+                                                Unassigned
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                                 <form method="POST" action="{{ route('rooms.destroy', $room) }}">
@@ -735,6 +852,30 @@
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Remove</button>
                                 </form>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Adults (18+):</span>
+                                    <span class="text-slate-700 font-medium">{{ $room->adults }}</span>
+                                </div>
+                                @if($room->children_12_17 > 0)
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Children 12-17:</span>
+                                        <span class="text-slate-700 font-medium">{{ $room->children_12_17 }}</span>
+                                    </div>
+                                @endif
+                                @if($room->children_2_11 > 0)
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Children 2-11:</span>
+                                        <span class="text-slate-700 font-medium">{{ $room->children_2_11 }}</span>
+                                    </div>
+                                @endif
+                                @if($room->children_under_2 > 0)
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Under 2:</span>
+                                        <span class="text-slate-700 font-medium">{{ $room->children_under_2 }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @endforeach
@@ -774,23 +915,38 @@
                 @forelse($booking->activityLogs->sortByDesc('created_at') as $log)
                     <div class="flex gap-4">
                         <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                <span class="text-orange-600 font-semibold text-sm">
-                                    {{ strtoupper(substr($log->user->name ?? 'S', 0, 1)) }}
-                                </span>
-                            </div>
+                            @if($log->action_type === 'manual')
+                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                    <span class="text-orange-600 font-semibold text-sm">
+                                        {{ strtoupper(substr($log->user->name ?? 'S', 0, 1)) }}
+                                    </span>
+                                </div>
+                            @else
+                                <div class="w-10 h-10 {{ $log->action_color }} rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $log->action_icon }}" />
+                                    </svg>
+                                </div>
+                            @endif
                         </div>
                         <div class="flex-1 bg-white border border-slate-200 rounded-xl p-4">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <div class="font-medium text-slate-900">{{ $log->user->name ?? 'System' }}</div>
+                                    <div class="font-medium text-slate-900">
+                                        {{ $log->user->name ?? 'System' }}
+                                        @if($log->action_type !== 'manual')
+                                            <span class="ml-2 text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Auto</span>
+                                        @endif
+                                    </div>
                                     <div class="text-xs text-slate-500">{{ $log->created_at->format('M j, Y g:i A') }} ({{ $log->created_at->diffForHumans() }})</div>
                                 </div>
-                                <form method="POST" action="{{ route('activity-logs.destroy', $log) }}" onsubmit="return confirm('Delete this note?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
-                                </form>
+                                @if($log->action_type === 'manual')
+                                    <form method="POST" action="{{ route('activity-logs.destroy', $log) }}" onsubmit="return confirm('Delete this note?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
+                                    </form>
+                                @endif
                             </div>
                             <div class="mt-2 text-slate-700">{{ $log->notes }}</div>
                         </div>
@@ -800,7 +956,7 @@
                         <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p>No activity notes yet</p>
+                        <p>No activity yet</p>
                     </div>
                 @endforelse
             </div>
@@ -851,33 +1007,45 @@
 
     <!-- Add Flight Modal -->
     <div id="add-flight-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg">
             <h3 class="text-lg font-semibold text-slate-900 mb-4">Add Flight</h3>
             <form id="add-flight-form" method="POST">
                 @csrf
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type</label>
-                        <select name="type" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                            <option value="arrival">Arrival</option>
-                            <option value="departure">Departure</option>
-                        </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type</label>
+                            <select name="type" id="flight-type-select" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required onchange="toggleFlightInstructions()">
+                                <option value="arrival">Arrival</option>
+                                <option value="departure">Departure</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Airport</label>
+                            <input type="text" name="airport" placeholder="e.g., JRO" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Airport</label>
-                        <input type="text" name="airport" placeholder="e.g., JRO" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Flight Number</label>
-                        <input type="text" name="flight_number" placeholder="e.g., KQ 100" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Date</label>
-                        <input type="date" name="date" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Flight Number</label>
+                            <input type="text" name="flight_number" placeholder="e.g., KQ 100" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Date</label>
+                            <input type="date" name="date" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                        </div>
                     </div>
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Time</label>
                         <input type="time" name="time" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div id="pickup-instructions-field">
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Pickup Instructions</label>
+                        <textarea name="pickup_instructions" rows="2" placeholder="Where to pick up the traveler, vehicle details, driver contact, etc." class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"></textarea>
+                    </div>
+                    <div id="dropoff-instructions-field" class="hidden">
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Dropoff Instructions</label>
+                        <textarea name="dropoff_instructions" rows="2" placeholder="Where to drop off the traveler, special instructions, etc." class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"></textarea>
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
@@ -969,5 +1137,38 @@
                 }
             });
         });
+
+        // Toggle ledger form fields based on type
+        function toggleLedgerFields() {
+            const type = document.getElementById('ledger-type').value;
+            const receivedField = document.getElementById('received-category-field');
+            const paidField = document.getElementById('paid-category-field');
+            const vendorField = document.getElementById('vendor-field');
+
+            if (type === 'received') {
+                receivedField.classList.remove('hidden');
+                paidField.classList.add('hidden');
+                vendorField.classList.add('hidden');
+            } else {
+                receivedField.classList.add('hidden');
+                paidField.classList.remove('hidden');
+                vendorField.classList.remove('hidden');
+            }
+        }
+
+        // Toggle flight pickup/dropoff instructions based on type
+        function toggleFlightInstructions() {
+            const type = document.getElementById('flight-type-select').value;
+            const pickupField = document.getElementById('pickup-instructions-field');
+            const dropoffField = document.getElementById('dropoff-instructions-field');
+
+            if (type === 'arrival') {
+                pickupField.classList.remove('hidden');
+                dropoffField.classList.add('hidden');
+            } else {
+                pickupField.classList.add('hidden');
+                dropoffField.classList.remove('hidden');
+            }
+        }
     </script>
 </x-app-layout>

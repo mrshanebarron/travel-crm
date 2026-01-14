@@ -27,4 +27,9 @@ class Group extends Model
     {
         return $this->travelers()->where('is_lead', true)->first();
     }
+
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(Room::class);
+    }
 }

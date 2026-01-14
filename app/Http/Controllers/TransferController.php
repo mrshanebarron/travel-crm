@@ -6,11 +6,18 @@ use App\Models\Booking;
 use App\Models\Transfer;
 use App\Models\TransferExpense;
 use App\Models\LedgerEntry;
+use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TransferController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Transfer::class, 'transfer');
+    }
+
     public function index(Request $request)
     {
         $query = Transfer::with(['creator', 'expenses.booking']);
@@ -55,7 +62,10 @@ class TransferController extends Controller
     public function edit(Transfer $transfer)
     {
         $transfer->load(['expenses.booking']);
-        $bookings = Booking::where('status', '!=', 'completed')->orderBy('booking_number')->get();
+        $bookings = Booking::with(['groups.travelers'])
+            ->where('status', '!=', 'completed')
+            ->orderBy('start_date')
+            ->get();
         return view('transfers.edit', compact('transfer', 'bookings'));
     }
 
@@ -73,15 +83,49 @@ class TransferController extends Controller
 
         $oldStatus = $transfer->status;
 
-        // Set timestamps based on status changes
-        if ($validated['status'] === 'sent' && !$transfer->sent_at) {
+        // Set timestamps and create tasks based on status changes
+        if ($validated['status'] === 'sent' && $oldStatus === 'draft') {
             $updateData['sent_at'] = now();
+
+            // Create Task 1: Transfer Execution for Team Member A
+            $transferTask = Task::create([
+                'name' => "Make transfer for {$transfer->transfer_number} ({$transfer->request_date->format('M j, Y')})",
+                'description' => "Transfer Amount: $" . number_format($transfer->total_amount, 2) . "\n\nExpenses:\n" . $this->formatExpensesForTask($transfer),
+                'status' => 'pending',
+                'due_date' => now()->addDays(2),
+                'assigned_by' => auth()->id(),
+            ]);
+
+            $updateData['transfer_task_id'] = $transferTask->id;
         }
-        if ($validated['status'] === 'transfer_completed' && !$transfer->transfer_completed_at) {
+
+        if ($validated['status'] === 'transfer_completed' && $oldStatus === 'sent') {
             $updateData['transfer_completed_at'] = now();
+
+            // Mark Task 1 as completed
+            if ($transfer->transferTask) {
+                $transfer->transferTask->markComplete();
+            }
+
+            // Create Task 2: Vendor Payments for Team Member B
+            $vendorTask = Task::create([
+                'name' => "Make vendor payments from {$transfer->transfer_number} ({$transfer->request_date->format('M j, Y')})",
+                'description' => "Transfer Amount: $" . number_format($transfer->total_amount, 2) . "\n\nVendor Payments Required:\n" . $this->formatExpensesForTask($transfer),
+                'status' => 'pending',
+                'due_date' => now()->addDays(3),
+                'assigned_by' => auth()->id(),
+            ]);
+
+            $updateData['vendor_task_id'] = $vendorTask->id;
         }
-        if ($validated['status'] === 'vendor_payments_completed' && !$transfer->vendor_payments_completed_at) {
+
+        if ($validated['status'] === 'vendor_payments_completed' && $oldStatus === 'transfer_completed') {
             $updateData['vendor_payments_completed_at'] = now();
+
+            // Mark Task 2 as completed
+            if ($transfer->vendorTask) {
+                $transfer->vendorTask->markComplete();
+            }
 
             // Auto-post ledger entries when vendor payments are completed
             // This creates "paid" entries in each booking's ledger
@@ -103,12 +147,16 @@ class TransferController extends Controller
 
                             LedgerEntry::create([
                                 'booking_id' => $expense->booking_id,
-                                'date' => now(),
+                                'date' => $transfer->request_date,
                                 'description' => 'Transfer ' . $transfer->transfer_number . ' - ' . $expense->description,
                                 'type' => 'paid',
                                 'amount' => $expense->amount,
                                 'balance' => $balance,
+                                'transfer_expense_id' => $expense->id,
                             ]);
+
+                            // Mark expense as ledger posted
+                            $expense->update(['ledger_posted' => true]);
                         }
                     }
                 }
@@ -132,5 +180,23 @@ class TransferController extends Controller
 
         return redirect()->route('transfers.index')
             ->with('success', 'Transfer request deleted.');
+    }
+
+    /**
+     * Format expenses for task description.
+     */
+    private function formatExpensesForTask(Transfer $transfer): string
+    {
+        $lines = [];
+        foreach ($transfer->expenses as $expense) {
+            $booking = $expense->booking;
+            $leadTraveler = $booking ? $booking->leadTraveler() : null;
+            $bookingRef = $leadTraveler
+                ? "{$leadTraveler->last_name}, {$leadTraveler->first_name}"
+                : ($booking ? $booking->booking_number : 'Unknown');
+
+            $lines[] = "- {$expense->description}: $" . number_format($expense->amount, 2) . " ({$bookingRef})";
+        }
+        return implode("\n", $lines);
     }
 }

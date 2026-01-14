@@ -1,8 +1,16 @@
 <x-app-layout>
     <!-- Page Title -->
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p class="text-slate-500">Welcome back, {{ Auth::user()->name }}. Here is your booking overview.</p>
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
+            <p class="text-slate-500">Welcome back, {{ Auth::user()->name }}. Here is your booking overview.</p>
+        </div>
+        <a href="{{ route('bookings.create') }}" class="btn btn-primary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            New Booking
+        </a>
     </div>
 
     <!-- Stats Cards - 5 columns -->
@@ -144,45 +152,4 @@
         </table>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="grid grid-cols-3 gap-4">
-        <div class="bg-white rounded-xl border border-slate-200 p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-slate-900">New Booking</h3>
-            </div>
-            <p class="text-sm text-slate-500 mb-4">Create a new safari booking with client details.</p>
-            <a href="{{ route('bookings.create') }}" class="btn btn-primary w-full">Create Booking</a>
-        </div>
-
-        <div class="bg-white rounded-xl border border-slate-200 p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-slate-900">New Transfer</h3>
-            </div>
-            <p class="text-sm text-slate-500 mb-4">Create a new fund transfer request to Kenya.</p>
-            <a href="{{ route('transfers.create') }}" class="btn btn-primary w-full">Create Transfer</a>
-        </div>
-
-        <div class="bg-white rounded-xl border border-slate-200 p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-slate-900">View Tasks</h3>
-            </div>
-            <p class="text-sm text-slate-500 mb-4">Manage pending tasks and assignments.</p>
-            <a href="{{ route('tasks.index') }}" class="btn btn-primary w-full">View Tasks</a>
-        </div>
-    </div>
 </x-app-layout>

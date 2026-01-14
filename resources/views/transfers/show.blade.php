@@ -159,6 +159,76 @@
         @endif
     </div>
 
+    <!-- Associated Tasks -->
+    @if($transfer->transferTask || $transfer->vendorTask)
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-900">Associated Tasks</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    @if($transfer->transferTask)
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center {{ $transfer->transferTask->status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600' }}">
+                                    @if($transfer->transferTask->status === 'completed')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @else
+                                        <span class="text-xs font-bold">1</span>
+                                    @endif
+                                </div>
+                                <div>
+                                    <div class="font-medium text-slate-900">{{ $transfer->transferTask->name }}</div>
+                                    <div class="text-sm text-slate-500">
+                                        @if($transfer->transferTask->status === 'completed')
+                                            Completed {{ $transfer->transferTask->completed_at->format('M j, Y') }}
+                                        @else
+                                            Due {{ $transfer->transferTask->due_date ? $transfer->transferTask->due_date->format('M j, Y') : 'No date set' }}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="badge {{ $transfer->transferTask->status === 'completed' ? 'badge-success' : 'badge-warning' }}">
+                                {{ ucfirst($transfer->transferTask->status) }}
+                            </span>
+                        </div>
+                    @endif
+
+                    @if($transfer->vendorTask)
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center {{ $transfer->vendorTask->status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600' }}">
+                                    @if($transfer->vendorTask->status === 'completed')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @else
+                                        <span class="text-xs font-bold">2</span>
+                                    @endif
+                                </div>
+                                <div>
+                                    <div class="font-medium text-slate-900">{{ $transfer->vendorTask->name }}</div>
+                                    <div class="text-sm text-slate-500">
+                                        @if($transfer->vendorTask->status === 'completed')
+                                            Completed {{ $transfer->vendorTask->completed_at->format('M j, Y') }}
+                                        @else
+                                            Due {{ $transfer->vendorTask->due_date ? $transfer->vendorTask->due_date->format('M j, Y') : 'No date set' }}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="badge {{ $transfer->vendorTask->status === 'completed' ? 'badge-success' : 'badge-warning' }}">
+                                {{ ucfirst($transfer->vendorTask->status) }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Timeline -->
     @if($transfer->sent_at || $transfer->transfer_completed_at || $transfer->vendor_payments_completed_at)
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">

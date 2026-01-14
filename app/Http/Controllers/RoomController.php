@@ -13,6 +13,7 @@ class RoomController extends Controller
         $validated = $request->validate([
             'type' => 'required|in:double,triple,single,family,other',
             'custom_type' => 'nullable|required_if:type,other|string|max:255',
+            'group_id' => 'nullable|exists:groups,id',
             'adults' => 'required|integer|min:0',
             'children_12_17' => 'nullable|integer|min:0',
             'children_2_11' => 'nullable|integer|min:0',

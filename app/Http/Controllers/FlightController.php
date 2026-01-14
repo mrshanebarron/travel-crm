@@ -14,9 +14,11 @@ class FlightController extends Controller
             'type' => 'required|in:arrival,departure',
             'airport' => 'required|string|max:255',
             'flight_number' => 'nullable|string|max:50',
-            'date' => 'required|date',
+            'date' => 'nullable|date',
             'time' => 'nullable|date_format:H:i',
             'notes' => 'nullable|string',
+            'pickup_instructions' => 'nullable|string',
+            'dropoff_instructions' => 'nullable|string',
         ]);
 
         $traveler->flights()->create($validated);
@@ -30,9 +32,11 @@ class FlightController extends Controller
             'type' => 'required|in:arrival,departure',
             'airport' => 'required|string|max:255',
             'flight_number' => 'nullable|string|max:50',
-            'date' => 'required|date',
+            'date' => 'nullable|date',
             'time' => 'nullable|date_format:H:i',
             'notes' => 'nullable|string',
+            'pickup_instructions' => 'nullable|string',
+            'dropoff_instructions' => 'nullable|string',
         ]);
 
         $flight->update($validated);

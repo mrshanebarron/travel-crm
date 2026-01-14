@@ -8,7 +8,7 @@
         </a>
         <div>
             <h1 class="text-2xl font-bold text-slate-900">New Transfer Request</h1>
-            <p class="text-slate-500">Create a new fund transfer to Kenya</p>
+            <p class="text-slate-500">Create a new fund transfer to Tapestry of Africa (Kenya)</p>
         </div>
     </div>
 
@@ -31,7 +31,7 @@
                     <div class="mb-6">
                         <label for="request_date" class="block text-sm font-medium text-slate-700 mb-1">Request Date</label>
                         <input type="date" name="request_date" id="request_date" value="{{ old('request_date', date('Y-m-d')) }}"
-                            class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                         <p class="mt-2 text-sm text-slate-500">The transfer number will be auto-generated</p>
                     </div>
 

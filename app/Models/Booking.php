@@ -102,4 +102,17 @@ class Booking extends Model
 
         return $prefix . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Get display name for dropdowns: "Last Name, First Name (Start Date)"
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        $lead = $this->leadTraveler();
+        $travelerName = $lead
+            ? "{$lead->last_name}, {$lead->first_name}"
+            : $this->booking_number;
+
+        return "{$travelerName} ({$this->start_date->format('M j, Y')})";
+    }
 }

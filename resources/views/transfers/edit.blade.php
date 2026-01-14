@@ -33,12 +33,12 @@
                         <div>
                             <label for="request_date" class="block text-sm font-medium text-slate-700 mb-1">Request Date</label>
                             <input type="date" name="request_date" id="request_date" value="{{ $transfer->request_date->format('Y-m-d') }}"
-                                class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                                class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                         </div>
 
                         <div>
                             <label for="status" class="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                            <select name="status" id="status" class="w-full rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500" required>
+                            <select name="status" id="status" class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                                 <option value="draft" {{ $transfer->status === 'draft' ? 'selected' : '' }}>Draft</option>
                                 <option value="sent" {{ $transfer->status === 'sent' ? 'selected' : '' }}>Sent</option>
                                 <option value="transfer_completed" {{ $transfer->status === 'transfer_completed' ? 'selected' : '' }}>Transfer Completed</option>
@@ -97,29 +97,29 @@
                 <form method="POST" action="{{ route('transfer-expenses.store', $transfer) }}" class="mb-6 p-4 bg-slate-50 rounded-lg">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
-                        <select name="booking_id" class="rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500 @error('booking_id') border-red-500 @enderror" required>
+                        <select name="booking_id" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('booking_id') border-red-500 @enderror" required>
                             <option value="">Select Booking</option>
                             @foreach($bookings as $booking)
-                                <option value="{{ $booking->id }}" {{ old('booking_id') == $booking->id ? 'selected' : '' }}>{{ $booking->booking_number }}</option>
+                                <option value="{{ $booking->id }}" {{ old('booking_id') == $booking->id ? 'selected' : '' }}>{{ $booking->display_name }}</option>
                             @endforeach
                         </select>
-                        <select name="category" class="rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500 @error('category') border-red-500 @enderror" required>
+                        <select name="category" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('category') border-red-500 @enderror" required>
                             <option value="lodge" {{ old('category') == 'lodge' ? 'selected' : '' }}>Lodge</option>
                             <option value="guide_vehicle" {{ old('category') == 'guide_vehicle' ? 'selected' : '' }}>Guide/Vehicle</option>
                             <option value="park_entry" {{ old('category') == 'park_entry' ? 'selected' : '' }}>Park Entry</option>
                             <option value="misc" {{ old('category') == 'misc' ? 'selected' : '' }}>Misc</option>
                         </select>
-                        <input type="text" name="vendor_name" placeholder="Vendor" value="{{ old('vendor_name') }}" class="rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500">
-                        <select name="payment_type" class="rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500 @error('payment_type') border-red-500 @enderror" required>
+                        <input type="text" name="vendor_name" placeholder="Vendor" value="{{ old('vendor_name') }}" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                        <select name="payment_type" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('payment_type') border-red-500 @enderror" required>
                             <option value="deposit" {{ old('payment_type') == 'deposit' ? 'selected' : '' }}>Deposit</option>
                             <option value="final" {{ old('payment_type') == 'final' ? 'selected' : '' }}>Final</option>
                             <option value="other" {{ old('payment_type') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
-                        <input type="number" name="amount" placeholder="Amount" step="0.01" min="0" value="{{ old('amount') }}" class="rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500 @error('amount') border-red-500 @enderror" required>
+                        <input type="number" name="amount" placeholder="Amount" step="0.01" min="0" value="{{ old('amount') }}" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('amount') border-red-500 @enderror" required>
                         <button type="submit" class="btn btn-primary text-sm">Add</button>
                     </div>
                     <div class="mt-3">
-                        <input type="text" name="notes" placeholder="Notes (optional)" value="{{ old('notes') }}" class="w-full rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500">
+                        <input type="text" name="notes" placeholder="Notes (optional)" value="{{ old('notes') }}" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                     </div>
                 </form>
 

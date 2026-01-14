@@ -9,6 +9,7 @@ class Room extends Model
 {
     protected $fillable = [
         'booking_id',
+        'group_id',
         'type',
         'custom_type',
         'adults',
@@ -27,6 +28,11 @@ class Room extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function getTotalOccupantsAttribute(): int

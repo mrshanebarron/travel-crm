@@ -37,4 +37,23 @@ class TransferExpense extends Model
     {
         return $this->hasOne(LedgerEntry::class);
     }
+
+    /**
+     * Get a formatted description for ledger entries.
+     */
+    public function getDescriptionAttribute(): string
+    {
+        $categoryLabels = [
+            'lodge' => 'Lodge/Camp',
+            'guide_vehicle' => 'Guide/Vehicle',
+            'park_entry' => 'Park Entry & Activities',
+            'misc' => 'Miscellaneous',
+        ];
+
+        $category = $categoryLabels[$this->category] ?? ucfirst($this->category);
+        $vendor = $this->vendor_name ? " - {$this->vendor_name}" : '';
+        $paymentType = $this->payment_type ? " ({$this->payment_type})" : '';
+
+        return "{$category}{$vendor}{$paymentType}";
+    }
 }
