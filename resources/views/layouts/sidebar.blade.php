@@ -1,7 +1,7 @@
 <aside class="w-64 sidebar fixed h-screen">
     <div class="p-6">
-        <div class="flex items-center gap-3 mb-8">
-            <img src="{{ asset('images/tapestry_logo_full.png') }}" alt="Tapestry of Africa" class="h-12 w-auto">
+        <div class="mb-8">
+            <img src="{{ asset('images/tapestry_logo_full.png') }}" alt="Tapestry of Africa" class="w-full h-auto">
         </div>
 
         <nav class="space-y-2">
