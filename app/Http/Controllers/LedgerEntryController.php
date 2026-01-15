@@ -14,6 +14,11 @@ class LedgerEntryController extends Controller
     {
         $this->authorize('update', $booking);
 
+        // Only users with modify_ledger permission can create ledger entries
+        if (!auth()->user()->can('modify_ledger')) {
+            return redirect()->back()->with('error', 'You do not have permission to modify the ledger.');
+        }
+
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'nullable|string|max:255',
@@ -79,6 +84,11 @@ class LedgerEntryController extends Controller
     public function destroy(LedgerEntry $ledgerEntry)
     {
         Gate::authorize('update', $ledgerEntry->booking);
+
+        // Only users with modify_ledger permission can delete ledger entries
+        if (!auth()->user()->can('modify_ledger')) {
+            return redirect()->back()->with('error', 'You do not have permission to modify the ledger.');
+        }
 
         $booking = $ledgerEntry->booking;
         $ledgerEntry->delete();

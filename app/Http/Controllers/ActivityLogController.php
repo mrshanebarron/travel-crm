@@ -29,6 +29,11 @@ class ActivityLogController extends Controller
     {
         Gate::authorize('update', $activityLog->booking);
 
+        // Only users with modify_activity_log permission can delete activity logs
+        if (!auth()->user()->can('modify_activity_log')) {
+            return redirect()->back()->with('error', 'Only super administrators can delete activity log entries.');
+        }
+
         $activityLog->delete();
 
         return redirect()->back()->with('success', 'Activity note deleted successfully.');

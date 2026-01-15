@@ -6,107 +6,82 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    /**
-     * Display team members list (admin only).
-     */
     public function index()
     {
-        $this->authorize('viewAny', User::class);
+        // Only super_admin can manage users
+        if (!auth()->user()->hasRole('super_admin')) {
+            abort(403);
+        }
 
-        $users = User::orderBy('name')->paginate(20);
-        $roles = User::getRoles();
+        $users = User::with('roles')->orderBy('name')->get();
+        $roles = Role::orderBy('name')->get();
 
         return view('users.index', compact('users', 'roles'));
     }
 
-    /**
-     * Show form to create a new team member.
-     */
-    public function create()
-    {
-        $this->authorize('create', User::class);
-
-        $roles = User::getRoles();
-
-        return view('users.create', compact('roles'));
-    }
-
-    /**
-     * Store a new team member.
-     */
     public function store(Request $request)
     {
-        $this->authorize('create', User::class);
+        if (!auth()->user()->hasRole('super_admin')) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => ['required', 'in:admin,manager,staff'],
+            'role' => ['required', 'exists:roles,name'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
         ]);
 
+        $user->assignRole($validated['role']);
+
         return redirect()->route('users.index')
-            ->with('success', 'Team member created successfully.');
+            ->with('success', 'User created successfully.');
     }
 
-    /**
-     * Show form to edit a team member.
-     */
-    public function edit(User $user)
-    {
-        $this->authorize('update', $user);
-
-        $roles = User::getRoles();
-
-        return view('users.edit', compact('user', 'roles'));
-    }
-
-    /**
-     * Update a team member.
-     */
     public function update(Request $request, User $user)
     {
-        $this->authorize('update', $user);
+        if (!auth()->user()->hasRole('super_admin')) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role' => ['required', 'in:admin,manager,staff'],
+            'role' => ['required', 'exists:roles,name'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
 
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
         ]);
 
         if (!empty($validated['password'])) {
             $user->update(['password' => Hash::make($validated['password'])]);
         }
 
+        $user->syncRoles([$validated['role']]);
+
         return redirect()->route('users.index')
-            ->with('success', 'Team member updated successfully.');
+            ->with('success', 'User updated successfully.');
     }
 
-    /**
-     * Remove a team member.
-     */
     public function destroy(User $user)
     {
-        $this->authorize('delete', $user);
+        if (!auth()->user()->hasRole('super_admin')) {
+            abort(403);
+        }
 
-        // Prevent deleting yourself
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')
                 ->with('error', 'You cannot delete your own account.');
@@ -115,6 +90,6 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('users.index')
-            ->with('success', 'Team member deleted successfully.');
+            ->with('success', 'User deleted successfully.');
     }
 }

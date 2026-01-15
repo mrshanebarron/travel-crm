@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -25,46 +26,35 @@ class User extends Authenticatable
     ];
 
     /**
-     * Role constants
+     * Check if user is a super admin (using Spatie roles)
      */
-    public const ROLE_ADMIN = 'admin';
-    public const ROLE_MANAGER = 'manager';
-    public const ROLE_STAFF = 'staff';
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
 
     /**
-     * Check if user is an admin
+     * Check if user is an admin or higher (using Spatie roles)
      */
     public function isAdmin(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return $this->hasAnyRole(['super_admin', 'admin']);
     }
 
     /**
-     * Check if user is a manager (or higher)
-     */
-    public function isManager(): bool
-    {
-        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_MANAGER]);
-    }
-
-    /**
-     * Check if user is staff (any authenticated user)
+     * Check if user is any staff member (has any role)
      */
     public function isStaff(): bool
     {
-        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_MANAGER, self::ROLE_STAFF]);
+        return $this->hasAnyRole(['super_admin', 'admin', 'user']);
     }
 
     /**
-     * Get all available roles
+     * Check if user can manage (same as admin for now, but could be different)
      */
-    public static function getRoles(): array
+    public function isManager(): bool
     {
-        return [
-            self::ROLE_ADMIN => 'Administrator',
-            self::ROLE_MANAGER => 'Manager',
-            self::ROLE_STAFF => 'Staff',
-        ];
+        return $this->hasAnyRole(['super_admin', 'admin']);
     }
 
     /**

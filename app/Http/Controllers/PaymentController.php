@@ -13,14 +13,20 @@ class PaymentController extends Controller
     {
         Gate::authorize('update', $traveler->group->booking);
 
+        // Only users with modify_rates_payments permission can create payment records
+        if (!auth()->user()->can('modify_rates_payments')) {
+            return redirect()->back()->with('error', 'You do not have permission to modify rates and payments.');
+        }
+
         $validated = $request->validate([
             'safari_rate' => 'required|numeric|min:0',
-            'deposit' => 'nullable|numeric|min:0',
-            'payment_90_day' => 'nullable|numeric|min:0',
-            'payment_45_day' => 'nullable|numeric|min:0',
         ]);
 
-        $traveler->payment()->create($validated);
+        $payment = new Payment();
+        $payment->traveler_id = $traveler->id;
+        $payment->safari_rate = $validated['safari_rate'];
+        $payment->recalculateSchedule();
+        $payment->save();
 
         return redirect()->back()->with('success', 'Payment record created successfully.');
     }
@@ -29,14 +35,23 @@ class PaymentController extends Controller
     {
         Gate::authorize('update', $payment->traveler->group->booking);
 
+        // Only users with modify_rates_payments permission can update payment records
+        if (!auth()->user()->can('modify_rates_payments')) {
+            return redirect()->back()->with('error', 'You do not have permission to modify rates and payments.');
+        }
+
+        // Only super admins can modify an existing safari rate that's already locked
+        if ($payment->deposit_locked && !auth()->user()->isSuperAdmin()) {
+            return redirect()->back()->with('error', 'Only super administrators can modify locked safari rates.');
+        }
+
         $validated = $request->validate([
             'safari_rate' => 'required|numeric|min:0',
-            'deposit' => 'nullable|numeric|min:0',
-            'payment_90_day' => 'nullable|numeric|min:0',
-            'payment_45_day' => 'nullable|numeric|min:0',
         ]);
 
-        $payment->update($validated);
+        $payment->safari_rate = $validated['safari_rate'];
+        $payment->recalculateSchedule();
+        $payment->save();
 
         return redirect()->back()->with('success', 'Payment record updated successfully.');
     }

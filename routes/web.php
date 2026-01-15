@@ -23,6 +23,7 @@ use App\Http\Controllers\VendorController;
 use App\Http\Controllers\EmailNotificationController;
 use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\ReconciliationController;
+use App\Http\Controllers\TravelerAddonController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Flights
     Route::post('/travelers/{traveler}/flights', [FlightController::class, 'store'])->name('flights.store');
     Route::patch('/flights/{flight}', [FlightController::class, 'update'])->name('flights.update');
+    Route::post('/flights/{flight}/copy', [FlightController::class, 'copyToTravelers'])->name('flights.copy');
     Route::delete('/flights/{flight}', [FlightController::class, 'destroy'])->name('flights.destroy');
 
     // Documents
@@ -88,6 +90,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Payments
     Route::post('/travelers/{traveler}/payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::patch('/payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
+
+    // Traveler Add-ons
+    Route::post('/travelers/{traveler}/addons', [TravelerAddonController::class, 'store'])->name('traveler-addons.store');
+    Route::patch('/traveler-addons/{addon}/paid', [TravelerAddonController::class, 'markPaid'])->name('traveler-addons.mark-paid');
+    Route::delete('/traveler-addons/{addon}', [TravelerAddonController::class, 'destroy'])->name('traveler-addons.destroy');
 
     // Transfers
     Route::resource('transfers', TransferController::class);

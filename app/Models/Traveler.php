@@ -50,6 +50,11 @@ class Traveler extends Model
         return $this->hasMany(ClientNote::class);
     }
 
+    public function addons(): HasMany
+    {
+        return $this->hasMany(TravelerAddon::class);
+    }
+
     public function arrivalFlight()
     {
         return $this->flights()->where('type', 'arrival')->first();

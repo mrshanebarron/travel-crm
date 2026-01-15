@@ -44,32 +44,36 @@
                 </svg>
                 <span>Reports</span>
             </a>
+            @can('view_financial_data')
             <a href="{{ route('reconciliation.index') }}" @click="sidebarOpen = false" class="sidebar-link {{ request()->routeIs('reconciliation.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 <span>Reconciliation</span>
             </a>
+            @endcan
+            @can('view_transfers')
             <a href="{{ route('transfers.index') }}" @click="sidebarOpen = false" class="sidebar-link {{ request()->routeIs('transfers.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
-                <span>Transfers</span>
+                <span>Transfers & Disbursements</span>
             </a>
+            @endcan
             <a href="{{ route('vendors.index') }}" @click="sidebarOpen = false" class="sidebar-link {{ request()->routeIs('vendors.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
                 <span>Vendors</span>
             </a>
-            @can('viewAny', App\Models\User::class)
+            @if(auth()->user()->hasRole('super_admin'))
             <a href="{{ route('users.index') }}" @click="sidebarOpen = false" class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span>Team</span>
+                <span>Users</span>
             </a>
-            @endcan
+            @endif
         </nav>
 
         <!-- User section at bottom -->
@@ -82,7 +86,7 @@
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-white text-sm font-medium truncate">{{ Auth::user()->name }}</p>
-                    <p class="text-slate-400 text-xs capitalize">{{ Auth::user()->role ?? 'Staff' }}</p>
+                    <p class="text-slate-400 text-xs capitalize">{{ str_replace('_', ' ', Auth::user()->roles->first()?->name ?? 'User') }}</p>
                 </div>
             </div>
         </div>

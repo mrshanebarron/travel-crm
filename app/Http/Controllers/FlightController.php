@@ -57,4 +57,51 @@ class FlightController extends Controller
 
         return redirect()->back()->with('success', 'Flight removed successfully.');
     }
+
+    public function copyToTravelers(Request $request, Flight $flight)
+    {
+        Gate::authorize('update', $flight->traveler->group->booking);
+
+        $validated = $request->validate([
+            'traveler_ids' => 'required|array|min:1',
+            'traveler_ids.*' => 'exists:travelers,id',
+        ]);
+
+        $booking = $flight->traveler->group->booking;
+        $copiedCount = 0;
+
+        foreach ($validated['traveler_ids'] as $travelerId) {
+            // Make sure traveler belongs to the same booking
+            $traveler = Traveler::find($travelerId);
+            if ($traveler && $traveler->group->booking_id === $booking->id) {
+                // Check if traveler already has this exact flight to avoid duplicates
+                $exists = $traveler->flights()
+                    ->where('type', $flight->type)
+                    ->where('airport', $flight->airport)
+                    ->where('flight_number', $flight->flight_number)
+                    ->where('date', $flight->date)
+                    ->exists();
+
+                if (!$exists) {
+                    $traveler->flights()->create([
+                        'type' => $flight->type,
+                        'airport' => $flight->airport,
+                        'flight_number' => $flight->flight_number,
+                        'date' => $flight->date,
+                        'time' => $flight->time,
+                        'notes' => $flight->notes,
+                        'pickup_instructions' => $flight->pickup_instructions,
+                        'dropoff_instructions' => $flight->dropoff_instructions,
+                    ]);
+                    $copiedCount++;
+                }
+            }
+        }
+
+        if ($copiedCount > 0) {
+            return redirect()->back()->with('success', "Flight copied to {$copiedCount} traveler(s).");
+        }
+
+        return redirect()->back()->with('info', 'No new flights were copied (travelers may already have this flight).');
+    }
 }

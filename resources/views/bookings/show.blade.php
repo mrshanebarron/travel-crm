@@ -44,12 +44,14 @@
                 </svg>
                 <span>Safari Plan</span>
             </button>
+            @can('view_financial_data')
             <button class="tab flex items-center gap-2" data-tab="payment-details">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Payments</span>
+                <span>Rates & Payments</span>
             </button>
+            @endcan
             <button class="tab flex items-center gap-2" data-tab="master-checklist">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -60,7 +62,7 @@
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
-                <span>Flights</span>
+                <span>Arrival/Departure</span>
             </button>
             <button class="tab flex items-center gap-2" data-tab="documents">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,12 +70,14 @@
                 </svg>
                 <span>Documents</span>
             </button>
+            @can('view_financial_data')
             <button class="tab flex items-center gap-2" data-tab="ledger">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 <span>Ledger</span>
             </button>
+            @endcan
             <button class="tab flex items-center gap-2" data-tab="rooms">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -198,6 +202,7 @@
                                                 </div>
                                             </div>
                                         @endif
+                                        <button type="button" onclick="openEditTravelerModal({{ $traveler->id }}, '{{ addslashes($traveler->first_name) }}', '{{ addslashes($traveler->last_name) }}', '{{ $traveler->email }}', '{{ $traveler->phone }}', '{{ $traveler->dob?->format('Y-m-d') }}', {{ $traveler->is_lead ? 'true' : 'false' }})" class="btn btn-secondary text-sm py-1 px-2">Edit</button>
                                         <a href="{{ route('clients.show', $traveler) }}" class="btn btn-secondary text-sm py-1 px-2">View</a>
                                         <form method="POST" action="{{ route('travelers.destroy', $traveler) }}" onsubmit="return confirm('Remove this traveler?')">
                                             @csrf
@@ -299,13 +304,14 @@
         </div>
 
         <!-- Payment Details Tab -->
+        @can('view_financial_data')
         <div class="tab-content p-6" id="payment-details">
-            <h2 class="text-lg font-semibold text-slate-900 mb-6">Payment Schedule</h2>
+            <h2 class="text-lg font-semibold text-slate-900 mb-6">Safari Rates & Payment Schedule</h2>
 
             @foreach($booking->groups as $group)
                 <div class="border border-slate-200 rounded-xl mb-6 overflow-hidden">
                     <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
-                        <h3 class="font-semibold text-slate-900">Group {{ $group->group_number }} - Payment Summary</h3>
+                        <h3 class="font-semibold text-slate-900">Group {{ $group->group_number }} - Base Safari Rates</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="data-table">
@@ -313,10 +319,10 @@
                                 <tr>
                                     <th>Traveler</th>
                                     <th class="text-right">Safari Rate</th>
-                                    <th class="text-right">Deposit (25%)</th>
-                                    <th class="text-right">90-Day (25%)</th>
-                                    <th class="text-right">45-Day (50%)</th>
-                                    <th class="text-center">Actions</th>
+                                    <th class="text-right">Deposit</th>
+                                    <th class="text-right">90-Day Payment</th>
+                                    <th class="text-right">45-Day Payment</th>
+                                    <th class="text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -330,9 +336,9 @@
                                     @php
                                         $payment = $traveler->payment;
                                         $safariRate = $payment ? $payment->safari_rate : 0;
-                                        $deposit = $safariRate * 0.25;
-                                        $payment90 = $safariRate * 0.25;
-                                        $payment45 = $safariRate * 0.50;
+                                        $deposit = $payment ? $payment->deposit : 0;
+                                        $payment90 = $payment ? $payment->payment_90_day : 0;
+                                        $payment45 = $payment ? $payment->payment_45_day : 0;
                                         $groupTotal += $safariRate;
                                         $groupDeposit += $deposit;
                                         $group90Day += $payment90;
@@ -348,26 +354,45 @@
                                             </div>
                                         </td>
                                         <td class="text-right">
-                                            <form method="POST" action="{{ route('payments.update', $payment ?? 'new') }}" class="inline" id="payment-form-{{ $traveler->id }}">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="number" name="safari_rate" value="{{ $safariRate }}" step="0.01" min="0"
-                                                    class="w-28 text-right rounded border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"
-                                                    onchange="this.form.submit()">
-                                            </form>
+                                            @if($payment)
+                                                @if($payment->deposit_locked && !auth()->user()->isSuperAdmin())
+                                                    <span class="font-medium text-slate-900">${{ number_format($safariRate, 2) }}</span>
+                                                    @if($payment->original_rate && $payment->original_rate != $payment->safari_rate)
+                                                        <div class="text-xs text-slate-500">Original: ${{ number_format($payment->original_rate, 2) }}</div>
+                                                    @endif
+                                                @else
+                                                    <form method="POST" action="{{ route('payments.update', $payment) }}" class="inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="number" name="safari_rate" value="{{ $safariRate }}" step="0.01" min="0"
+                                                            class="w-28 text-right rounded border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"
+                                                            onchange="this.form.submit()">
+                                                    </form>
+                                                @endif
+                                            @else
+                                                <form method="POST" action="{{ route('payments.store', $traveler) }}" class="inline">
+                                                    @csrf
+                                                    <input type="number" name="safari_rate" value="0" step="0.01" min="0"
+                                                        class="w-28 text-right rounded border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"
+                                                        onchange="this.form.submit()">
+                                                </form>
+                                            @endif
                                         </td>
-                                        <td class="text-right text-slate-600">${{ number_format($deposit, 2) }}</td>
+                                        <td class="text-right text-slate-600">
+                                            ${{ number_format($deposit, 2) }}
+                                            @if($payment && $payment->deposit_locked)
+                                                <span class="text-xs text-green-600 block">Locked</span>
+                                            @endif
+                                        </td>
                                         <td class="text-right text-slate-600">${{ number_format($payment90, 2) }}</td>
                                         <td class="text-right text-slate-600">${{ number_format($payment45, 2) }}</td>
                                         <td class="text-center">
                                             @if(!$payment)
-                                                <form method="POST" action="{{ route('payments.store', $traveler) }}" class="inline">
-                                                    @csrf
-                                                    <input type="hidden" name="safari_rate" value="0">
-                                                    <button type="submit" class="text-orange-600 hover:text-orange-800 text-sm font-medium">Initialize</button>
-                                                </form>
+                                                <span class="text-slate-400 text-sm">Not set</span>
+                                            @elseif($payment->deposit_locked)
+                                                <span class="badge badge-success">Active</span>
                                             @else
-                                                <span class="text-green-600 text-sm">Active</span>
+                                                <span class="badge badge-warning">Draft</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -388,27 +413,107 @@
                 </div>
             @endforeach
 
+            <!-- Add-ons Section -->
+            <div class="border border-slate-200 rounded-xl mb-6 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-semibold text-slate-900">Add-ons & Experiences</h3>
+                    <button type="button" onclick="document.getElementById('add-addon-modal').classList.remove('hidden')" class="btn btn-secondary text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Experience
+                    </button>
+                </div>
+                <div class="p-6">
+                    @php
+                        $allAddons = $booking->groups->flatMap->travelers->flatMap->addons;
+                    @endphp
+                    @if($allAddons->count() > 0)
+                        <div class="overflow-x-auto">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Traveler</th>
+                                        <th>Experience</th>
+                                        <th class="text-right">Cost</th>
+                                        <th>Notes</th>
+                                        <th class="text-center">Payment Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($allAddons as $addon)
+                                        <tr>
+                                            <td class="font-medium text-slate-900">{{ $addon->traveler->full_name }}</td>
+                                            <td>{{ $addon->experience_name }}</td>
+                                            <td class="text-right">${{ number_format($addon->cost_per_person, 2) }}</td>
+                                            <td class="text-slate-600 text-sm">{{ $addon->notes ?: '-' }}</td>
+                                            <td class="text-center">
+                                                @if($addon->paid)
+                                                    <span class="badge badge-success">Paid</span>
+                                                @else
+                                                    <form method="POST" action="{{ route('traveler-addons.mark-paid', $addon) }}" class="inline">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="badge badge-warning cursor-pointer hover:bg-yellow-200">Unpaid - Click to mark paid</button>
+                                                    </form>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <form method="POST" action="{{ route('traveler-addons.destroy', $addon) }}" onsubmit="return confirm('Delete this add-on?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot class="bg-slate-50">
+                                    <tr>
+                                        <td colspan="2" class="font-semibold text-slate-900">Total Add-ons</td>
+                                        <td class="text-right font-semibold text-slate-900">${{ number_format($allAddons->sum('cost_per_person'), 2) }}</td>
+                                        <td></td>
+                                        <td class="text-center text-sm text-slate-600">
+                                            {{ $allAddons->where('paid', true)->count() }}/{{ $allAddons->count() }} paid
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-8 text-slate-500">
+                            <p>No add-ons or experiences added yet.</p>
+                            <p class="text-sm">Click "Add Experience" to add optional extras like balloon rides, spa treatments, etc.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             <!-- Payment Due Dates -->
             <div class="bg-orange-50 rounded-xl p-6 mt-6">
                 <h3 class="font-semibold text-slate-900 mb-4">Payment Due Dates</h3>
                 <div class="grid grid-cols-3 gap-4">
                     <div class="bg-white rounded-lg p-4 border border-orange-200">
-                        <div class="text-sm text-slate-500">Deposit (25%)</div>
+                        <div class="text-sm text-slate-500">Deposit</div>
                         <div class="font-semibold text-slate-900">Upon Booking</div>
+                        <div class="text-xs text-slate-500">Locked once entered</div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-orange-200">
-                        <div class="text-sm text-slate-500">Second Payment (25%)</div>
+                        <div class="text-sm text-slate-500">Second Payment</div>
                         <div class="font-semibold text-slate-900">{{ $booking->start_date->subDays(90)->format('M j, Y') }}</div>
                         <div class="text-xs text-slate-500">90 days before departure</div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-orange-200">
-                        <div class="text-sm text-slate-500">Final Payment (50%)</div>
+                        <div class="text-sm text-slate-500">Final Payment</div>
                         <div class="font-semibold text-slate-900">{{ $booking->start_date->subDays(45)->format('M j, Y') }}</div>
                         <div class="text-xs text-slate-500">45 days before departure</div>
                     </div>
                 </div>
             </div>
         </div>
+        @endcan
 
         <!-- Master Checklist Tab -->
         <div class="tab-content p-6" id="master-checklist">
@@ -422,114 +527,110 @@
                 </button>
             </div>
 
-            <div class="space-y-4">
-                <!-- Pending Tasks -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
-                    <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
-                        <h3 class="font-medium text-slate-900">Pending Tasks ({{ $booking->tasks->where('status', '!=', 'completed')->count() }})</h3>
-                    </div>
-                    <div class="divide-y divide-slate-200">
-                        @forelse($booking->tasks->where('status', '!=', 'completed')->sortBy('due_date') as $task)
-                            <div class="p-4 hover:bg-slate-50">
-                                <div class="flex justify-between items-start gap-4">
-                                    <div class="flex items-start gap-3">
-                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="mt-1">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="name" value="{{ $task->name }}">
-                                            <input type="hidden" name="status" value="completed">
-                                            <button type="submit" class="w-5 h-5 border-2 border-slate-300 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors" title="Mark complete"></button>
-                                        </form>
-                                        <div class="flex-1">
-                                            <div class="font-medium text-slate-900">{{ $task->name }}</div>
-                                            <div class="flex flex-wrap gap-3 mt-1 text-sm">
-                                                @if($task->due_date)
-                                                    <span class="{{ $task->due_date->isPast() ? 'text-red-600 font-medium' : 'text-slate-500' }}">
-                                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
-                                                        {{ $task->due_date->format('M j, Y') }}
-                                                        @if($task->due_date->isPast()) (overdue) @endif
-                                                    </span>
-                                                @endif
-                                                @if($task->assignedTo)
-                                                    <span class="text-slate-500">
-                                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                        </svg>
-                                                        {{ $task->assignedTo->name }}
-                                                    </span>
-                                                @else
-                                                    <span class="text-amber-600">
-                                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                        </svg>
-                                                        Unassigned
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button type="button" onclick="openEditTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->due_date?->format('Y-m-d') }}', {{ $task->assigned_to ?? 'null' }})" class="text-slate-400 hover:text-slate-600" title="Edit task">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </button>
-                                        <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-slate-400 hover:text-red-600" title="Delete task">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="p-6 text-center text-slate-500">
-                                No pending tasks
-                            </div>
-                        @endforelse
+            <!-- All Tasks Table -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-medium text-slate-900">All Tasks ({{ $booking->tasks->count() }})</h3>
+                        <div class="text-sm text-slate-500">
+                            <span class="text-green-600 font-medium">{{ $booking->tasks->where('status', 'completed')->count() }}</span> completed,
+                            <span class="text-amber-600 font-medium">{{ $booking->tasks->where('status', '!=', 'completed')->count() }}</span> pending
+                        </div>
                     </div>
                 </div>
-
-                <!-- Completed Tasks -->
-                @if($booking->tasks->where('status', 'completed')->count() > 0)
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="bg-green-50 px-6 py-3 border-b border-slate-200">
-                            <h3 class="font-medium text-green-800">Completed Tasks ({{ $booking->tasks->where('status', 'completed')->count() }})</h3>
-                        </div>
-                        <div class="divide-y divide-slate-200">
-                            @foreach($booking->tasks->where('status', 'completed')->sortByDesc('completed_at') as $task)
-                                <div class="p-4 flex justify-between items-center bg-slate-50">
-                                    <div class="flex items-center gap-3">
-                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <div>
-                                            <span class="text-slate-500 line-through">{{ $task->name }}</span>
-                                            @if($task->completed_at)
-                                                <span class="text-xs text-slate-400 ml-2">{{ $task->completed_at->diffForHumans() }}</span>
-                                            @endif
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">Done</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Task</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-36">Due Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-36">Assigned To</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            @forelse($booking->tasks->sortBy([['status', 'asc'], ['due_date', 'asc']]) as $task)
+                                <tr class="{{ $task->status === 'completed' ? 'bg-green-50/50' : '' }} hover:bg-slate-50">
+                                    <td class="px-4 py-3">
+                                        @if($task->status === 'completed')
+                                            <form method="POST" action="{{ route('tasks.update', $task) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="name" value="{{ $task->name }}">
+                                                <input type="hidden" name="status" value="pending">
+                                                <button type="submit" class="w-5 h-5 bg-green-500 rounded flex items-center justify-center hover:bg-green-600 transition-colors" title="Mark incomplete">
+                                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('tasks.update', $task) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="name" value="{{ $task->name }}">
+                                                <input type="hidden" name="status" value="completed">
+                                                <button type="submit" class="w-5 h-5 border-2 border-slate-300 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors" title="Mark complete"></button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="{{ $task->status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900 font-medium' }}">
+                                            {{ $task->name }}
+                                        </span>
+                                        @if($task->status === 'completed' && $task->completed_at)
+                                            <span class="text-xs text-slate-400 ml-2">({{ $task->completed_at->diffForHumans() }})</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-sm">
+                                        @if($task->due_date)
+                                            <span class="{{ $task->status !== 'completed' && $task->due_date->isPast() ? 'text-red-600 font-medium' : 'text-slate-500' }}">
+                                                {{ $task->due_date->format('M j, Y') }}
+                                                @if($task->status !== 'completed' && $task->due_date->isPast())
+                                                    <span class="text-xs">(overdue)</span>
+                                                @endif
+                                            </span>
+                                        @else
+                                            <span class="text-slate-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-sm">
+                                        @if($task->assignedTo)
+                                            <span class="text-slate-700">{{ $task->assignedTo->name }}</span>
+                                        @else
+                                            <span class="text-amber-600">Unassigned</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="openEditTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->due_date?->format('Y-m-d') }}', {{ $task->assigned_to ?? 'null' }})" class="text-slate-400 hover:text-slate-600" title="Edit task">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-slate-400 hover:text-red-600" title="Delete task">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </form>
                                         </div>
-                                    </div>
-                                    <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-slate-400 hover:text-red-600">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-4 py-6 text-center text-slate-500">
+                                        No tasks yet. Click "Add Task" to create one.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -583,11 +684,14 @@
                                                     @else
                                                         <span class="badge badge-info">Departure</span>
                                                     @endif
-                                                    <form method="POST" action="{{ route('flights.destroy', $flight) }}" onsubmit="return confirm('Delete this flight?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Remove</button>
-                                                    </form>
+                                                    <div class="flex items-center gap-2">
+                                                        <button type="button" onclick="openCopyFlightModal({{ $flight->id }}, '{{ $flight->type }}', '{{ addslashes($flight->airport) }}', '{{ $flight->flight_number }}', {{ $traveler->id }})" class="text-orange-600 hover:text-orange-800 text-xs font-medium">Copy</button>
+                                                        <form method="POST" action="{{ route('flights.destroy', $flight) }}" onsubmit="return confirm('Delete this flight?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Remove</button>
+                                                        </form>
+                                                    </div>
                                                 </div>
                                                 <div class="space-y-2 text-sm">
                                                     <div class="flex justify-between">
@@ -718,6 +822,7 @@
         </div>
 
         <!-- Ledger Tab -->
+        @can('view_financial_data')
         <div class="tab-content p-6" id="ledger">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Financial Ledger</h2>
@@ -845,6 +950,7 @@
                 </div>
             @endif
         </div>
+        @endcan
 
         <!-- Rooms Tab -->
         <div class="tab-content p-6" id="rooms">
@@ -1136,6 +1242,49 @@
         </div>
     </div>
 
+    <!-- Edit Traveler Modal -->
+    <div id="edit-traveler-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Edit Traveler</h3>
+            <form id="edit-traveler-form" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">First Name</label>
+                            <input type="text" name="first_name" id="edit-traveler-first-name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Last Name</label>
+                            <input type="text" name="last_name" id="edit-traveler-last-name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</label>
+                        <input type="email" name="email" id="edit-traveler-email" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Phone</label>
+                        <input type="text" name="phone" id="edit-traveler-phone" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Date of Birth</label>
+                        <input type="date" name="dob" id="edit-traveler-dob" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_lead" id="edit-traveler-is-lead" class="rounded border-slate-300 text-orange-600 focus:ring-orange-500">
+                        <label for="edit-traveler-is-lead" class="text-sm text-slate-700">Lead Traveler</label>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('edit-traveler-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Add Flight Modal -->
     <div id="add-flight-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-lg">
@@ -1182,6 +1331,45 @@
                 <div class="flex justify-end gap-3 mt-6">
                     <button type="button" onclick="document.getElementById('add-flight-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Flight</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Copy Flight Modal -->
+    <div id="copy-flight-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg">
+            <h3 class="text-lg font-semibold text-slate-900 mb-2">Copy Flight to Other Travelers</h3>
+            <p class="text-sm text-slate-500 mb-4" id="copy-flight-info"></p>
+            <form id="copy-flight-form" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div class="text-sm font-medium text-slate-700 mb-2">Select travelers to copy this flight to:</div>
+                    <div class="max-h-64 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-200">
+                        @foreach($booking->groups as $group)
+                            <div class="bg-slate-50 px-4 py-2 font-medium text-slate-700 text-sm sticky top-0">
+                                Group {{ $group->group_number }}
+                            </div>
+                            @foreach($group->travelers as $t)
+                                <label class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer copy-flight-traveler-option" data-traveler-id="{{ $t->id }}">
+                                    <input type="checkbox" name="traveler_ids[]" value="{{ $t->id }}" class="rounded border-slate-300 text-orange-600 focus:ring-orange-500">
+                                    <span class="text-slate-900">{{ $t->first_name }} {{ $t->last_name }}</span>
+                                    @if($t->is_lead)
+                                        <span class="badge badge-orange text-xs">Lead</span>
+                                    @endif
+                                </label>
+                            @endforeach
+                        @endforeach
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="selectAllTravelers()" class="text-sm text-orange-600 hover:text-orange-800 font-medium">Select All</button>
+                        <span class="text-slate-300">|</span>
+                        <button type="button" onclick="deselectAllTravelers()" class="text-sm text-slate-600 hover:text-slate-800 font-medium">Deselect All</button>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('copy-flight-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Copy Flight</button>
                 </div>
             </form>
         </div>
@@ -1249,6 +1437,45 @@
                 <div class="flex justify-end gap-3 mt-6">
                     <button type="button" onclick="document.getElementById('import-pdf-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">Import PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Addon Modal -->
+    <div id="add-addon-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Add Experience / Add-on</h3>
+            <form id="add-addon-form" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Traveler</label>
+                        <select name="traveler_id" id="addon-traveler-select" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required onchange="updateAddonFormAction()">
+                            <option value="">Select traveler...</option>
+                            @foreach($booking->groups as $group)
+                                @foreach($group->travelers as $traveler)
+                                    <option value="{{ $traveler->id }}">{{ $traveler->full_name }} (Group {{ $group->group_number }})</option>
+                                @endforeach
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Experience Name</label>
+                        <input type="text" name="experience_name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" placeholder="e.g., Balloon Safari, Spa Treatment" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Cost Per Person ($)</label>
+                        <input type="number" name="cost_per_person" step="0.01" min="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes (optional)</label>
+                        <textarea name="notes" rows="2" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" placeholder="Any special details..."></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('add-addon-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Experience</button>
                 </div>
             </form>
         </div>
@@ -1368,18 +1595,60 @@
     </div>
 
     <script>
-        // Tab switching
+        // Tab switching with URL hash persistence
+        function switchToTab(tabId) {
+            // Remove active from all tabs
+            document.querySelectorAll('#booking-tabs .tab').forEach(t => t.classList.remove('active'));
+            // Remove active from all content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            // Find and activate the tab button
+            const tabButton = document.querySelector(`#booking-tabs .tab[data-tab="${tabId}"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+            // Show corresponding content
+            const tabContent = document.getElementById(tabId);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+
+            // Update URL hash without triggering scroll
+            history.replaceState(null, null, `#${tabId}`);
+        }
+
         document.querySelectorAll('#booking-tabs .tab').forEach(tab => {
             tab.addEventListener('click', function() {
-                // Remove active from all tabs
-                document.querySelectorAll('#booking-tabs .tab').forEach(t => t.classList.remove('active'));
-                // Remove active from all content
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                switchToTab(this.dataset.tab);
+            });
+        });
 
-                // Add active to clicked tab
-                this.classList.add('active');
-                // Show corresponding content
-                document.getElementById(this.dataset.tab).classList.add('active');
+        // On page load, check URL hash and activate that tab
+        document.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const tabContent = document.getElementById(hash);
+                if (tabContent && tabContent.classList.contains('tab-content')) {
+                    switchToTab(hash);
+                }
+            }
+
+            // Preserve tab hash on form submissions by adding hidden input
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    const currentHash = window.location.hash.substring(1);
+                    if (currentHash) {
+                        // Add hidden input for tab preservation
+                        let tabInput = form.querySelector('input[name="_tab"]');
+                        if (!tabInput) {
+                            tabInput = document.createElement('input');
+                            tabInput.type = 'hidden';
+                            tabInput.name = '_tab';
+                            form.appendChild(tabInput);
+                        }
+                        tabInput.value = currentHash;
+                    }
+                });
             });
         });
 
@@ -1390,11 +1659,71 @@
             document.getElementById('add-traveler-modal').classList.remove('hidden');
         }
 
+        // Add Addon - update form action when traveler selected
+        function updateAddonFormAction() {
+            const travelerId = document.getElementById('addon-traveler-select').value;
+            const form = document.getElementById('add-addon-form');
+            if (travelerId) {
+                form.action = `/travelers/${travelerId}/addons`;
+            }
+        }
+
+        // Edit Traveler Modal
+        function openEditTravelerModal(travelerId, firstName, lastName, email, phone, dob, isLead) {
+            const form = document.getElementById('edit-traveler-form');
+            form.action = `/travelers/${travelerId}`;
+            document.getElementById('edit-traveler-first-name').value = firstName;
+            document.getElementById('edit-traveler-last-name').value = lastName;
+            document.getElementById('edit-traveler-email').value = email || '';
+            document.getElementById('edit-traveler-phone').value = phone || '';
+            document.getElementById('edit-traveler-dob').value = dob || '';
+            document.getElementById('edit-traveler-is-lead').checked = isLead;
+            document.getElementById('edit-traveler-modal').classList.remove('hidden');
+        }
+
         // Add Flight Modal
         function openAddFlightModal(travelerId) {
             const form = document.getElementById('add-flight-form');
             form.action = `/travelers/${travelerId}/flights`;
             document.getElementById('add-flight-modal').classList.remove('hidden');
+        }
+
+        // Copy Flight Modal
+        function openCopyFlightModal(flightId, flightType, airport, flightNumber, currentTravelerId) {
+            const form = document.getElementById('copy-flight-form');
+            form.action = `/flights/${flightId}/copy`;
+
+            // Update info text
+            const typeLabel = flightType === 'arrival' ? 'Arrival' : 'Departure';
+            const flightInfo = flightNumber ? `${typeLabel} - ${airport} (${flightNumber})` : `${typeLabel} - ${airport}`;
+            document.getElementById('copy-flight-info').textContent = flightInfo;
+
+            // Reset all checkboxes and hide the current traveler's option
+            document.querySelectorAll('.copy-flight-traveler-option').forEach(option => {
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                checkbox.checked = false;
+
+                // Hide the option for the traveler who already has this flight
+                if (parseInt(option.dataset.travelerId) === currentTravelerId) {
+                    option.classList.add('hidden');
+                } else {
+                    option.classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('copy-flight-modal').classList.remove('hidden');
+        }
+
+        function selectAllTravelers() {
+            document.querySelectorAll('.copy-flight-traveler-option:not(.hidden) input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+        }
+
+        function deselectAllTravelers() {
+            document.querySelectorAll('.copy-flight-traveler-option input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
         }
 
         // Payment Reminder Modal

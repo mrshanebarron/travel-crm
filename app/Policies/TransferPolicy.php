@@ -8,32 +8,33 @@ use App\Models\User;
 class TransferPolicy
 {
     /**
-     * All staff can view transfers.
+     * Superadmin and Admin can view transfers (view_transfers permission).
+     * Users cannot view transfers at all.
      */
     public function viewAny(User $user): bool
     {
-        return $user->isStaff();
+        return $user->can('view_transfers');
     }
 
     public function view(User $user, Transfer $transfer): bool
     {
-        return $user->isStaff();
+        return $user->can('view_transfers');
     }
 
     /**
-     * Only managers/admins can create transfers (financial).
+     * Only superadmins can create transfers (manage_transfers permission).
      */
     public function create(User $user): bool
     {
-        return $user->isManager();
+        return $user->can('manage_transfers');
     }
 
     /**
-     * Managers/admins can update, staff cannot. Cannot modify completed transfers.
+     * Only superadmins can update transfers. Cannot modify completed transfers.
      */
     public function update(User $user, Transfer $transfer): bool
     {
-        if (!$user->isManager()) {
+        if (!$user->can('manage_transfers')) {
             return false;
         }
 
@@ -42,11 +43,11 @@ class TransferPolicy
     }
 
     /**
-     * Only managers/admins can delete, and only draft transfers.
+     * Only superadmins can delete, and only draft transfers.
      */
     public function delete(User $user, Transfer $transfer): bool
     {
-        if (!$user->isManager()) {
+        if (!$user->can('manage_transfers')) {
             return false;
         }
 
@@ -54,11 +55,11 @@ class TransferPolicy
     }
 
     /**
-     * Only admins can restore.
+     * Only superadmins can restore.
      */
     public function restore(User $user, Transfer $transfer): bool
     {
-        return $user->isAdmin();
+        return $user->can('manage_transfers');
     }
 
     /**
