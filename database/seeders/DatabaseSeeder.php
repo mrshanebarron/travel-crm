@@ -21,25 +21,54 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create admin user
-        $admin = User::create([
-            'name' => 'Shane Barron',
-            'email' => 'mrshanebarron@gmail.com',
-            'password' => Hash::make('password'),
-        ]);
+        // Call RoleSeeder first to create roles and permissions
+        $this->call(RoleSeeder::class);
 
-        // Create staff users
-        $staff1 = User::create([
-            'name' => 'Jane Operator',
-            'email' => 'jane@example.com',
-            'password' => Hash::make('password'),
-        ]);
+        // Create team members per client spec:
+        // Matt & Linda = super_admin, Hilda & Albert = admin, Peter = user
 
-        $staff2 = User::create([
-            'name' => 'John Guide',
-            'email' => 'john@example.com',
+        // Super Admins
+        $matt = User::create([
+            'name' => 'Matt',
+            'email' => 'matt@tapestryofafrica.com',
             'password' => Hash::make('password'),
         ]);
+        $matt->assignRole('super_admin');
+
+        $linda = User::create([
+            'name' => 'Linda',
+            'email' => 'linda@tapestryofafrica.com',
+            'password' => Hash::make('password'),
+        ]);
+        $linda->assignRole('super_admin');
+
+        // Admins
+        $hilda = User::create([
+            'name' => 'Hilda',
+            'email' => 'hilda@tapestryofafrica.com',
+            'password' => Hash::make('password'),
+        ]);
+        $hilda->assignRole('admin');
+
+        $albert = User::create([
+            'name' => 'Albert',
+            'email' => 'albert@tapestryofafrica.com',
+            'password' => Hash::make('password'),
+        ]);
+        $albert->assignRole('admin');
+
+        // User
+        $peter = User::create([
+            'name' => 'Peter',
+            'email' => 'peter@tapestryofafrica.com',
+            'password' => Hash::make('password'),
+        ]);
+        $peter->assignRole('user');
+
+        // Use Matt as the primary admin for demo data
+        $admin = $matt;
+        $staff1 = $hilda;
+        $staff2 = $albert;
 
         // Booking 1: Upcoming Tanzania Safari
         $booking1 = Booking::create([
