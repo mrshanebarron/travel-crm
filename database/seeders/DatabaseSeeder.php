@@ -65,6 +65,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $peter->assignRole('user');
 
+        // Demo user for easy login (pre-filled on login page)
+        $demo = User::create([
+            'name' => 'Demo User',
+            'email' => 'demo@travelcrm.com',
+            'password' => Hash::make('Tr@vel2024!Demo'),
+        ]);
+        $demo->assignRole('super_admin');
+
         // Use Matt as the primary admin for demo data
         $admin = $matt;
         $staff1 = $hilda;
