@@ -1,16 +1,4 @@
 <x-app-layout>
-    <!-- Page Title -->
-    <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Bookings</h1>
-            <p class="text-slate-500 text-sm sm:text-base">Manage all safari bookings</p>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-2">
-            <x-action-button type="import" label="Import from Safari Office" @click="$dispatch('open-import-modal')" class="w-full sm:w-auto justify-center" />
-            <x-action-button type="create" label="New Booking" :href="route('bookings.create')" class="w-full sm:w-auto justify-center" />
-        </div>
-    </div>
-
     <!-- Import from Safari Office Modal -->
     <div x-data="{ open: false }"
          x-show="open"

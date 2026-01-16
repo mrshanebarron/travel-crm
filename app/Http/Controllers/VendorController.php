@@ -11,32 +11,7 @@ class VendorController extends Controller
     {
         $this->authorize('viewAny', Vendor::class);
 
-        $query = Vendor::query();
-
-        // Filter by category
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
-        }
-
-        // Filter by active status
-        if ($request->has('active')) {
-            $query->where('is_active', $request->boolean('active'));
-        }
-
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('contact_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        $vendors = $query->orderBy('name')->paginate(20);
-        $categories = Vendor::CATEGORIES;
-
-        return view('vendors.index', compact('vendors', 'categories'));
+        return view('vendors.index');
     }
 
     public function create()

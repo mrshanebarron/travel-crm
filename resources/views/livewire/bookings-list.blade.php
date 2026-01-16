@@ -1,4 +1,16 @@
 <div>
+    <!-- Page Title -->
+    <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Bookings</h1>
+            <p class="text-slate-500 text-sm sm:text-base">Manage all safari bookings</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+            <x-action-button type="import" label="Import from Safari Office" @click="$dispatch('open-import-modal')" class="w-full sm:w-auto justify-center" />
+            <x-action-button type="create" label="New Booking" wire:click="openCreateModal" class="w-full sm:w-auto justify-center" />
+        </div>
+    </div>
+
     <!-- Filters -->
     <div class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6">
         <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1 -mb-1">
@@ -211,4 +223,106 @@
             </div>
         @endif
     </div>
+
+    <!-- Create Booking Modal -->
+    @if($showCreateModal)
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click.self="closeCreateModal">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
+                <h3 class="text-lg font-semibold text-slate-900">New Booking</h3>
+                <button wire:click="closeCreateModal" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form wire:submit="createBooking">
+                <div class="p-6 space-y-6">
+                    <!-- Trip Details -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-900 mb-3">Trip Details</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Country *</label>
+                                <select wire:model="country" required class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                    <option value="">Select...</option>
+                                    <option value="Tanzania">Tanzania</option>
+                                    <option value="Kenya">Kenya</option>
+                                    <option value="Botswana">Botswana</option>
+                                    <option value="South Africa">South Africa</option>
+                                    <option value="Namibia">Namibia</option>
+                                    <option value="Rwanda">Rwanda</option>
+                                    <option value="Uganda">Uganda</option>
+                                    <option value="Zimbabwe">Zimbabwe</option>
+                                    <option value="Zambia">Zambia</option>
+                                </select>
+                                @error('country') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Start Date *</label>
+                                <input type="date" wire:model="startDate" required class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                @error('startDate') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">End Date *</label>
+                                <input type="date" wire:model="endDate" required class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                @error('endDate') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Travelers -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-semibold text-slate-900">Travelers</h4>
+                            <button type="button" wire:click="addTraveler" class="text-sm text-orange-600 hover:text-orange-800 font-medium">+ Add Traveler</button>
+                        </div>
+                        <div class="space-y-4">
+                            @foreach($travelers as $index => $traveler)
+                                <div class="border border-slate-200 rounded-lg p-4 relative" wire:key="traveler-{{ $index }}">
+                                    @if(count($travelers) > 1)
+                                        <button type="button" wire:click="removeTraveler({{ $index }})" class="absolute top-2 right-2 text-red-500 hover:text-red-700">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                    <div class="text-xs font-medium text-slate-500 mb-2">{{ $index === 0 ? 'Lead Traveler' : 'Traveler ' . ($index + 1) }}</div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-xs font-medium text-slate-500">First Name *</label>
+                                            <input type="text" wire:model="travelers.{{ $index }}.first_name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" {{ $index === 0 ? 'required' : '' }}>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-medium text-slate-500">Last Name *</label>
+                                            <input type="text" wire:model="travelers.{{ $index }}.last_name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" {{ $index === 0 ? 'required' : '' }}>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-medium text-slate-500">Email</label>
+                                            <input type="email" wire:model="travelers.{{ $index }}.email" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-medium text-slate-500">Phone</label>
+                                            <input type="text" wire:model="travelers.{{ $index }}.phone" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                        </div>
+                                        <div class="col-span-2 sm:col-span-1">
+                                            <label class="text-xs font-medium text-slate-500">Date of Birth</label>
+                                            <input type="date" wire:model="travelers.{{ $index }}.dob" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                            @error('travelers.0.first_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            @error('travelers.0.last_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 sticky bottom-0 bg-white">
+                    <x-action-button type="cancel" wire:click="closeCreateModal" />
+                    <x-action-button type="create" label="Create Booking" :submit="true" />
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 </div>
