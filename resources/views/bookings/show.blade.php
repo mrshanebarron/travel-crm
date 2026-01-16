@@ -323,6 +323,9 @@
                                     <th class="text-right">90-Day Payment</th>
                                     <th class="text-right">45-Day Payment</th>
                                     <th class="text-center">Status</th>
+                                    @if(auth()->user()->isSuperAdmin())
+                                        <th class="text-center">Actions</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -356,14 +359,11 @@
                                         <td class="text-right">
                                             @if($payment)
                                                 @if($payment->deposit_locked)
-                                                    {{-- Locked rate - show value and Edit button for super admins --}}
+                                                    {{-- Locked rate - show value --}}
                                                     <div class="rate-display-{{ $payment->id }}">
                                                         <span class="font-medium text-slate-900">${{ number_format($safariRate, 2) }}</span>
                                                         @if($payment->original_rate && $payment->original_rate != $payment->safari_rate)
                                                             <div class="text-xs text-slate-500">Original: ${{ number_format($payment->original_rate, 2) }}</div>
-                                                        @endif
-                                                        @if(auth()->user()->isSuperAdmin())
-                                                            <button type="button" onclick="showRateEdit({{ $payment->id }})" class="text-xs text-orange-600 hover:text-orange-800 mt-1 block">Edit</button>
                                                         @endif
                                                     </div>
                                                     {{-- Hidden edit form for super admins --}}
@@ -472,6 +472,15 @@
                                                 <span class="badge badge-warning">Draft</span>
                                             @endif
                                         </td>
+                                        @if(auth()->user()->isSuperAdmin())
+                                            <td class="text-center">
+                                                @if($payment && $payment->deposit_locked)
+                                                    <button type="button" onclick="showRateEdit({{ $payment->id }})" class="text-xs text-orange-600 hover:text-orange-800">Edit</button>
+                                                @else
+                                                    <span class="text-slate-400">-</span>
+                                                @endif
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -483,6 +492,9 @@
                                     <td class="text-right font-semibold text-slate-900">${{ number_format($group90Day, 2) }}</td>
                                     <td class="text-right font-semibold text-slate-900">${{ number_format($group45Day, 2) }}</td>
                                     <td></td>
+                                    @if(auth()->user()->isSuperAdmin())
+                                        <td></td>
+                                    @endif
                                 </tr>
                             </tfoot>
                         </table>
