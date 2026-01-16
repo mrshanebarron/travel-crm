@@ -29,15 +29,15 @@ class TravelerAddonController extends Controller
             DB::transaction(function () use ($traveler, $validated, $type, $isCredit) {
                 $booking = $traveler->group->booking;
 
-                // For credits, the ledger entry type is 'disbursed' (money going out/refund)
+                // For credits, the ledger entry type is 'paid' (money going out/refund)
                 // For add-ons, it's 'received' (money owed to us)
                 $ledgerEntry = LedgerEntry::create([
                     'booking_id' => $booking->id,
                     'date' => now(),
                     'description' => ($isCredit ? "Credit: " : "Add-on: ") . "{$validated['experience_name']} - {$traveler->full_name}",
-                    'type' => $isCredit ? 'disbursed' : 'received',
+                    'type' => $isCredit ? 'paid' : 'received',
                     'received_category' => $isCredit ? null : 'add_on',
-                    'disbursed_category' => $isCredit ? 'other' : null,
+                    'paid_category' => $isCredit ? 'credit' : null,
                     'amount' => $validated['cost_per_person'],
                     'created_by' => auth()->id(),
                 ]);

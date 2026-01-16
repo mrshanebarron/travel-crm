@@ -59,17 +59,24 @@ class Payment extends Model
             $this->deposit_locked = true;
         } else {
             // Rate changed - rebalance keeping deposit fixed
-            // Total should still equal safari_rate
+            // Total must always equal safari_rate
             $remainingAfterDeposit = $this->safari_rate - $this->deposit;
 
             // If 90-day was 0 (late booking), keep it 0 and put remainder in 45-day
             if ($this->payment_90_day == 0) {
                 $this->payment_45_day = max(0, $remainingAfterDeposit);
             } else {
-                // Normal booking: deposit + 90-day = 50%, 45-day = 50%
+                // Normal booking: try deposit + 90-day = 50%, 45-day = 50%
                 $halfTotal = $this->safari_rate * 0.50;
-                $this->payment_90_day = max(0, $halfTotal - $this->deposit);
-                $this->payment_45_day = $this->safari_rate * 0.50;
+
+                // If deposit already exceeds 50%, 90-day becomes 0
+                if ($this->deposit >= $halfTotal) {
+                    $this->payment_90_day = 0;
+                    $this->payment_45_day = max(0, $remainingAfterDeposit);
+                } else {
+                    $this->payment_90_day = $halfTotal - $this->deposit;
+                    $this->payment_45_day = $this->safari_rate * 0.50;
+                }
             }
         }
     }

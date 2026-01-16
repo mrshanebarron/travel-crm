@@ -21,6 +21,12 @@ class LedgerEntry extends Model
         'vendor_name',
     ];
 
+    /**
+     * Valid ledger entry types
+     */
+    const TYPE_RECEIVED = 'received';
+    const TYPE_PAID = 'paid';
+
     protected $casts = [
         'date' => 'date',
         'amount' => 'decimal:2',
