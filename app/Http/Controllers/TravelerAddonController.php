@@ -29,16 +29,25 @@ class TravelerAddonController extends Controller
             DB::transaction(function () use ($traveler, $validated, $type, $isCredit) {
                 $booking = $traveler->group->booking;
 
+                // Calculate running balance (same logic as LedgerEntryController)
+                $lastEntry = $booking->ledgerEntries()->orderBy('id', 'desc')->first();
+                $previousBalance = $lastEntry ? $lastEntry->balance : 0;
+                $ledgerType = $isCredit ? 'paid' : 'received';
+                $newBalance = $ledgerType === 'received'
+                    ? $previousBalance + $validated['cost_per_person']
+                    : $previousBalance - $validated['cost_per_person'];
+
                 // For credits, the ledger entry type is 'paid' (money going out/refund)
                 // For add-ons, it's 'received' (money owed to us)
                 $ledgerEntry = LedgerEntry::create([
                     'booking_id' => $booking->id,
                     'date' => now(),
                     'description' => ($isCredit ? "Credit: " : "Add-on: ") . "{$validated['experience_name']} - {$traveler->full_name}",
-                    'type' => $isCredit ? 'paid' : 'received',
+                    'type' => $ledgerType,
                     'received_category' => $isCredit ? null : 'add_on',
                     'paid_category' => $isCredit ? 'credit' : null,
                     'amount' => $validated['cost_per_person'],
+                    'balance' => $newBalance,
                     'created_by' => auth()->id(),
                 ]);
 
@@ -72,13 +81,34 @@ class TravelerAddonController extends Controller
     {
         Gate::authorize('update', $addon->traveler->group->booking);
 
+        $booking = $addon->traveler->group->booking;
+
         // Delete associated ledger entry if exists
         if ($addon->ledger_entry_id) {
             LedgerEntry::where('id', $addon->ledger_entry_id)->delete();
+            // Recalculate all balances after deletion
+            $this->recalculateBalances($booking);
         }
 
         $addon->delete();
 
         return redirect()->back()->with('success', 'Add-on deleted.');
+    }
+
+    /**
+     * Recalculate running balances for all ledger entries in a booking.
+     */
+    private function recalculateBalances($booking): void
+    {
+        $entries = $booking->ledgerEntries()->orderBy('id')->get();
+        $balance = 0;
+
+        foreach ($entries as $entry) {
+            $balance = $entry->type === 'received'
+                ? $balance + $entry->amount
+                : $balance - $entry->amount;
+
+            $entry->update(['balance' => $balance]);
+        }
     }
 }
