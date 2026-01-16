@@ -138,3 +138,61 @@ Options for client:
 - **Google Workspace** ($6/user/month) - if they use Gmail
 - **Resend** (free tier 100/day) - simple API-based
 - **Mailgun/SendGrid** - transactional email services
+
+---
+
+## Production Hosting Plan (Pending Matt's Confirmation)
+
+**Date:** January 16, 2026
+
+### Current Situation
+Matt uses **Rocket.net** for tapestryofafrica.com - this is WordPress-optimized hosting that won't properly support Laravel.
+
+### Rocket.net SSH Access (for reference)
+- **Host:** 131.153.236.180
+- **Username:** umiybqa
+- **Auth:** SSH key (~/.ssh/id_ed25519)
+- **PHP Available:** 7.4 (default), 8.0, 8.1, 8.2, 8.3
+- **Composer:** Installed at /home/umiybqa/bin/composer
+
+### Why Rocket.net Won't Work for Laravel
+- WordPress-optimized, not general PHP hosting
+- No queue workers or process control
+- Document root configuration limited
+- Would be hacky/fragile setup
+
+### Recommended Solution: Dedicated DigitalOcean Droplet
+**Plan:** Create a $6/mo droplet, set up everything, then transfer ownership to Matt
+
+**Steps:**
+1. Create droplet under Shane's DO account
+2. Set up: PHP 8.2+, MySQL, Nginx, SSL, git deployment
+3. Deploy CRM and verify everything works
+4. Matt creates DigitalOcean account + adds payment method
+5. Transfer droplet ownership to Matt's account
+6. Matt pays ~$6/mo directly to DigitalOcean
+7. We retain SSH access for ongoing maintenance
+
+**DNS:** Matt points `crm.tapestryofafrica.com` to the new droplet IP
+
+**Status:** WAITING - Need Matt's confirmation he's okay with ~$6/mo hosting cost
+
+### Rocket.net Control Panel Access
+- **URL:** control.rocket.net
+- **Email:** mrshanebarron@gmail.com
+- **Password:** Rat9chet!
+
+---
+
+## Recent Features Added
+
+### Create Booking from Safari Office PDF (January 16, 2026)
+Users can now upload a Safari Office PDF directly from the Bookings list page to automatically create a booking with:
+- Lead traveler name extracted from PDF
+- All travelers (with placeholder names for non-lead)
+- Start/end dates and country
+- Full itinerary with lodges, meals, activities
+- Payment records with extracted rates
+- Default task checklist
+
+**Location:** "Import from Safari Office" button on Bookings index page
