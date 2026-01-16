@@ -15,7 +15,7 @@ class TransferExpenseController extends Controller
 
         $validated = $request->validate([
             'booking_id' => 'required|exists:bookings,id',
-            'category' => 'required|in:lodge,guide_vehicle,park_entry,misc',
+            'category' => 'required|in:lodges_camps,driver_guide,park_entry,arrival_dept_flight,internal_flights,driver_guide_invoices,misc',
             'vendor_name' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'payment_type' => 'required|in:deposit,final,other',
@@ -34,7 +34,7 @@ class TransferExpenseController extends Controller
 
         $validated = $request->validate([
             'booking_id' => 'required|exists:bookings,id',
-            'category' => 'required|in:lodge,guide_vehicle,park_entry,misc',
+            'category' => 'required|in:lodges_camps,driver_guide,park_entry,arrival_dept_flight,internal_flights,driver_guide_invoices,misc',
             'vendor_name' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'payment_type' => 'required|in:deposit,final,other',

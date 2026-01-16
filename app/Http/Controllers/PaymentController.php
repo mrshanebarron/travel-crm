@@ -54,11 +54,22 @@ class PaymentController extends Controller
             'safari_rate' => 'required|numeric|min:0',
         ]);
 
+        $oldRate = $payment->safari_rate;
         $payment->safari_rate = $validated['safari_rate'];
         $payment->recalculateSchedule();
         $payment->save();
 
         $booking = $payment->traveler->group->booking;
+        $traveler = $payment->traveler;
+
+        // Log rate change
+        if ($oldRate != $validated['safari_rate']) {
+            $booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'rate_changed',
+                'notes' => "Safari rate changed for {$traveler->full_name}: \${$oldRate} → \${$validated['safari_rate']}",
+            ]);
+        }
 
         return redirect()->route('bookings.show', ['booking' => $booking->id, 'tab' => 'payment-details'])
             ->with('success', 'Payment record updated successfully.');

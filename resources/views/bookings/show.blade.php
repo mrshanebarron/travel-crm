@@ -244,63 +244,166 @@
                 </div>
             </div>
 
-            <div class="space-y-4">
-                @forelse($booking->safariDays->sortBy('day_number') as $day)
-                    <div class="border border-slate-200 rounded-xl p-4">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <span class="inline-flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full text-orange-600 font-bold">
-                                        {{ $day->day_number }}
-                                    </span>
-                                    <div>
-                                        <div class="font-semibold text-slate-900">{{ $day->date->format('l, F j, Y') }}</div>
-                                        <div class="text-sm text-slate-600">{{ $day->location ?: 'Location TBD' }}</div>
-                                    </div>
-                                </div>
-                                @if($day->lodge)
-                                    <div class="ml-13 mt-2">
-                                        <span class="text-sm text-slate-500">Accommodation:</span>
-                                        <span class="text-sm font-medium text-slate-900">{{ $day->lodge }}</span>
-                                    </div>
-                                @endif
-                                @if($day->morning_activity || $day->midday_activity || $day->afternoon_activity || $day->other_activities)
-                                    <div class="ml-13 mt-2 text-sm space-y-1">
-                                        @if($day->morning_activity)
-                                            <div class="text-slate-600"><span class="text-slate-500">Morning:</span> {{ $day->morning_activity }}</div>
-                                        @endif
-                                        @if($day->midday_activity)
-                                            <div class="text-slate-600"><span class="text-slate-500">Midday:</span> {{ $day->midday_activity }}</div>
-                                        @endif
-                                        @if($day->afternoon_activity)
-                                            <div class="text-slate-600"><span class="text-slate-500">Afternoon:</span> {{ $day->afternoon_activity }}</div>
-                                        @endif
-                                        @if($day->other_activities)
-                                            <div class="text-slate-600"><span class="text-slate-500">Other:</span> {{ $day->other_activities }}</div>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="flex flex-col items-end gap-2">
-                                @if($day->meal_plan)
-                                    <span class="badge badge-info">{{ $day->meal_plan }}</span>
-                                @endif
-                                @if($day->drink_plan)
-                                    <span class="badge badge-success">{{ $day->drink_plan }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-12 text-slate-500">
-                        <svg class="mx-auto mb-4 text-slate-300" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                        <p>No safari itinerary added yet</p>
-                        <p class="text-sm">Import a Safari Office PDF to populate the itinerary</p>
-                    </div>
-                @endforelse
-            </div>
+            @if($booking->safariDays->count())
+                <div class="border border-slate-200 rounded-xl overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5">Day / Destination</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5">Morning</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5">Midday</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5">Afternoon</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5">Evening</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            @foreach($booking->safariDays->sortBy('day_number') as $day)
+                                @php
+                                    $morningActivities = $day->activitiesForPeriod('morning');
+                                    $middayActivities = $day->activitiesForPeriod('midday');
+                                    $afternoonActivities = $day->activitiesForPeriod('afternoon');
+                                    $eveningActivities = $day->activitiesForPeriod('evening');
+                                @endphp
+                                <tr class="hover:bg-slate-50">
+                                    {{-- Day Info Column --}}
+                                    <td class="px-4 py-4 align-top">
+                                        <div class="flex items-start gap-3">
+                                            <span class="inline-flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full text-orange-600 font-bold text-sm shrink-0">
+                                                {{ $day->day_number }}
+                                            </span>
+                                            <div class="min-w-0">
+                                                <div class="text-sm font-medium text-slate-900">{{ $day->date->format('M j, Y') }}</div>
+                                                <div class="text-sm text-slate-600 font-medium">{{ $day->location ?: 'TBD' }}</div>
+                                                @if($day->lodge)
+                                                    <div class="text-xs text-slate-500 mt-1">{{ $day->lodge }}</div>
+                                                @endif
+                                                <div class="flex flex-wrap gap-1 mt-2">
+                                                    @if($day->meal_plan)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">{{ $day->meal_plan }}</span>
+                                                    @endif
+                                                    @if($day->drink_plan)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">{{ $day->drink_plan }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {{-- Morning Column --}}
+                                    <td class="px-4 py-4 align-top">
+                                        <div class="space-y-1" x-data="activityCell({{ $day->id }}, 'morning', {{ json_encode($morningActivities->pluck('activity')->toArray()) }})">
+                                            <template x-if="!editing">
+                                                <div>
+                                                    <template x-for="(activity, index) in activities" :key="index">
+                                                        <div class="text-sm text-slate-700" x-text="activity"></div>
+                                                    </template>
+                                                    <div x-show="activities.length === 0" class="text-sm text-slate-400">-</div>
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <button @click="startEdit()" class="text-xs text-orange-600 hover:text-orange-800 mt-1">Edit</button>
+                                                    @endif
+                                                </div>
+                                            </template>
+                                            <template x-if="editing">
+                                                <div>
+                                                    <textarea x-model="editText" rows="3" class="w-full text-sm border-slate-300 rounded focus:border-orange-500 focus:ring-orange-500" placeholder="One activity per line"></textarea>
+                                                    <div class="flex gap-1 mt-1">
+                                                        <button @click="save()" class="text-xs text-green-600 hover:text-green-800">Save</button>
+                                                        <button @click="cancel()" class="text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                    {{-- Midday Column --}}
+                                    <td class="px-4 py-4 align-top">
+                                        @php
+                                            $middayDefault = $middayActivities->isEmpty() ? ['Lunch'] : $middayActivities->pluck('activity')->toArray();
+                                        @endphp
+                                        <div class="space-y-1" x-data="activityCell({{ $day->id }}, 'midday', {{ json_encode($middayDefault) }})">
+                                            <template x-if="!editing">
+                                                <div>
+                                                    <template x-for="(activity, index) in activities" :key="index">
+                                                        <div class="text-sm text-slate-700" x-text="activity"></div>
+                                                    </template>
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <button @click="startEdit()" class="text-xs text-orange-600 hover:text-orange-800 mt-1">Edit</button>
+                                                    @endif
+                                                </div>
+                                            </template>
+                                            <template x-if="editing">
+                                                <div>
+                                                    <textarea x-model="editText" rows="3" class="w-full text-sm border-slate-300 rounded focus:border-orange-500 focus:ring-orange-500" placeholder="One activity per line"></textarea>
+                                                    <div class="flex gap-1 mt-1">
+                                                        <button @click="save()" class="text-xs text-green-600 hover:text-green-800">Save</button>
+                                                        <button @click="cancel()" class="text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                    {{-- Afternoon Column --}}
+                                    <td class="px-4 py-4 align-top">
+                                        <div class="space-y-1" x-data="activityCell({{ $day->id }}, 'afternoon', {{ json_encode($afternoonActivities->pluck('activity')->toArray()) }})">
+                                            <template x-if="!editing">
+                                                <div>
+                                                    <template x-for="(activity, index) in activities" :key="index">
+                                                        <div class="text-sm text-slate-700" x-text="activity"></div>
+                                                    </template>
+                                                    <div x-show="activities.length === 0" class="text-sm text-slate-400">-</div>
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <button @click="startEdit()" class="text-xs text-orange-600 hover:text-orange-800 mt-1">Edit</button>
+                                                    @endif
+                                                </div>
+                                            </template>
+                                            <template x-if="editing">
+                                                <div>
+                                                    <textarea x-model="editText" rows="3" class="w-full text-sm border-slate-300 rounded focus:border-orange-500 focus:ring-orange-500" placeholder="One activity per line"></textarea>
+                                                    <div class="flex gap-1 mt-1">
+                                                        <button @click="save()" class="text-xs text-green-600 hover:text-green-800">Save</button>
+                                                        <button @click="cancel()" class="text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                    {{-- Evening Column --}}
+                                    <td class="px-4 py-4 align-top">
+                                        <div class="space-y-1" x-data="activityCell({{ $day->id }}, 'evening', {{ json_encode($eveningActivities->pluck('activity')->toArray()) }})">
+                                            <template x-if="!editing">
+                                                <div>
+                                                    <template x-for="(activity, index) in activities" :key="index">
+                                                        <div class="text-sm text-slate-700" x-text="activity"></div>
+                                                    </template>
+                                                    <div x-show="activities.length === 0" class="text-sm text-slate-400">-</div>
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <button @click="startEdit()" class="text-xs text-orange-600 hover:text-orange-800 mt-1">Edit</button>
+                                                    @endif
+                                                </div>
+                                            </template>
+                                            <template x-if="editing">
+                                                <div>
+                                                    <textarea x-model="editText" rows="3" class="w-full text-sm border-slate-300 rounded focus:border-orange-500 focus:ring-orange-500" placeholder="One activity per line"></textarea>
+                                                    <div class="flex gap-1 mt-1">
+                                                        <button @click="save()" class="text-xs text-green-600 hover:text-green-800">Save</button>
+                                                        <button @click="cancel()" class="text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-12 text-slate-500">
+                    <svg class="mx-auto mb-4 text-slate-300" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    <p>No safari itinerary added yet</p>
+                    <p class="text-sm">Import a Safari Office PDF to populate the itinerary</p>
+                </div>
+            @endif
         </div>
 
         <!-- Payment Details Tab -->
@@ -704,20 +807,20 @@
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">Done</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Task</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-36">Assigned To</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Date Assigned</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Date Completed</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Notes</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-40">Behavior/Timing</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Actions</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-10"></th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-48">Task</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Assigned</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-20">Assigned</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-20">Completed</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Notes</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-28">Timing</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16"></th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
                             @forelse($booking->tasks->sortBy([['status', 'asc'], ['due_date', 'asc']]) as $task)
                                 <tr class="{{ $task->status === 'completed' ? 'bg-green-50/50' : '' }} hover:bg-slate-50">
-                                    <td class="px-4 py-3">
+                                    <td class="px-2 py-2">
                                         @if($task->status === 'completed')
                                             <form method="POST" action="{{ route('tasks.update', $task) }}">
                                                 @csrf
@@ -740,36 +843,36 @@
                                             </form>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <span class="{{ $task->status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900 font-medium' }}">
+                                    <td class="px-2 py-2">
+                                        <span class="{{ $task->status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900 font-medium' }} text-sm">
                                             {{ $task->name }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm">
+                                    <td class="px-2 py-2 text-xs">
                                         @if($task->assignedTo)
                                             <span class="text-slate-700">{{ $task->assignedTo->name }}</span>
                                         @else
-                                            <span class="text-amber-600">Unassigned</span>
+                                            <span class="text-amber-600">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-500">
-                                        {{ $task->assigned_at ? $task->assigned_at->format('M j, Y') : ($task->created_at ? $task->created_at->format('M j, Y') : '-') }}
+                                    <td class="px-2 py-2 text-xs text-slate-500">
+                                        {{ $task->assigned_at ? $task->assigned_at->format('n/j') : '-' }}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-500">
+                                    <td class="px-2 py-2 text-xs text-slate-500">
                                         @if($task->status === 'completed' && $task->completed_at)
-                                            {{ $task->completed_at->format('M j, Y') }}
+                                            {{ $task->completed_at->format('n/j') }}
                                         @else
-                                            <span class="text-slate-400">-</span>
+                                            -
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">
-                                        {{ $task->description ?: '-' }}
+                                    <td class="px-2 py-2 text-sm text-slate-600">
+                                        {{ $task->description ?: '' }}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-500">
-                                        {{ $task->timing_description ?: '-' }}
+                                    <td class="px-2 py-2 text-xs text-slate-500">
+                                        {{ $task->timing_description ?: '' }}
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex items-center gap-2">
+                                    <td class="px-2 py-2">
+                                        <div class="flex items-center gap-1">
                                             <button type="button" onclick="openEditTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->due_date?->format('Y-m-d') }}', {{ $task->assigned_to ?? 'null' }})" class="text-slate-400 hover:text-slate-600" title="Edit task">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -2014,6 +2117,55 @@
                 pickupField.classList.add('hidden');
                 dropoffField.classList.remove('hidden');
             }
+        }
+
+        // Alpine.js component for editing safari day activities
+        function activityCell(safariDayId, period, initialActivities) {
+            return {
+                safariDayId: safariDayId,
+                period: period,
+                activities: initialActivities || [],
+                editing: false,
+                editText: '',
+
+                startEdit() {
+                    this.editText = this.activities.join('\n');
+                    this.editing = true;
+                },
+
+                cancel() {
+                    this.editing = false;
+                    this.editText = '';
+                },
+
+                async save() {
+                    const activities = this.editText.split('\n').map(a => a.trim()).filter(a => a);
+
+                    try {
+                        const response = await fetch(`/safari-days/${this.safariDayId}/activities`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                period: this.period,
+                                activities: activities
+                            })
+                        });
+
+                        if (response.ok) {
+                            this.activities = activities;
+                            this.editing = false;
+                        } else {
+                            alert('Failed to save activities');
+                        }
+                    } catch (error) {
+                        console.error('Error saving activities:', error);
+                        alert('Failed to save activities');
+                    }
+                }
+            };
         }
 
     </script>

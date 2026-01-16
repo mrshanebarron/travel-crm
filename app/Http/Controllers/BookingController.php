@@ -111,7 +111,7 @@ class BookingController extends Controller
         $booking->load([
             'groups.travelers.flights',
             'groups.travelers.payment',
-            'safariDays',
+            'safariDays.activities',
             'tasks.assignedTo',
             'documents',
             'rooms',
@@ -155,6 +155,10 @@ class BookingController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $booking) {
+            $oldStartDate = $booking->start_date;
+            $newStartDate = \Carbon\Carbon::parse($validated['start_date']);
+            $dateChanged = !$oldStartDate->equalTo($newStartDate);
+
             $booking->update([
                 'country' => $validated['country'],
                 'start_date' => $validated['start_date'],
@@ -162,6 +166,25 @@ class BookingController extends Controller
                 'status' => $validated['status'],
                 'guides' => $validated['guides'] ?? [],
             ]);
+
+            // If start date changed, recalculate all payment schedules and log it
+            if ($dateChanged) {
+                $daysUntilSafari = now()->diffInDays($newStartDate, false);
+                foreach ($booking->groups as $group) {
+                    foreach ($group->travelers as $traveler) {
+                        if ($traveler->payment) {
+                            $traveler->payment->recalculateWithAddons($daysUntilSafari);
+                            $traveler->payment->save();
+                        }
+                    }
+                }
+
+                $booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action_type' => 'date_changed',
+                    'notes' => 'Start date changed from ' . $oldStartDate->format('M j, Y') . ' to ' . $newStartDate->format('M j, Y'),
+                ]);
+            }
 
             // Update travelers if provided
             if (isset($validated['travelers'])) {
@@ -248,8 +271,8 @@ class BookingController extends Controller
                 // Log activity
                 $booking->activityLogs()->create([
                     'user_id' => auth()->id(),
-                    'action' => 'pdf_imported',
-                    'description' => 'PDF uploaded but could not be parsed automatically. Saved for manual review.',
+                    'action_type' => 'pdf_imported',
+                    'notes' => 'PDF uploaded but could not be parsed automatically. Saved for manual review.',
                 ]);
 
                 return redirect()->route('bookings.show', $booking)
@@ -353,8 +376,8 @@ class BookingController extends Controller
             // Log activity
             $booking->activityLogs()->create([
                 'user_id' => auth()->id(),
-                'action' => 'pdf_imported',
-                'description' => $description,
+                'action_type' => 'pdf_imported',
+                'notes' => $description,
             ]);
 
             $successMessage = "PDF imported successfully!";
@@ -610,18 +633,17 @@ class BookingController extends Controller
                 // Create safari days from parsed itinerary or date range
                 if (!empty($parsedDays)) {
                     foreach ($parsedDays as $dayData) {
-                        $booking->safariDays()->create([
+                        $safariDay = $booking->safariDays()->create([
                             'day_number' => $dayData['day_number'],
                             'date' => $dayData['date'] ?? null,
                             'location' => $dayData['location'] ?? '',
                             'lodge' => $dayData['lodge'] ?? null,
-                            'morning_activity' => $dayData['morning_activity'] ?? null,
-                            'midday_activity' => $dayData['midday_activity'] ?? null,
-                            'afternoon_activity' => $dayData['afternoon_activity'] ?? null,
-                            'other_activities' => $dayData['other_activities'] ?? null,
                             'meal_plan' => $dayData['meal_plan'] ?? null,
                             'drink_plan' => $dayData['drink_plan'] ?? null,
                         ]);
+
+                        // Create activities from parsed data
+                        $this->createActivitiesFromParsedData($safariDay, $dayData);
                     }
                 } else {
                     // Fallback: create empty days based on date range
@@ -653,8 +675,8 @@ class BookingController extends Controller
                 $refInfo = $metadata['reference_number'] ? " (Ref: {$metadata['reference_number']})" : '';
                 $booking->activityLogs()->create([
                     'user_id' => auth()->id(),
-                    'action' => 'booking_created_from_pdf',
-                    'description' => "Booking created from Safari Office PDF{$refInfo}. Lead: {$metadata['lead_name']}, {$metadata['traveler_count']} travelers.",
+                    'action_type' => 'booking_created',
+                    'notes' => "Booking created from Safari Office PDF{$refInfo}. Lead: {$metadata['lead_name']}, {$metadata['traveler_count']} travelers.",
                 ]);
 
                 return $booking;
@@ -697,8 +719,8 @@ class BookingController extends Controller
                 // Log activity
                 $booking->activityLogs()->create([
                     'user_id' => auth()->id(),
-                    'action' => 'url_import_failed',
-                    'description' => 'Safari Office URL imported but no itinerary data could be extracted.',
+                    'action_type' => 'url_import_failed',
+                    'notes' => 'Safari Office URL imported but no itinerary data could be extracted.',
                 ]);
 
                 return redirect()->route('bookings.show', $booking)
@@ -754,8 +776,8 @@ class BookingController extends Controller
             // Store the URL in a note field or as activity log
             $booking->activityLogs()->create([
                 'user_id' => auth()->id(),
-                'action' => 'url_imported',
-                'description' => "Safari Office URL imported. {$updatedCount} days updated with itinerary data. URL: {$request->safari_office_url}",
+                'action_type' => 'url_imported',
+                'notes' => "Safari Office URL imported. {$updatedCount} days updated with itinerary data. URL: {$request->safari_office_url}",
             ]);
 
             // Also store the URL in the booking's notes for reference
@@ -776,6 +798,37 @@ class BookingController extends Controller
 
             return redirect()->route('bookings.show', $booking)
                 ->with('error', 'Failed to import from Safari Office: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create activity records from parsed PDF data.
+     */
+    protected function createActivitiesFromParsedData($safariDay, array $dayData): void
+    {
+        $periods = [
+            'morning' => $dayData['morning_activity'] ?? null,
+            'midday' => $dayData['midday_activity'] ?? null,
+            'afternoon' => $dayData['afternoon_activity'] ?? null,
+        ];
+
+        foreach ($periods as $period => $activityText) {
+            if ($activityText) {
+                // Split by semicolons (from PDF parser concatenation) or newlines
+                $activities = preg_split('/[;\n]/', $activityText);
+                $sortOrder = 0;
+
+                foreach ($activities as $activity) {
+                    $activity = trim($activity);
+                    if ($activity) {
+                        $safariDay->activities()->create([
+                            'period' => $period,
+                            'activity' => $activity,
+                            'sort_order' => $sortOrder++,
+                        ]);
+                    }
+                }
+            }
         }
     }
 }

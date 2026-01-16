@@ -59,7 +59,7 @@
                 </svg>
             </div>
             <p class="text-2xl sm:text-3xl font-bold text-slate-900 mb-0.5 sm:mb-1">{{ $stats['tasks_assigned_by_me'] }}</p>
-            <p class="text-xs sm:text-sm text-slate-500">Assigned</p>
+            <p class="text-xs sm:text-sm text-slate-500">Tasks I Assigned to Others</p>
         </a>
     </div>
 

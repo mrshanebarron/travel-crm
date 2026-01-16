@@ -127,6 +127,111 @@ class Payment extends Model
         return $this->belongsTo(Traveler::class);
     }
 
+    /**
+     * Get total rate including add-ons and credits.
+     * This is the amount that should be used for payment schedule calculations.
+     */
+    public function getTotalRateWithAddonsAttribute(): float
+    {
+        $traveler = $this->traveler;
+        if (!$traveler) {
+            return (float) $this->safari_rate;
+        }
+
+        $addons = $traveler->addons->where('type', '!=', 'credit')->sum('cost_per_person');
+        $credits = $traveler->addons->where('type', 'credit')->sum('cost_per_person');
+
+        return (float) $this->safari_rate + $addons - $credits;
+    }
+
+    /**
+     * Recalculate payment schedule based on total rate (including add-ons).
+     * Called when add-ons change or dates change.
+     */
+    public function recalculateWithAddons(?int $daysUntilSafari = null): void
+    {
+        $totalRate = $this->total_rate_with_addons;
+
+        // Calculate what's already been paid (don't touch paid amounts)
+        $paidAmount = 0;
+        if ($this->deposit_paid) {
+            $paidAmount += $this->deposit;
+        }
+        if ($this->payment_90_day_paid) {
+            $paidAmount += $this->payment_90_day;
+        }
+        if ($this->payment_45_day_paid) {
+            $paidAmount += $this->payment_45_day;
+        }
+
+        $remainingToPay = $totalRate - $paidAmount;
+
+        // If all payments are made, nothing to recalculate
+        if ($this->deposit_paid && $this->payment_90_day_paid && $this->payment_45_day_paid) {
+            return;
+        }
+
+        // Determine schedule based on days until safari
+        if ($daysUntilSafari !== null && $daysUntilSafari <= 0) {
+            // Already on safari - any remaining is 100% due now
+            if (!$this->deposit_paid) {
+                $this->deposit = $remainingToPay;
+                $this->payment_90_day = 0;
+                $this->payment_45_day = 0;
+            } elseif (!$this->payment_90_day_paid) {
+                $this->payment_90_day = $remainingToPay;
+                $this->payment_45_day = 0;
+            } elseif (!$this->payment_45_day_paid) {
+                $this->payment_45_day = $remainingToPay;
+            }
+        } elseif ($daysUntilSafari !== null && $daysUntilSafari <= 45) {
+            // Within 45 days - remaining split between available payments
+            if (!$this->deposit_paid) {
+                $this->deposit = $remainingToPay;
+                $this->payment_90_day = 0;
+                $this->payment_45_day = 0;
+            } elseif (!$this->payment_45_day_paid) {
+                $this->payment_45_day = $remainingToPay;
+                if (!$this->payment_90_day_paid) {
+                    $this->payment_90_day = 0;
+                }
+            }
+        } elseif ($daysUntilSafari !== null && $daysUntilSafari <= 90) {
+            // Within 90 days - 50/50 split of remaining
+            if (!$this->deposit_paid) {
+                $this->deposit = $remainingToPay * 0.50;
+                $this->payment_90_day = 0;
+                $this->payment_45_day = $remainingToPay * 0.50;
+            } else {
+                // Deposit paid - all remaining goes to 45-day
+                $this->payment_90_day = 0;
+                if (!$this->payment_45_day_paid) {
+                    $this->payment_45_day = $remainingToPay;
+                }
+            }
+        } else {
+            // Normal booking (> 90 days) - maintain 25/25/50 ratio on remaining
+            // But respect what's already been paid
+            if (!$this->deposit_paid) {
+                // Target: deposit + 90-day = 50%, 45-day = 50%
+                $targetFirstHalf = $totalRate * 0.50;
+                $this->deposit = $totalRate * 0.25;
+                $this->payment_90_day = $totalRate * 0.25;
+                $this->payment_45_day = $totalRate * 0.50;
+            } elseif (!$this->payment_90_day_paid) {
+                // Deposit paid - recalc 90-day so deposit + 90-day = 50%
+                $targetFirstHalf = $totalRate * 0.50;
+                $this->payment_90_day = max(0, $targetFirstHalf - $this->deposit);
+                if (!$this->payment_45_day_paid) {
+                    $this->payment_45_day = max(0, $totalRate - $this->deposit - $this->payment_90_day);
+                }
+            } elseif (!$this->payment_45_day_paid) {
+                // Deposit and 90-day paid - 45-day absorbs remainder
+                $this->payment_45_day = max(0, $remainingToPay);
+            }
+        }
+    }
+
     public function getTotalPaidAttribute(): float
     {
         return $this->deposit + $this->payment_90_day + $this->payment_45_day;
@@ -134,7 +239,7 @@ class Payment extends Model
 
     public function getBalanceAttribute(): float
     {
-        return $this->safari_rate - $this->total_paid;
+        return $this->total_rate_with_addons - $this->total_paid;
     }
 
     public function getIsFullyPaidAttribute(): bool

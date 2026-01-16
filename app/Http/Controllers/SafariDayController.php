@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SafariDay;
+use App\Models\SafariDayActivity;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -27,5 +28,30 @@ class SafariDayController extends Controller
         $safariDay->update($validated);
 
         return redirect()->back()->with('success', 'Safari day updated successfully.');
+    }
+
+    public function updateActivities(Request $request, SafariDay $safariDay)
+    {
+        Gate::authorize('update', $safariDay->booking);
+
+        $validated = $request->validate([
+            'period' => 'required|in:morning,midday,afternoon,evening',
+            'activities' => 'array',
+            'activities.*' => 'string|max:255',
+        ]);
+
+        // Delete existing activities for this period
+        $safariDay->activities()->where('period', $validated['period'])->delete();
+
+        // Create new activities
+        foreach ($validated['activities'] as $index => $activity) {
+            $safariDay->activities()->create([
+                'period' => $validated['period'],
+                'activity' => $activity,
+                'sort_order' => $index,
+            ]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }

@@ -65,6 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Safari Days
     Route::patch('/safari-days/{safariDay}', [SafariDayController::class, 'update'])->name('safari-days.update');
+    Route::post('/safari-days/{safariDay}/activities', [SafariDayController::class, 'updateActivities'])->name('safari-days.activities');
 
     // Tasks
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');

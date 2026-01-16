@@ -59,6 +59,23 @@ class TravelerAddonController extends Controller
                     'notes' => $validated['notes'] ?? null,
                     'ledger_entry_id' => $ledgerEntry->id,
                 ]);
+
+                // Recalculate payment schedule to include add-on
+                if ($traveler->payment) {
+                    $daysUntilSafari = now()->diffInDays($booking->start_date, false);
+                    $traveler->payment->recalculateWithAddons($daysUntilSafari);
+                    $traveler->payment->save();
+                }
+
+                // Log activity
+                $actionText = $isCredit
+                    ? "Credit applied: {$validated['experience_name']} (-\${$validated['cost_per_person']}) for {$traveler->full_name}"
+                    : "Add-on added: {$validated['experience_name']} (\${$validated['cost_per_person']}) for {$traveler->full_name}";
+                $booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action_type' => $isCredit ? 'credit_applied' : 'addon_added',
+                    'notes' => $actionText,
+                ]);
             });
 
             $message = $isCredit ? 'Credit applied and synced to ledger.' : 'Add-on created and synced to ledger.';
@@ -81,7 +98,8 @@ class TravelerAddonController extends Controller
     {
         Gate::authorize('update', $addon->traveler->group->booking);
 
-        $booking = $addon->traveler->group->booking;
+        $traveler = $addon->traveler;
+        $booking = $traveler->group->booking;
 
         // Delete associated ledger entry if exists
         if ($addon->ledger_entry_id) {
@@ -91,6 +109,14 @@ class TravelerAddonController extends Controller
         }
 
         $addon->delete();
+
+        // Recalculate payment schedule after removing add-on
+        if ($traveler->payment) {
+            $traveler->load('addons'); // Refresh addons collection
+            $daysUntilSafari = now()->diffInDays($booking->start_date, false);
+            $traveler->payment->recalculateWithAddons($daysUntilSafari);
+            $traveler->payment->save();
+        }
 
         return redirect()->back()->with('success', 'Add-on deleted.');
     }

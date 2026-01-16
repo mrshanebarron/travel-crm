@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\Booking;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -11,34 +12,16 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Task::with(['booking', 'assignedTo', 'assignedBy']);
+        // Load all tasks for client-side filtering
+        $tasks = Task::with(['booking', 'assignedTo', 'assignedBy'])
+            ->orderBy('due_date')
+            ->get();
 
-        // Apply filters
-        switch ($request->filter) {
-            case 'mine':
-                $query->where('assigned_to', auth()->id())
-                      ->where('status', '!=', 'completed');
-                break;
-            case 'assigned':
-                $query->where('assigned_by', auth()->id())
-                      ->where('assigned_to', '!=', auth()->id())
-                      ->where('status', '!=', 'completed');
-                break;
-            case 'overdue':
-                $query->where('due_date', '<', now())
-                      ->where('status', '!=', 'completed');
-                break;
-            case 'completed':
-                $query->where('status', 'completed');
-                break;
-            default:
-                $query->where('status', '!=', 'completed');
-                break;
-        }
+        // Get bookings for the create task modal
+        $bookings = Booking::orderBy('start_date', 'desc')->get();
+        $users = User::orderBy('name')->get();
 
-        $tasks = $query->orderBy('due_date')->paginate(20);
-
-        return view('tasks.index', compact('tasks'));
+        return view('tasks.index', compact('tasks', 'bookings', 'users'));
     }
 
     public function store(Request $request, Booking $booking)
@@ -54,11 +37,21 @@ class TaskController extends Controller
             'timing_description' => 'nullable|string|max:255',
         ]);
 
-        $booking->tasks()->create([
+        $task = $booking->tasks()->create([
             ...$validated,
             'assigned_by' => auth()->id(),
             'assigned_at' => $validated['assigned_to'] ? now() : null,
         ]);
+
+        // Log task creation with assignment if applicable
+        if (!empty($validated['assigned_to'])) {
+            $assignee = User::find($validated['assigned_to']);
+            $booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_assigned',
+                'notes' => "Task created and assigned to {$assignee->name}: {$validated['name']}",
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Task created successfully.');
     }
@@ -78,16 +71,39 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
         ]);
 
-        if ($validated['status'] === 'completed' && $task->status !== 'completed') {
+        $wasCompleted = $task->status === 'completed';
+        $oldAssignee = $task->assigned_to;
+
+        if ($validated['status'] === 'completed' && !$wasCompleted) {
             $validated['completed_at'] = now();
         }
 
         // Track when task was assigned (if newly assigned)
-        if (isset($validated['assigned_to']) && $validated['assigned_to'] != $task->assigned_to) {
+        $newlyAssigned = isset($validated['assigned_to']) && $validated['assigned_to'] != $oldAssignee;
+        if ($newlyAssigned) {
             $validated['assigned_at'] = $validated['assigned_to'] ? now() : null;
         }
 
         $task->update($validated);
+
+        // Log task completion
+        if ($validated['status'] === 'completed' && !$wasCompleted) {
+            $task->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_completed',
+                'notes' => "Task completed: {$task->name}",
+            ]);
+        }
+
+        // Log task assignment change
+        if ($newlyAssigned && $validated['assigned_to']) {
+            $assignee = User::find($validated['assigned_to']);
+            $task->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_assigned',
+                'notes' => "Task assigned to {$assignee->name}: {$task->name}",
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Task updated successfully.');
     }
