@@ -9,6 +9,7 @@ class TravelerAddon extends Model
 {
     protected $fillable = [
         'traveler_id',
+        'type',
         'experience_name',
         'cost_per_person',
         'notes',
@@ -20,6 +21,22 @@ class TravelerAddon extends Model
         'cost_per_person' => 'decimal:2',
         'paid' => 'boolean',
     ];
+
+    /**
+     * Check if this is a credit (negative adjustment)
+     */
+    public function isCredit(): bool
+    {
+        return $this->type === 'credit';
+    }
+
+    /**
+     * Get the effective amount (negative for credits)
+     */
+    public function getEffectiveAmountAttribute(): float
+    {
+        return $this->isCredit() ? -abs($this->cost_per_person) : $this->cost_per_person;
+    }
 
     public function traveler(): BelongsTo
     {

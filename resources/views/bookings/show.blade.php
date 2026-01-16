@@ -427,6 +427,9 @@
                 <div class="p-6">
                     @php
                         $allAddons = $booking->groups->flatMap->travelers->flatMap->addons;
+                        $addonsOnly = $allAddons->where('type', '!=', 'credit');
+                        $creditsOnly = $allAddons->where('type', 'credit');
+                        $netTotal = $addonsOnly->sum('cost_per_person') - $creditsOnly->sum('cost_per_person');
                     @endphp
                     @if($allAddons->count() > 0)
                         <div class="overflow-x-auto">
@@ -434,33 +437,45 @@
                                 <thead>
                                     <tr>
                                         <th>Traveler</th>
-                                        <th>Experience</th>
-                                        <th class="text-right">Cost</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th class="text-right">Amount</th>
                                         <th>Notes</th>
-                                        <th class="text-center">Payment Status</th>
+                                        <th class="text-center">Status</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($allAddons as $addon)
-                                        <tr>
+                                        <tr class="{{ $addon->type === 'credit' ? 'bg-blue-50' : '' }}">
                                             <td class="font-medium text-slate-900">{{ $addon->traveler->full_name }}</td>
+                                            <td>
+                                                @if($addon->type === 'credit')
+                                                    <span class="badge badge-info">Credit</span>
+                                                @else
+                                                    <span class="badge badge-slate">Add-on</span>
+                                                @endif
+                                            </td>
                                             <td>{{ $addon->experience_name }}</td>
-                                            <td class="text-right">${{ number_format($addon->cost_per_person, 2) }}</td>
+                                            <td class="text-right {{ $addon->type === 'credit' ? 'text-blue-600' : '' }}">
+                                                {{ $addon->type === 'credit' ? '-' : '' }}${{ number_format($addon->cost_per_person, 2) }}
+                                            </td>
                                             <td class="text-slate-600 text-sm">{{ $addon->notes ?: '-' }}</td>
                                             <td class="text-center">
-                                                @if($addon->paid)
+                                                @if($addon->type === 'credit')
+                                                    <span class="badge badge-success">Applied</span>
+                                                @elseif($addon->paid)
                                                     <span class="badge badge-success">Paid</span>
                                                 @else
                                                     <form method="POST" action="{{ route('traveler-addons.mark-paid', $addon) }}" class="inline">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <button type="submit" class="badge badge-warning cursor-pointer hover:bg-yellow-200">Unpaid - Click to mark paid</button>
+                                                        <button type="submit" class="badge badge-warning cursor-pointer hover:bg-yellow-200">Unpaid</button>
                                                     </form>
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <form method="POST" action="{{ route('traveler-addons.destroy', $addon) }}" onsubmit="return confirm('Delete this add-on?')">
+                                                <form method="POST" action="{{ route('traveler-addons.destroy', $addon) }}" onsubmit="return confirm('Delete this {{ $addon->type === 'credit' ? 'credit' : 'add-on' }}?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
@@ -471,11 +486,23 @@
                                 </tbody>
                                 <tfoot class="bg-slate-50">
                                     <tr>
-                                        <td colspan="2" class="font-semibold text-slate-900">Total Add-ons</td>
-                                        <td class="text-right font-semibold text-slate-900">${{ number_format($allAddons->sum('cost_per_person'), 2) }}</td>
+                                        <td colspan="3" class="font-semibold text-slate-900">Add-ons Subtotal</td>
+                                        <td class="text-right font-semibold text-slate-900">${{ number_format($addonsOnly->sum('cost_per_person'), 2) }}</td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    @if($creditsOnly->count() > 0)
+                                    <tr>
+                                        <td colspan="3" class="font-semibold text-blue-600">Credits Subtotal</td>
+                                        <td class="text-right font-semibold text-blue-600">-${{ number_format($creditsOnly->sum('cost_per_person'), 2) }}</td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    @endif
+                                    <tr class="border-t-2 border-slate-300">
+                                        <td colspan="3" class="font-bold text-slate-900">Net Add-ons Total</td>
+                                        <td class="text-right font-bold text-slate-900">${{ number_format($netTotal, 2) }}</td>
                                         <td></td>
                                         <td class="text-center text-sm text-slate-600">
-                                            {{ $allAddons->where('paid', true)->count() }}/{{ $allAddons->count() }} paid
+                                            {{ $addonsOnly->where('paid', true)->count() }}/{{ $addonsOnly->count() }} paid
                                         </td>
                                         <td></td>
                                     </tr>
@@ -484,8 +511,8 @@
                         </div>
                     @else
                         <div class="text-center py-8 text-slate-500">
-                            <p>No add-ons or experiences added yet.</p>
-                            <p class="text-sm">Click "Add Experience" to add optional extras like balloon rides, spa treatments, etc.</p>
+                            <p>No add-ons or credits added yet.</p>
+                            <p class="text-sm">Click "Add Experience" to add extras (balloon rides, spa) or credits (refunds, discounts).</p>
                         </div>
                     @endif
                 </div>
@@ -544,8 +571,11 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">Done</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Task</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-36">Due Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-36">Assigned To</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Date Assigned</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Date Completed</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Notes</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-40">Behavior/Timing</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Actions</th>
                             </tr>
                         </thead>
@@ -579,21 +609,6 @@
                                         <span class="{{ $task->status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900 font-medium' }}">
                                             {{ $task->name }}
                                         </span>
-                                        @if($task->status === 'completed' && $task->completed_at)
-                                            <span class="text-xs text-slate-400 ml-2">({{ $task->completed_at->diffForHumans() }})</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-sm">
-                                        @if($task->due_date)
-                                            <span class="{{ $task->status !== 'completed' && $task->due_date->isPast() ? 'text-red-600 font-medium' : 'text-slate-500' }}">
-                                                {{ $task->due_date->format('M j, Y') }}
-                                                @if($task->status !== 'completed' && $task->due_date->isPast())
-                                                    <span class="text-xs">(overdue)</span>
-                                                @endif
-                                            </span>
-                                        @else
-                                            <span class="text-slate-400">-</span>
-                                        @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm">
                                         @if($task->assignedTo)
@@ -601,6 +616,22 @@
                                         @else
                                             <span class="text-amber-600">Unassigned</span>
                                         @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-500">
+                                        {{ $task->assigned_at ? $task->assigned_at->format('M j, Y') : ($task->created_at ? $task->created_at->format('M j, Y') : '-') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-500">
+                                        @if($task->status === 'completed' && $task->completed_at)
+                                            {{ $task->completed_at->format('M j, Y') }}
+                                        @else
+                                            <span class="text-slate-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-600">
+                                        {{ $task->description ?: '-' }}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-500">
+                                        {{ $task->timing_description ?: '-' }}
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-2">
@@ -623,7 +654,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-6 text-center text-slate-500">
+                                    <td colspan="8" class="px-4 py-6 text-center text-slate-500">
                                         No tasks yet. Click "Add Task" to create one.
                                     </td>
                                 </tr>
@@ -1445,10 +1476,17 @@
     <!-- Add Addon Modal -->
     <div id="add-addon-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h3 class="text-lg font-semibold text-slate-900 mb-4">Add Experience / Add-on</h3>
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Add Experience / Credit</h3>
             <form id="add-addon-form" method="POST">
                 @csrf
                 <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type</label>
+                        <select name="type" id="addon-type-select" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" onchange="updateAddonLabels()">
+                            <option value="add_on">Add-on (Charge)</option>
+                            <option value="credit">Credit (Refund/Discount)</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Traveler</label>
                         <select name="traveler_id" id="addon-traveler-select" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required onchange="updateAddonFormAction()">
@@ -1461,11 +1499,11 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Experience Name</label>
-                        <input type="text" name="experience_name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" placeholder="e.g., Balloon Safari, Spa Treatment" required>
+                        <label id="addon-name-label" class="text-xs font-medium text-slate-500 uppercase tracking-wide">Experience Name</label>
+                        <input type="text" name="experience_name" id="addon-name-input" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" placeholder="e.g., Balloon Safari, Spa Treatment" required>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Cost Per Person ($)</label>
+                        <label id="addon-cost-label" class="text-xs font-medium text-slate-500 uppercase tracking-wide">Cost Per Person ($)</label>
                         <input type="number" name="cost_per_person" step="0.01" min="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
                     </div>
                     <div>
@@ -1475,7 +1513,7 @@
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
                     <button type="button" onclick="document.getElementById('add-addon-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Experience</button>
+                    <button type="submit" id="addon-submit-btn" class="btn btn-primary">Add Experience</button>
                 </div>
             </form>
         </div>
@@ -1665,6 +1703,26 @@
             const form = document.getElementById('add-addon-form');
             if (travelerId) {
                 form.action = `/travelers/${travelerId}/addons`;
+            }
+        }
+
+        function updateAddonLabels() {
+            const type = document.getElementById('addon-type-select').value;
+            const nameLabel = document.getElementById('addon-name-label');
+            const nameInput = document.getElementById('addon-name-input');
+            const costLabel = document.getElementById('addon-cost-label');
+            const submitBtn = document.getElementById('addon-submit-btn');
+
+            if (type === 'credit') {
+                nameLabel.textContent = 'Credit Description';
+                nameInput.placeholder = 'e.g., Hotel change credit, Day removed';
+                costLabel.textContent = 'Credit Amount ($)';
+                submitBtn.textContent = 'Add Credit';
+            } else {
+                nameLabel.textContent = 'Experience Name';
+                nameInput.placeholder = 'e.g., Balloon Safari, Spa Treatment';
+                costLabel.textContent = 'Cost Per Person ($)';
+                submitBtn.textContent = 'Add Experience';
             }
         }
 

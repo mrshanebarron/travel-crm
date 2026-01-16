@@ -6,6 +6,7 @@ use App\Models\TravelerAddon;
 use App\Models\Traveler;
 use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class TravelerAddonController extends Controller
@@ -15,28 +16,47 @@ class TravelerAddonController extends Controller
         Gate::authorize('update', $traveler->group->booking);
 
         $validated = $request->validate([
+            'type' => 'nullable|in:add_on,credit',
             'experience_name' => 'required|string|max:255',
             'cost_per_person' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
-        $addon = $traveler->addons()->create($validated);
+        $type = $validated['type'] ?? 'add_on';
+        $isCredit = $type === 'credit';
 
-        // Create ledger entry for the add-on (as a received amount to track what's owed)
-        $booking = $traveler->group->booking;
-        $ledgerEntry = LedgerEntry::create([
-            'booking_id' => $booking->id,
-            'date' => now(),
-            'description' => "Add-on: {$validated['experience_name']} - {$traveler->full_name}",
-            'type' => 'received',
-            'received_category' => 'add_on',
-            'amount' => $validated['cost_per_person'],
-            'created_by' => auth()->id(),
-        ]);
+        try {
+            DB::transaction(function () use ($traveler, $validated, $type, $isCredit) {
+                $booking = $traveler->group->booking;
 
-        $addon->update(['ledger_entry_id' => $ledgerEntry->id]);
+                // For credits, the ledger entry type is 'disbursed' (money going out/refund)
+                // For add-ons, it's 'received' (money owed to us)
+                $ledgerEntry = LedgerEntry::create([
+                    'booking_id' => $booking->id,
+                    'date' => now(),
+                    'description' => ($isCredit ? "Credit: " : "Add-on: ") . "{$validated['experience_name']} - {$traveler->full_name}",
+                    'type' => $isCredit ? 'disbursed' : 'received',
+                    'received_category' => $isCredit ? null : 'add_on',
+                    'disbursed_category' => $isCredit ? 'other' : null,
+                    'amount' => $validated['cost_per_person'],
+                    'created_by' => auth()->id(),
+                ]);
 
-        return redirect()->back()->with('success', 'Add-on created and synced to ledger.');
+                // Create addon with ledger_entry_id in single operation
+                $traveler->addons()->create([
+                    'type' => $type,
+                    'experience_name' => $validated['experience_name'],
+                    'cost_per_person' => $validated['cost_per_person'],
+                    'notes' => $validated['notes'] ?? null,
+                    'ledger_entry_id' => $ledgerEntry->id,
+                ]);
+            });
+
+            $message = $isCredit ? 'Credit applied and synced to ledger.' : 'Add-on created and synced to ledger.';
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create: ' . $e->getMessage());
+        }
     }
 
     public function markPaid(TravelerAddon $addon)

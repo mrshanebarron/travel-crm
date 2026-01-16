@@ -22,10 +22,14 @@ class PaymentController extends Controller
             'safari_rate' => 'required|numeric|min:0',
         ]);
 
+        // Calculate days until safari for booking timing logic
+        $booking = $traveler->group->booking;
+        $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
+
         $payment = new Payment();
         $payment->traveler_id = $traveler->id;
         $payment->safari_rate = $validated['safari_rate'];
-        $payment->recalculateSchedule();
+        $payment->recalculateSchedule($daysUntilSafari);
         $payment->save();
 
         return redirect()->back()->with('success', 'Payment record created successfully.');

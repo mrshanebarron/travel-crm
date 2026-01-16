@@ -442,7 +442,9 @@ class BookingController extends Controller
                 'status' => 'pending',
                 'due_date' => $dueDate,
                 'days_before_safari' => $taskData['days_before'] ?? null,
+                'timing_description' => $taskData['timing_description'] ?? null,
                 'assigned_to' => $assignedTo,
+                'assigned_at' => $assignedTo ? now() : null,
                 'assigned_by' => auth()->id(),
             ]);
         }

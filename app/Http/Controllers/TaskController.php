@@ -51,11 +51,13 @@ class TaskController extends Controller
             'assigned_to' => 'nullable|exists:users,id',
             'due_date' => 'nullable|date',
             'days_before_safari' => 'nullable|integer|min:0',
+            'timing_description' => 'nullable|string|max:255',
         ]);
 
         $booking->tasks()->create([
             ...$validated,
             'assigned_by' => auth()->id(),
+            'assigned_at' => $validated['assigned_to'] ? now() : null,
         ]);
 
         return redirect()->back()->with('success', 'Task created successfully.');
@@ -78,6 +80,11 @@ class TaskController extends Controller
 
         if ($validated['status'] === 'completed' && $task->status !== 'completed') {
             $validated['completed_at'] = now();
+        }
+
+        // Track when task was assigned (if newly assigned)
+        if (isset($validated['assigned_to']) && $validated['assigned_to'] != $task->assigned_to) {
+            $validated['assigned_at'] = $validated['assigned_to'] ? now() : null;
         }
 
         $task->update($validated);

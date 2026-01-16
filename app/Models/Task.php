@@ -12,15 +12,18 @@ class Task extends Model
         'name',
         'description',
         'assigned_to',
+        'assigned_at',
         'assigned_by',
         'status',
         'due_date',
         'days_before_safari',
+        'timing_description',
         'completed_at',
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'assigned_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
 

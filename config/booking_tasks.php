@@ -33,36 +33,42 @@ return [
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Matt',
+            'timing_description' => 'Immediately upon booking',
         ],
         [
             'name' => 'Receipt of Deposit email sent',
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Matt',
+            'timing_description' => 'Immediately upon booking',
         ],
         [
             'name' => 'All lodges Booked',
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Hilda',
+            'timing_description' => 'Immediately upon booking',
         ],
         [
             'name' => 'Safari Essential Email Series Activated',
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Albert',
+            'timing_description' => 'Immediately upon booking',
         ],
         [
             'name' => 'Safari Guides assigned',
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Hilda',
+            'timing_description' => 'Immediately upon booking',
         ],
         [
             'name' => 'Visas obtained for all travelers',
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Peter',
+            'timing_description' => 'Immediately upon booking',
         ],
 
         // === PAYMENT MILESTONE TASKS ===
@@ -70,11 +76,13 @@ return [
             'name' => '90 Day payment received',
             'days_before' => 92, // 2 days before 90-day due date
             'assigned_to_name' => 'Matt',
+            'timing_description' => '2 days before 90-day payment due',
         ],
         [
             'name' => '45 Day payment Received',
             'days_before' => 47, // 2 days before 45-day due date
             'assigned_to_name' => 'Matt',
+            'timing_description' => '2 days before 45-day payment due',
         ],
 
         // === 30 DAYS AFTER BOOKING ===
@@ -82,6 +90,7 @@ return [
             'name' => 'Flight info received and entered',
             'days_after_booking' => 30, // 30 days after booking created
             'assigned_to_name' => 'Hilda',
+            'timing_description' => '30 days after booking',
         ],
 
         // === 30 DAYS BEFORE SAFARI START ===
@@ -89,11 +98,13 @@ return [
             'name' => 'Insurance created and shared',
             'days_before' => 30,
             'assigned_to_name' => 'Peter',
+            'timing_description' => '30 days before safari',
         ],
         [
             'name' => 'Arrival and Departure arrangements',
             'days_before' => 30,
             'assigned_to_name' => 'Albert',
+            'timing_description' => '30 days before safari',
         ],
 
         // === 5 DAYS BEFORE SAFARI START ===
@@ -101,11 +112,13 @@ return [
             'name' => 'Safari guide invoice obtained',
             'days_before' => 5,
             'assigned_to_name' => 'Peter',
+            'timing_description' => '5 days before safari',
         ],
         [
             'name' => 'Welcome communication sent',
             'days_before' => 5,
             'assigned_to_name' => 'Albert',
+            'timing_description' => '1-2 weeks before arrival',
         ],
 
         // === 2 DAYS BEFORE SAFARI START ===
@@ -113,6 +126,7 @@ return [
             'name' => 'Client picked up and safari commenced',
             'days_before' => 2,
             'assigned_to_name' => 'Albert',
+            'timing_description' => 'Safari start day',
         ],
 
         // === 1 DAY BEFORE SAFARI START ===
@@ -120,6 +134,7 @@ return [
             'name' => 'Client delivered to final destination',
             'days_before' => 1,
             'assigned_to_name' => 'Albert',
+            'timing_description' => 'Safari end day',
         ],
 
         // === POST-SAFARI TASKS ===
@@ -127,6 +142,7 @@ return [
             'name' => 'Review request sent',
             'days_after' => 5,
             'assigned_to_name' => 'Hilda',
+            'timing_description' => '5 days after safari ends',
         ],
     ],
 
