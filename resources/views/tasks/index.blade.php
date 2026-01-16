@@ -33,19 +33,6 @@
                 <button @click="filter = 'assigned'" :class="filter === 'assigned' ? 'tab active' : 'tab'" class="whitespace-nowrap">Tasks I Assigned</button>
                 <button @click="filter = 'overdue'" :class="filter === 'overdue' ? 'tab active' : 'tab'" class="whitespace-nowrap">Overdue</button>
                 <button @click="filter = 'completed'" :class="filter === 'completed' ? 'tab active' : 'tab'" class="whitespace-nowrap">Done</button>
-
-                <!-- Sort Dropdown -->
-                <div class="ml-auto relative">
-                    <select x-model="sortBy" class="text-sm rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 pr-8">
-                        <option value="due_date_asc">Due Date (Earliest)</option>
-                        <option value="due_date_desc">Due Date (Latest)</option>
-                        <option value="name_asc">Name (A-Z)</option>
-                        <option value="name_desc">Name (Z-A)</option>
-                        <option value="booking">Booking</option>
-                        <option value="assigned_to">Assigned To</option>
-                        <option value="status">Status</option>
-                    </select>
-                </div>
             </div>
 
             <!-- Results Count -->
