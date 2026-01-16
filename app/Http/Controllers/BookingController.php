@@ -241,7 +241,7 @@ class BookingController extends Controller
                 $booking->documents()->create([
                     'filename' => $request->file('pdf')->getClientOriginalName(),
                     'path' => $path,
-                    'category' => 'Miscellaneous',
+                    'category' => 'misc',
                     'uploaded_by' => auth()->id(),
                 ]);
 
@@ -335,7 +335,7 @@ class BookingController extends Controller
             $booking->documents()->create([
                 'filename' => $request->file('pdf')->getClientOriginalName(),
                 'path' => $path,
-                'category' => 'Miscellaneous',
+                'category' => 'misc',
                 'uploaded_by' => auth()->id(),
             ]);
 
@@ -376,7 +376,7 @@ class BookingController extends Controller
             $booking->documents()->create([
                 'filename' => $request->file('pdf')->getClientOriginalName(),
                 'path' => $path,
-                'category' => 'Miscellaneous',
+                'category' => 'misc',
                 'uploaded_by' => auth()->id(),
             ]);
 

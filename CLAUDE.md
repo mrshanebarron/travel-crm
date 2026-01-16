@@ -113,3 +113,28 @@ Based on external audit feedback:
 **Login:** Pre-filled on login page
 **Server:** 138.197.105.147 (Demo server)
 **Path:** /var/www/demos/travelcrm
+
+---
+
+## Production Deployment Checklist
+
+When deploying to client's production environment, update the following:
+
+### Mail Configuration (REQUIRED)
+Currently using Shane's Zoho SMTP for demo. Client needs their own mail service:
+```
+MAIL_MAILER=smtp
+MAIL_HOST=[client's SMTP host]
+MAIL_PORT=[465 for SSL, 587 for TLS]
+MAIL_USERNAME=[client's email]
+MAIL_PASSWORD=[client's password]
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS=[client's from address]
+MAIL_FROM_NAME="Tapestry of Africa"
+```
+
+Options for client:
+- **Zoho Mail** ($1/user/month) - what sbarron.com uses
+- **Google Workspace** ($6/user/month) - if they use Gmail
+- **Resend** (free tier 100/day) - simple API-based
+- **Mailgun/SendGrid** - transactional email services
