@@ -849,11 +849,18 @@
                                         </span>
                                     </td>
                                     <td class="px-2 py-2 text-xs">
-                                        @if($task->assignedTo)
-                                            <span class="text-slate-700">{{ $task->assignedTo->name }}</span>
-                                        @else
-                                            <span class="text-amber-600">-</span>
-                                        @endif
+                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="inline-assign-form">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="name" value="{{ $task->name }}">
+                                            <input type="hidden" name="status" value="{{ $task->status }}">
+                                            <select name="assigned_to" onchange="this.form.submit()" class="text-xs border-0 bg-transparent p-0 pr-6 focus:ring-0 cursor-pointer {{ $task->assignedTo ? 'text-slate-700' : 'text-amber-600 font-medium' }}">
+                                                <option value="">-- Assign --</option>
+                                                @foreach($users as $user)
+                                                    <option value="{{ $user->id }}" {{ $task->assigned_to == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </form>
                                     </td>
                                     <td class="px-2 py-2 text-xs text-slate-500">
                                         {{ $task->assigned_at ? $task->assigned_at->format('n/j') : '-' }}

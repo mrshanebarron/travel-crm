@@ -176,15 +176,19 @@
                                     <span x-show="task.status === 'in_progress'" class="badge badge-info">In Progress</span>
                                     <span x-show="task.status === 'completed'" class="badge badge-success">Completed</span>
                                 </td>
-                                <td>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
-                                            <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </div>
-                                        <span class="text-slate-700" x-text="task.assigned_to_name || 'Unassigned'"></span>
-                                    </div>
+                                <td @click.stop>
+                                    <form method="POST" :action="'/tasks/' + task.id" class="inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="name" :value="task.name">
+                                        <input type="hidden" name="status" :value="task.status">
+                                        <select name="assigned_to" onchange="this.form.submit()" class="text-sm border-0 bg-transparent p-0 pr-6 focus:ring-0 cursor-pointer" :class="task.assigned_to_name ? 'text-slate-700' : 'text-amber-600 font-medium'">
+                                            <option value="">-- Assign --</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}" :selected="task.assigned_to == {{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </form>
                                 </td>
                                 <td @click.stop>
                                     <div class="flex items-center gap-2">
