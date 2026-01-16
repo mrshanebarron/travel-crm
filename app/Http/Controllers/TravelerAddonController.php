@@ -81,6 +81,11 @@ class TravelerAddonController extends Controller
             $message = $isCredit ? 'Credit applied and synced to ledger.' : 'Add-on created and synced to ledger.';
             return redirect()->back()->with('success', $message);
         } catch (\Exception $e) {
+            \Log::error('Add-on creation failed', [
+                'traveler_id' => $traveler->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return redirect()->back()->with('error', 'Failed to create: ' . $e->getMessage());
         }
     }
