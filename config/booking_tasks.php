@@ -87,7 +87,7 @@ return [
 
         // === 30 DAYS AFTER BOOKING ===
         [
-            'name' => 'Flight info received and entered',
+            'name' => 'Flight info received and entered into plan',
             'days_after_booking' => 30, // 30 days after booking created
             'assigned_to_name' => 'Hilda',
             'timing_description' => '30 days after booking',
@@ -95,13 +95,13 @@ return [
 
         // === 30 DAYS BEFORE SAFARI START ===
         [
-            'name' => 'Insurance created and shared',
+            'name' => 'Insurance created and shared with each Traveler',
             'days_before' => 30,
             'assigned_to_name' => 'Peter',
             'timing_description' => '30 days before safari',
         ],
         [
-            'name' => 'Arrival and Departure arrangements',
+            'name' => 'Arrival and Departure arrangments made',
             'days_before' => 30,
             'assigned_to_name' => 'Albert',
             'timing_description' => '30 days before safari',
@@ -109,30 +109,30 @@ return [
 
         // === 5 DAYS BEFORE SAFARI START ===
         [
-            'name' => 'Safari guide invoice obtained',
+            'name' => 'Safari guide invoice obtained for all guides',
             'days_before' => 5,
             'assigned_to_name' => 'Peter',
             'timing_description' => '5 days before safari',
         ],
         [
-            'name' => 'Welcome communication sent',
-            'days_before' => 5,
+            'name' => 'Welcome communication sent within 1-2 weeks before arrival',
+            'days_before' => 14, // 1-2 weeks before, using 14 days
             'assigned_to_name' => 'Albert',
             'timing_description' => '1-2 weeks before arrival',
         ],
 
-        // === 2 DAYS BEFORE SAFARI START ===
+        // === SAFARI START DAY ===
         [
-            'name' => 'Client picked up and safari commenced',
-            'days_before' => 2,
+            'name' => 'Client picked and safari commenced',
+            'days_before' => 0, // Safari start day
             'assigned_to_name' => 'Albert',
             'timing_description' => 'Safari start day',
         ],
 
-        // === 1 DAY BEFORE SAFARI START ===
+        // === SAFARI END DAY ===
         [
-            'name' => 'Client delivered to final destination',
-            'days_before' => 1,
+            'name' => 'Client delivered to final hotel or airport destination',
+            'days_after' => 0, // Safari end day
             'assigned_to_name' => 'Albert',
             'timing_description' => 'Safari end day',
         ],
