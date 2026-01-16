@@ -90,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Payments
     Route::post('/travelers/{traveler}/payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::patch('/payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
+    Route::patch('/payments/{payment}/toggle-paid', [PaymentController::class, 'togglePaid'])->name('payments.toggle-paid');
 
     // Traveler Add-ons
     Route::post('/travelers/{traveler}/addons', [TravelerAddonController::class, 'store'])->name('traveler-addons.store');

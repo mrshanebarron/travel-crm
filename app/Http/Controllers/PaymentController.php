@@ -32,7 +32,8 @@ class PaymentController extends Controller
         $payment->recalculateSchedule($daysUntilSafari);
         $payment->save();
 
-        return redirect()->back()->with('success', 'Payment record created successfully.');
+        return redirect()->route('bookings.show', ['booking' => $booking->id, 'tab' => 'payment-details'])
+            ->with('success', 'Payment record created successfully.');
     }
 
     public function update(Request $request, Payment $payment)
@@ -57,6 +58,34 @@ class PaymentController extends Controller
         $payment->recalculateSchedule();
         $payment->save();
 
-        return redirect()->back()->with('success', 'Payment record updated successfully.');
+        $booking = $payment->traveler->group->booking;
+
+        return redirect()->route('bookings.show', ['booking' => $booking->id, 'tab' => 'payment-details'])
+            ->with('success', 'Payment record updated successfully.');
+    }
+
+    /**
+     * Toggle payment status (paid/unpaid) for a specific payment field.
+     */
+    public function togglePaid(Request $request, Payment $payment)
+    {
+        Gate::authorize('update', $payment->traveler->group->booking);
+
+        if (!auth()->user()->can('modify_rates_payments')) {
+            return redirect()->back()->with('error', 'You do not have permission to modify rates and payments.');
+        }
+
+        $validated = $request->validate([
+            'field' => 'required|in:deposit,payment_90_day,payment_45_day',
+        ]);
+
+        $paidField = $validated['field'] . '_paid';
+        $payment->$paidField = !$payment->$paidField;
+        $payment->save();
+
+        $booking = $payment->traveler->group->booking;
+
+        return redirect()->route('bookings.show', ['booking' => $booking->id, 'tab' => 'payment-details'])
+            ->with('success', 'Payment status updated.');
     }
 }

@@ -355,12 +355,32 @@
                                         </td>
                                         <td class="text-right">
                                             @if($payment)
-                                                @if($payment->deposit_locked && !auth()->user()->isSuperAdmin())
-                                                    <span class="font-medium text-slate-900">${{ number_format($safariRate, 2) }}</span>
-                                                    @if($payment->original_rate && $payment->original_rate != $payment->safari_rate)
-                                                        <div class="text-xs text-slate-500">Original: ${{ number_format($payment->original_rate, 2) }}</div>
+                                                @if($payment->deposit_locked)
+                                                    {{-- Locked rate - show value and Edit button for super admins --}}
+                                                    <div class="rate-display-{{ $payment->id }}">
+                                                        <span class="font-medium text-slate-900">${{ number_format($safariRate, 2) }}</span>
+                                                        @if($payment->original_rate && $payment->original_rate != $payment->safari_rate)
+                                                            <div class="text-xs text-slate-500">Original: ${{ number_format($payment->original_rate, 2) }}</div>
+                                                        @endif
+                                                        @if(auth()->user()->isSuperAdmin())
+                                                            <button type="button" onclick="showRateEdit({{ $payment->id }})" class="text-xs text-orange-600 hover:text-orange-800 mt-1 block">Edit</button>
+                                                        @endif
+                                                    </div>
+                                                    {{-- Hidden edit form for super admins --}}
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <form method="POST" action="{{ route('payments.update', $payment) }}" class="rate-edit-{{ $payment->id }} hidden">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="number" name="safari_rate" value="{{ $safariRate }}" step="0.01" min="0"
+                                                                class="w-28 text-right rounded border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                                            <div class="mt-1 flex gap-1 justify-end">
+                                                                <button type="submit" class="text-xs text-green-600 hover:text-green-800">Save</button>
+                                                                <button type="button" onclick="hideRateEdit({{ $payment->id }})" class="text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+                                                            </div>
+                                                        </form>
                                                     @endif
                                                 @else
+                                                    {{-- Not locked yet - show editable field --}}
                                                     <form method="POST" action="{{ route('payments.update', $payment) }}" class="inline">
                                                         @csrf
                                                         @method('PATCH')
@@ -370,6 +390,7 @@
                                                     </form>
                                                 @endif
                                             @else
+                                                {{-- No payment yet - show create form --}}
                                                 <form method="POST" action="{{ route('payments.store', $traveler) }}" class="inline">
                                                     @csrf
                                                     <input type="number" name="safari_rate" value="0" step="0.01" min="0"
@@ -378,14 +399,70 @@
                                                 </form>
                                             @endif
                                         </td>
-                                        <td class="text-right text-slate-600">
-                                            ${{ number_format($deposit, 2) }}
+                                        {{-- Deposit column with paid/unpaid toggle --}}
+                                        <td class="text-right">
+                                            <div class="text-slate-600">${{ number_format($deposit, 2) }}</div>
                                             @if($payment && $payment->deposit_locked)
-                                                <span class="text-xs text-green-600 block">Locked</span>
+                                                @if($payment->deposit_paid)
+                                                    <span class="text-xs text-green-600">Paid</span>
+                                                @else
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <form method="POST" action="{{ route('payments.toggle-paid', $payment) }}" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="field" value="deposit">
+                                                            <button type="submit" class="text-xs text-orange-600 hover:text-orange-800">Mark Paid</button>
+                                                        </form>
+                                                    @else
+                                                        <span class="text-xs text-orange-600">Due</span>
+                                                    @endif
+                                                @endif
                                             @endif
                                         </td>
-                                        <td class="text-right text-slate-600">${{ number_format($payment90, 2) }}</td>
-                                        <td class="text-right text-slate-600">${{ number_format($payment45, 2) }}</td>
+                                        {{-- 90-Day Payment column with paid/unpaid toggle --}}
+                                        <td class="text-right">
+                                            <div class="text-slate-600">${{ number_format($payment90, 2) }}</div>
+                                            @if($payment && $payment->deposit_locked && $payment90 > 0)
+                                                @if($payment->payment_90_day_paid)
+                                                    <span class="text-xs text-green-600">Paid</span>
+                                                @else
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <form method="POST" action="{{ route('payments.toggle-paid', $payment) }}" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="field" value="payment_90_day">
+                                                            <button type="submit" class="text-xs text-orange-600 hover:text-orange-800">Mark Paid</button>
+                                                        </form>
+                                                    @else
+                                                        <span class="text-xs text-orange-600">Due</span>
+                                                    @endif
+                                                @endif
+                                            @elseif($payment && $payment90 == 0)
+                                                <span class="text-xs text-slate-400">N/A</span>
+                                            @endif
+                                        </td>
+                                        {{-- 45-Day Payment column with paid/unpaid toggle --}}
+                                        <td class="text-right">
+                                            <div class="text-slate-600">${{ number_format($payment45, 2) }}</div>
+                                            @if($payment && $payment->deposit_locked && $payment45 > 0)
+                                                @if($payment->payment_45_day_paid)
+                                                    <span class="text-xs text-green-600">Paid</span>
+                                                @else
+                                                    @if(auth()->user()->isSuperAdmin())
+                                                        <form method="POST" action="{{ route('payments.toggle-paid', $payment) }}" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="field" value="payment_45_day">
+                                                            <button type="submit" class="text-xs text-orange-600 hover:text-orange-800">Mark Paid</button>
+                                                        </form>
+                                                    @else
+                                                        <span class="text-xs text-orange-600">Due</span>
+                                                    @endif
+                                                @endif
+                                            @elseif($payment && $payment45 == 0)
+                                                <span class="text-xs text-slate-400">N/A</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             @if(!$payment)
                                                 <span class="text-slate-400 text-sm">Not set</span>
@@ -1633,6 +1710,16 @@
     </div>
 
     <script>
+        // Rate Edit show/hide functions
+        function showRateEdit(paymentId) {
+            document.querySelector('.rate-display-' + paymentId).classList.add('hidden');
+            document.querySelector('.rate-edit-' + paymentId).classList.remove('hidden');
+        }
+        function hideRateEdit(paymentId) {
+            document.querySelector('.rate-display-' + paymentId).classList.remove('hidden');
+            document.querySelector('.rate-edit-' + paymentId).classList.add('hidden');
+        }
+
         // Tab switching with URL hash persistence
         function switchToTab(tabId) {
             // Remove active from all tabs
@@ -1661,13 +1748,27 @@
             });
         });
 
-        // On page load, check URL hash and activate that tab
+        // On page load, check URL query param or hash and activate that tab
         document.addEventListener('DOMContentLoaded', function() {
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                const tabContent = document.getElementById(hash);
+            // Check for ?tab= query parameter first (from redirects)
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam) {
+                const tabContent = document.getElementById(tabParam);
                 if (tabContent && tabContent.classList.contains('tab-content')) {
-                    switchToTab(hash);
+                    switchToTab(tabParam);
+                    // Clean up URL by removing query param and adding hash instead
+                    const newUrl = window.location.pathname + '#' + tabParam;
+                    history.replaceState(null, null, newUrl);
+                }
+            } else {
+                // Fall back to URL hash
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    const tabContent = document.getElementById(hash);
+                    if (tabContent && tabContent.classList.contains('tab-content')) {
+                        switchToTab(hash);
+                    }
                 }
             }
 
