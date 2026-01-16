@@ -234,20 +234,7 @@
     <script>
         function taskManager() {
             return {
-                tasks: @json($tasks->map(fn($task) => [
-                    'id' => $task->id,
-                    'name' => $task->name,
-                    'description' => $task->description,
-                    'status' => $task->status,
-                    'due_date' => $task->due_date?->format('Y-m-d'),
-                    'due_date_formatted' => $task->due_date?->format('M d, Y'),
-                    'is_overdue' => $task->due_date && $task->due_date->isPast() && $task->status !== 'completed',
-                    'booking_id' => $task->booking_id,
-                    'booking_number' => $task->booking->booking_number,
-                    'assigned_to' => $task->assigned_to,
-                    'assigned_to_name' => $task->assignedTo?->name,
-                    'assigned_by' => $task->assigned_by,
-                ])),
+                tasks: @json($tasksJson),
                 search: '',
                 filter: '{{ request('filter') ?: 'open' }}',
                 sortBy: 'due_date_asc',
