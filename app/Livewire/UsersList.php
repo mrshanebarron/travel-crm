@@ -10,8 +10,6 @@ use Spatie\Permission\Models\Role;
 
 class UsersList extends Component
 {
-    protected $listeners = ['openAddModal'];
-
     // Add user form
     public $showAddModal = false;
     public $addName = '';

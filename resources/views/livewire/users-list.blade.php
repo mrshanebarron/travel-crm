@@ -1,4 +1,13 @@
 <div>
+    <!-- Page Title -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">User Management</h1>
+            <p class="text-slate-500">Manage users and their roles</p>
+        </div>
+        <x-action-button type="adduser" label="Add User" wire:click="openAddModal" />
+    </div>
+
     <!-- Role Legend -->
     <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
         <div class="flex flex-wrap items-center gap-6">
