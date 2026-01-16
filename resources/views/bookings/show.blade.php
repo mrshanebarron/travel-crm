@@ -319,9 +319,12 @@
                                 <tr>
                                     <th>Traveler</th>
                                     <th class="text-right">Safari Rate</th>
+                                    <th class="text-right">Add-ons</th>
+                                    <th class="text-right">Credits</th>
+                                    <th class="text-right">Total Rate</th>
                                     <th class="text-right">Deposit</th>
-                                    <th class="text-right">90-Day Payment</th>
-                                    <th class="text-right">45-Day Payment</th>
+                                    <th class="text-right">90-Day</th>
+                                    <th class="text-right">45-Day</th>
                                     <th class="text-center">Status</th>
                                     @if(auth()->user()->isSuperAdmin())
                                         <th class="text-center">Actions</th>
@@ -331,6 +334,9 @@
                             <tbody>
                                 @php
                                     $groupTotal = 0;
+                                    $groupAddons = 0;
+                                    $groupCredits = 0;
+                                    $groupTotalRate = 0;
                                     $groupDeposit = 0;
                                     $group90Day = 0;
                                     $group45Day = 0;
@@ -342,7 +348,16 @@
                                         $deposit = $payment ? $payment->deposit : 0;
                                         $payment90 = $payment ? $payment->payment_90_day : 0;
                                         $payment45 = $payment ? $payment->payment_45_day : 0;
+
+                                        // Calculate add-ons and credits for this traveler
+                                        $travelerAddons = $traveler->addons->where('type', '!=', 'credit')->sum('cost_per_person');
+                                        $travelerCredits = $traveler->addons->where('type', 'credit')->sum('cost_per_person');
+                                        $totalRate = $safariRate + $travelerAddons - $travelerCredits;
+
                                         $groupTotal += $safariRate;
+                                        $groupAddons += $travelerAddons;
+                                        $groupCredits += $travelerCredits;
+                                        $groupTotalRate += $totalRate;
                                         $groupDeposit += $deposit;
                                         $group90Day += $payment90;
                                         $group45Day += $payment45;
@@ -398,6 +413,26 @@
                                                         onchange="this.form.submit()">
                                                 </form>
                                             @endif
+                                        </td>
+                                        {{-- Add-ons column --}}
+                                        <td class="text-right text-slate-600">
+                                            @if($travelerAddons > 0)
+                                                ${{ number_format($travelerAddons, 2) }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        {{-- Credits column --}}
+                                        <td class="text-right text-blue-600">
+                                            @if($travelerCredits > 0)
+                                                -${{ number_format($travelerCredits, 2) }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        {{-- Total Rate column --}}
+                                        <td class="text-right font-semibold text-slate-900">
+                                            ${{ number_format($totalRate, 2) }}
                                         </td>
                                         {{-- Deposit column with paid/unpaid toggle --}}
                                         <td class="text-right">
@@ -488,6 +523,9 @@
                                 <tr>
                                     <td class="font-semibold text-slate-900">Group Total</td>
                                     <td class="text-right font-semibold text-slate-900">${{ number_format($groupTotal, 2) }}</td>
+                                    <td class="text-right font-semibold text-slate-900">${{ number_format($groupAddons, 2) }}</td>
+                                    <td class="text-right font-semibold text-blue-600">@if($groupCredits > 0)-@endif${{ number_format($groupCredits, 2) }}</td>
+                                    <td class="text-right font-bold text-slate-900">${{ number_format($groupTotalRate, 2) }}</td>
                                     <td class="text-right font-semibold text-slate-900">${{ number_format($groupDeposit, 2) }}</td>
                                     <td class="text-right font-semibold text-slate-900">${{ number_format($group90Day, 2) }}</td>
                                     <td class="text-right font-semibold text-slate-900">${{ number_format($group45Day, 2) }}</td>
