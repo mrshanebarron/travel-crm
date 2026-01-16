@@ -42,6 +42,7 @@
                         <option value="name_asc">Name (A-Z)</option>
                         <option value="name_desc">Name (Z-A)</option>
                         <option value="booking">Booking</option>
+                        <option value="assigned_to">Assigned To</option>
                         <option value="status">Status</option>
                     </select>
                 </div>
@@ -150,7 +151,12 @@
                                     <svg x-show="sortBy === 'status'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
                                 </div>
                             </th>
-                            <th>Assigned To</th>
+                            <th class="cursor-pointer hover:bg-slate-100" @click="toggleSort('assigned_to')">
+                                <div class="flex items-center gap-1">
+                                    Assigned To
+                                    <svg x-show="sortBy === 'assigned_to'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                                </div>
+                            </th>
                             <th></th>
                         </tr>
                     </thead>
@@ -296,6 +302,10 @@
                                 return b.name.localeCompare(a.name);
                             case 'booking':
                                 return a.booking_number.localeCompare(b.booking_number);
+                            case 'assigned_to':
+                                const aName = a.assigned_to_name || 'zzz';
+                                const bName = b.assigned_to_name || 'zzz';
+                                return aName.localeCompare(bName);
                             case 'status':
                                 const statusOrder = { pending: 0, in_progress: 1, completed: 2 };
                                 return statusOrder[a.status] - statusOrder[b.status];
