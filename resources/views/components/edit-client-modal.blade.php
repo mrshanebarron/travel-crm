@@ -35,8 +35,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="document.getElementById('edit-client-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <x-action-button type="cancel" onclick="document.getElementById('edit-client-modal').classList.add('hidden')" />
+                <x-action-button type="save" label="Save Changes" :submit="true" />
             </div>
         </form>
     </div>

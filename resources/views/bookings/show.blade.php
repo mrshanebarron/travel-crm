@@ -20,12 +20,7 @@
             @else
                 <span class="badge" style="background: #f1f5f9; color: #475569;">Completed</span>
             @endif
-            <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-secondary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Edit
-            </a>
+            <x-action-button type="edit" size="sm" :href="route('bookings.edit', $booking)" />
         </div>
     </div>
 
@@ -105,12 +100,7 @@
         <div class="tab-content active p-6" id="client-details">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Groups & Travelers</h2>
-                <button type="button" onclick="document.getElementById('add-group-modal').classList.remove('hidden')" class="btn btn-primary text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add Group
-                </button>
+                <x-action-button type="add" size="sm" label="Add Group" onclick="document.getElementById('add-group-modal').classList.remove('hidden')" />
             </div>
 
             @forelse($booking->groups as $group)
@@ -121,12 +111,7 @@
                                 <h3 class="font-semibold text-slate-900">Group {{ $group->group_number }}</h3>
                                 <p class="text-sm text-slate-500">{{ $group->travelers->count() }} traveler(s)</p>
                             </div>
-                            <button type="button" onclick="openAddTravelerModal({{ $group->id }})" class="btn btn-secondary text-sm">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                </svg>
-                                Add Traveler
-                            </button>
+                            <x-action-button type="adduser" size="sm" onclick="openAddTravelerModal({{ $group->id }})" />
                         </div>
                         @if($group->rooms->count() > 0)
                             <div class="flex flex-wrap gap-2">
@@ -176,8 +161,8 @@
                                     <div class="flex items-center gap-2">
                                         @if($traveler->email)
                                             <div class="relative" x-data="{ open: false }">
-                                                <button @click="open = !open" class="btn btn-secondary text-sm py-1 px-2 flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <button @click="open = !open" class="inline-flex items-center font-medium rounded border transition-colors text-xs py-0.5 px-1.5 gap-1 bg-blue-600 border-blue-600 text-white hover:bg-blue-700">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                     </svg>
                                                     Email
@@ -202,13 +187,9 @@
                                                 </div>
                                             </div>
                                         @endif
-                                        <button type="button" onclick="openEditTravelerModal({{ $traveler->id }}, '{{ addslashes($traveler->first_name) }}', '{{ addslashes($traveler->last_name) }}', '{{ $traveler->email }}', '{{ $traveler->phone }}', '{{ $traveler->dob?->format('Y-m-d') }}', {{ $traveler->is_lead ? 'true' : 'false' }})" class="btn btn-secondary text-sm py-1 px-2">Edit</button>
-                                        <a href="{{ route('clients.show', $traveler) }}" class="btn btn-secondary text-sm py-1 px-2">View</a>
-                                        <form method="POST" action="{{ route('travelers.destroy', $traveler) }}" onsubmit="return confirm('Remove this traveler?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
-                                        </form>
+                                        <x-action-button type="view" size="xs" :href="route('clients.show', $traveler)" />
+                                        <x-action-button type="edit" size="xs" onclick="openEditTravelerModal({{ $traveler->id }}, '{{ addslashes($traveler->first_name) }}', '{{ addslashes($traveler->last_name) }}', '{{ $traveler->email }}', '{{ $traveler->phone }}', '{{ $traveler->dob?->format('Y-m-d') }}', {{ $traveler->is_lead ? 'true' : 'false' }})" />
+                                        <x-action-button type="delete" size="xs" :action="route('travelers.destroy', $traveler)" confirm="Remove this traveler?" />
                                     </div>
                                 </div>
                             </div>
@@ -235,12 +216,7 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Safari Itinerary</h2>
                 <div class="flex gap-2">
-                    <button type="button" class="btn btn-secondary text-sm" @click="$dispatch('open-import-modal')">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        Import from Safari Office
-                    </button>
+                    <x-action-button type="import" size="sm" label="Import from Safari Office" @click="$dispatch('open-import-modal')" />
                 </div>
             </div>
 
@@ -411,12 +387,7 @@
         <div class="tab-content p-6" id="payment-details">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Safari Rates & Payment Schedule</h2>
-                <button type="button" class="btn btn-secondary text-sm" @click="$dispatch('open-import-modal')">
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                    Import from Safari Office
-                </button>
+                <x-action-button type="import" size="sm" label="Import from Safari Office" @click="$dispatch('open-import-modal')" />
             </div>
 
             @foreach($booking->groups as $group)
@@ -655,12 +626,7 @@
             <div class="border border-slate-200 rounded-xl mb-6 overflow-hidden">
                 <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                     <h3 class="font-semibold text-slate-900">Add-ons & Experiences</h3>
-                    <button type="button" onclick="document.getElementById('add-addon-modal').classList.remove('hidden')" class="btn btn-secondary text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Experience
-                    </button>
+                    <x-action-button type="add" size="sm" label="Add Experience" onclick="document.getElementById('add-addon-modal').classList.remove('hidden')" />
                 </div>
                 <div class="p-6">
                     @php
@@ -782,107 +748,7 @@
 
         <!-- Master Checklist Tab -->
         <div class="tab-content p-6" id="master-checklist">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-slate-900">Master Checklist</h2>
-                <button type="button" onclick="document.getElementById('add-task-modal').classList.remove('hidden')" class="btn btn-primary text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add Task
-                </button>
-            </div>
-
-            <!-- All Tasks Table -->
-            <div class="border border-slate-200 rounded-xl overflow-hidden">
-                <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-medium text-slate-900">All Tasks ({{ $booking->tasks->count() }})</h3>
-                        <div class="text-sm text-slate-500">
-                            <span class="text-green-600 font-medium">{{ $booking->tasks->where('status', 'completed')->count() }}</span> completed,
-                            <span class="text-amber-600 font-medium">{{ $booking->tasks->where('status', '!=', 'completed')->count() }}</span> pending
-                        </div>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-8"></th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider" style="min-width: 320px;">Task</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Assigned To</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Assigned</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Completed</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-full">Notes</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-slate-200">
-                            @forelse($booking->tasks->sortBy([['status', 'asc'], ['due_date', 'asc']]) as $task)
-                                <tr class="{{ $task->status === 'completed' ? 'bg-green-50/50' : '' }} hover:bg-slate-50">
-                                    <td class="px-2 py-2">
-                                        @if($task->status === 'completed')
-                                            <form method="POST" action="{{ route('tasks.update', $task) }}">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="name" value="{{ $task->name }}">
-                                                <input type="hidden" name="status" value="pending">
-                                                <button type="submit" class="w-5 h-5 bg-green-500 rounded flex items-center justify-center hover:bg-green-600 transition-colors" title="Mark incomplete">
-                                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        @else
-                                            <form method="POST" action="{{ route('tasks.update', $task) }}">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="name" value="{{ $task->name }}">
-                                                <input type="hidden" name="status" value="completed">
-                                                <button type="submit" class="w-5 h-5 border-2 border-slate-300 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors" title="Mark complete"></button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                    <td class="px-2 py-2" style="min-width: 320px;">
-                                        <span class="{{ $task->status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900 font-medium' }} text-sm">
-                                            {{ $task->name }}
-                                        </span>
-                                    </td>
-                                    <td class="px-2 py-2 text-xs whitespace-nowrap">
-                                        <button type="button" onclick="openAssignTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->status }}', {{ $task->assigned_to ?? 'null' }})" class="text-xs {{ $task->assignedTo ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-orange-100 text-orange-700 hover:bg-orange-200' }} px-2 py-1 rounded font-medium">
-                                            {{ $task->assignedTo ? $task->assignedTo->name : 'Assign' }}
-                                        </button>
-                                    </td>
-                                    <td class="px-2 py-2 text-xs text-slate-500 whitespace-nowrap">
-                                        {{ $task->assigned_at ? $task->assigned_at->format('n/j') : '-' }}
-                                    </td>
-                                    <td class="px-2 py-2 text-xs text-slate-500 whitespace-nowrap">
-                                        @if($task->status === 'completed' && $task->completed_at)
-                                            {{ $task->completed_at->format('n/j') }}
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                    <td class="px-2 py-2 text-sm text-slate-600">
-                                        {{ $task->description ?: '' }}
-                                    </td>
-                                    <td class="px-2 py-2 whitespace-nowrap">
-                                        <div class="flex items-center gap-2">
-                                            <x-action-button type="edit" size="xs" onclick="openEditTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->due_date?->format('Y-m-d') }}', {{ $task->assigned_to ?? 'null' }})" />
-                                            <x-action-button type="delete" size="xs" :action="route('tasks.destroy', $task)" confirm="Delete this task?" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="px-4 py-6 text-center text-slate-500">
-                                        No tasks yet. Click "Add Task" to create one.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <livewire:booking-task-list :booking="$booking" />
         </div>
 
         <!-- Arrival/Departure Tab -->
@@ -917,12 +783,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <button type="button" onclick="openAddFlightModal({{ $traveler->id }})" class="btn btn-secondary text-sm py-1 px-3">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        Add Flight
-                                    </button>
+                                    <x-action-button type="flight" size="xs" onclick="openAddFlightModal({{ $traveler->id }})" />
                                 </div>
 
                                 @if($traveler->flights->count() > 0)
@@ -991,215 +852,13 @@
 
         <!-- Documents Tab -->
         <div class="tab-content p-6" id="documents">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-slate-900">Documents</h2>
-            </div>
-
-            <!-- Upload Form -->
-            <form method="POST" action="{{ route('documents.store', $booking) }}" enctype="multipart/form-data" class="mb-6 p-4 bg-slate-50 rounded-xl">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Document Name</label>
-                        <input type="text" name="name" placeholder="Document name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Category</label>
-                        <select name="category" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                            <option value="lodge">Lodges/Camps</option>
-                            <option value="arrival_departure_flight">Arrival/Departure Flight</option>
-                            <option value="internal_flight">Internal Flights</option>
-                            <option value="passport">Passport</option>
-                            <option value="safari_guide_invoice">Safari Guide Invoices</option>
-                            <option value="misc">Miscellaneous</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">File</label>
-                        <input type="file" name="file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100" required>
-                    </div>
-                    <div>
-                        <button type="submit" class="btn btn-primary w-full">Upload Document</button>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Documents Grid -->
-            @if($booking->documents->count() > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($booking->documents as $doc)
-                        <div class="border border-slate-200 rounded-xl p-4">
-                            <div class="flex items-start justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <a href="{{ route('documents.download', $doc) }}" class="font-medium text-orange-600 hover:text-orange-800">
-                                            {{ $doc->name }}
-                                        </a>
-                                        @php
-                                            $categoryLabels = [
-                                                'lodge' => 'Lodges/Camps',
-                                                'arrival_departure_flight' => 'Arrival/Departure Flight',
-                                                'internal_flight' => 'Internal Flights',
-                                                'passport' => 'Passport',
-                                                'safari_guide_invoice' => 'Safari Guide Invoices',
-                                                'misc' => 'Miscellaneous',
-                                            ];
-                                        @endphp
-                                        <div class="text-xs text-slate-500">{{ $categoryLabels[$doc->category] ?? ucfirst($doc->category) }}</div>
-                                    </div>
-                                </div>
-                                <form method="POST" action="{{ route('documents.destroy', $doc) }}" onsubmit="return confirm('Delete this document?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
-                                </form>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="text-center py-12 text-slate-500">
-                    <svg class="mx-auto mb-4 text-slate-300" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <p>No documents uploaded yet</p>
-                </div>
-            @endif
+            <livewire:booking-documents :booking="$booking" />
         </div>
 
         <!-- Ledger Tab -->
         @can('view_financial_data')
         <div class="tab-content p-6" id="ledger">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-slate-900">Financial Ledger</h2>
-            </div>
-
-            <!-- Add Entry Form -->
-            <form method="POST" action="{{ route('ledger-entries.store', $booking) }}" class="mb-6 p-4 bg-slate-50 rounded-xl" id="ledger-entry-form">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Date</label>
-                        <input type="date" name="date" value="{{ date('Y-m-d') }}" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type</label>
-                        <select name="type" id="ledger-type" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required onchange="toggleLedgerFields()">
-                            <option value="received">Received</option>
-                            <option value="paid">Paid</option>
-                        </select>
-                    </div>
-                    <div id="received-category-field">
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Payment Type</label>
-                        <select name="received_category" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
-                            <option value="deposit">Deposit (25%)</option>
-                            <option value="90_day">90-Day Payment (25%)</option>
-                            <option value="45_day">45-Day Payment (50%)</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div id="paid-category-field" class="hidden">
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Expense Category</label>
-                        <select name="paid_category" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
-                            <option value="lodges_camps">Lodges/Camps</option>
-                            <option value="driver_guide">Driver/Guide</option>
-                            <option value="park_entry">Park Entry</option>
-                            <option value="arrival_dept_flight">Arrival/Dept Flight</option>
-                            <option value="internal_flights">Internal Flights</option>
-                            <option value="driver_guide_invoices">Driver/Guide Invoices</option>
-                            <option value="misc">Misc</option>
-                        </select>
-                    </div>
-                    <div id="vendor-field" class="hidden">
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Vendor Name</label>
-                        <input type="text" name="vendor_name" placeholder="Vendor name" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</label>
-                        <input type="number" name="amount" placeholder="0.00" step="0.01" min="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes</label>
-                        <input type="text" name="description" placeholder="Optional notes" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    </div>
-                    <div>
-                        <button type="submit" class="btn btn-primary w-full">Add Entry</button>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Ledger Summary -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-green-50 rounded-xl p-4 text-center">
-                    <div class="text-sm text-green-600 font-medium">Total Received</div>
-                    <div class="text-2xl font-bold text-green-700">${{ number_format($booking->ledgerEntries->where('type', 'received')->sum('amount'), 2) }}</div>
-                </div>
-                <div class="bg-red-50 rounded-xl p-4 text-center">
-                    <div class="text-sm text-red-600 font-medium">Total Paid</div>
-                    <div class="text-2xl font-bold text-red-700">${{ number_format($booking->ledgerEntries->where('type', 'paid')->sum('amount'), 2) }}</div>
-                </div>
-                @php
-                    $balance = $booking->ledgerEntries->where('type', 'received')->sum('amount') - $booking->ledgerEntries->where('type', 'paid')->sum('amount');
-                @endphp
-                <div class="{{ $balance >= 0 ? 'bg-purple-50' : 'bg-red-50' }} rounded-xl p-4 text-center">
-                    <div class="text-sm {{ $balance >= 0 ? 'text-purple-600' : 'text-red-600' }} font-medium">Net Balance</div>
-                    <div class="text-2xl font-bold {{ $balance >= 0 ? 'text-purple-700' : 'text-red-700' }}">${{ number_format($balance, 2) }}</div>
-                </div>
-            </div>
-
-            <!-- Ledger Table -->
-            @if($booking->ledgerEntries->count() > 0)
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th class="text-right">Received</th>
-                                <th class="text-right">Paid</th>
-                                <th class="text-right">Balance</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($booking->ledgerEntries as $entry)
-                                <tr>
-                                    <td class="text-slate-900">{{ $entry->date->format('M j, Y') }}</td>
-                                    <td class="text-slate-900">{{ $entry->description }}</td>
-                                    <td class="text-right text-green-600 font-medium">
-                                        {{ $entry->type === 'received' ? '$' . number_format($entry->amount, 2) : '' }}
-                                    </td>
-                                    <td class="text-right text-red-600 font-medium">
-                                        {{ $entry->type === 'paid' ? '$' . number_format($entry->amount, 2) : '' }}
-                                    </td>
-                                    <td class="text-right font-semibold {{ $entry->balance >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                        ${{ number_format($entry->balance, 2) }}
-                                    </td>
-                                    <td class="text-right">
-                                        <form method="POST" action="{{ route('ledger-entries.destroy', $entry) }}" class="inline" onsubmit="return confirm('Delete this entry?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <div class="text-center py-12 text-slate-500">
-                    <svg class="mx-auto mb-4 text-slate-300" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <p>No ledger entries yet</p>
-                </div>
-            @endif
+            <livewire:booking-ledger :booking="$booking" />
         </div>
         @endcan
 
@@ -1249,7 +908,7 @@
                         <input type="number" name="children_under_2" placeholder="0" min="0" max="6" value="0" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                     </div>
                     <div>
-                        <button type="submit" class="btn btn-primary w-full">Add Room</button>
+                        <x-action-button type="add" label="Add Room" :submit="true" class="w-full justify-center" />
                     </div>
                 </div>
             </form>
@@ -1325,74 +984,7 @@
 
         <!-- Activity Log Tab -->
         <div class="tab-content p-6" id="activity-log">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-slate-900">Activity Log</h2>
-            </div>
-
-            <!-- Add Note Form -->
-            <form method="POST" action="{{ route('activity-logs.store', $booking) }}" class="mb-6 p-4 bg-slate-50 rounded-xl">
-                @csrf
-                <div class="flex gap-4 items-end">
-                    <div class="flex-1">
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Add Note</label>
-                        <textarea name="notes" rows="2" placeholder="Add a note..." class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required></textarea>
-                    </div>
-                    <div>
-                        <button type="submit" class="btn btn-primary">Add Note</button>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Activity Timeline -->
-            <div class="space-y-4">
-                @forelse($booking->activityLogs->sortByDesc('created_at') as $log)
-                    <div class="flex gap-4">
-                        <div class="flex-shrink-0">
-                            @if($log->action_type === 'manual')
-                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                    <span class="text-orange-600 font-semibold text-sm">
-                                        {{ strtoupper(substr($log->user->name ?? 'S', 0, 1)) }}
-                                    </span>
-                                </div>
-                            @else
-                                <div class="w-10 h-10 {{ $log->action_color }} rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $log->action_icon }}" />
-                                    </svg>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="flex-1 bg-white border border-slate-200 rounded-xl p-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="font-medium text-slate-900">
-                                        {{ $log->user->name ?? 'System' }}
-                                        @if($log->action_type !== 'manual')
-                                            <span class="ml-2 text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Auto</span>
-                                        @endif
-                                    </div>
-                                    <div class="text-xs text-slate-500">{{ $log->created_at->format('M j, Y g:i A') }} ({{ $log->created_at->diffForHumans() }})</div>
-                                </div>
-                                @if($log->action_type === 'manual')
-                                    <form method="POST" action="{{ route('activity-logs.destroy', $log) }}" onsubmit="return confirm('Delete this note?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
-                                    </form>
-                                @endif
-                            </div>
-                            <div class="mt-2 text-slate-700">{{ $log->notes }}</div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-12 text-slate-500">
-                        <svg class="mx-auto mb-4 text-slate-300" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p>No activity yet</p>
-                    </div>
-                @endforelse
-            </div>
+            <livewire:booking-activity-log :booking="$booking" />
         </div>
 
         <!-- Email History Tab -->
@@ -1486,8 +1078,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('add-traveler-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Traveler</button>
+                    <x-action-button type="cancel" onclick="document.getElementById('add-traveler-modal').classList.add('hidden')" />
+                    <x-action-button type="adduser" :submit="true" />
                 </div>
             </form>
         </div>
@@ -1529,8 +1121,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('edit-traveler-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <x-action-button type="cancel" onclick="document.getElementById('edit-traveler-modal').classList.add('hidden')" />
+                    <x-action-button type="save" label="Save Changes" :submit="true" />
                 </div>
             </form>
         </div>
@@ -1580,8 +1172,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('add-flight-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Flight</button>
+                    <x-action-button type="cancel" onclick="document.getElementById('add-flight-modal').classList.add('hidden')" />
+                    <x-action-button type="flight" :submit="true" />
                 </div>
             </form>
         </div>
@@ -1619,8 +1211,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('copy-flight-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Copy Flight</button>
+                    <x-action-button type="cancel" onclick="document.getElementById('copy-flight-modal').classList.add('hidden')" />
+                    <x-action-button type="save" label="Copy Flight" :submit="true" />
                 </div>
             </form>
         </div>
@@ -1641,8 +1233,8 @@
                     </p>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('add-group-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Group</button>
+                    <x-action-button type="cancel" onclick="document.getElementById('add-group-modal').classList.add('hidden')" />
+                    <x-action-button type="create" label="Create Group" :submit="true" />
                 </div>
             </form>
         </div>
@@ -1681,8 +1273,8 @@
                     <p class="text-sm text-slate-500">Paste the Safari Office online booking link. This will extract the itinerary directly from the webpage.</p>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" @click="open = false" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Import from URL</button>
+                    <x-action-button type="cancel" @click="open = false" />
+                    <x-action-button type="import" label="Import from URL" :submit="true" />
                 </div>
             </form>
 
@@ -1697,8 +1289,8 @@
                     <p class="text-sm text-slate-500">Upload a Safari Office booking confirmation PDF to automatically populate the itinerary.</p>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" @click="open = false" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Import PDF</button>
+                    <x-action-button type="cancel" @click="open = false" />
+                    <x-action-button type="import" label="Import PDF" :submit="true" />
                 </div>
             </form>
         </div>
@@ -1743,115 +1335,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('add-addon-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" id="addon-submit-btn" class="btn btn-primary">Add Experience</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Add Task Modal -->
-    <div id="add-task-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold text-slate-900 mb-4">Add New Task</h3>
-            <form method="POST" action="{{ route('tasks.store', $booking) }}">
-                @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Task Name</label>
-                        <input type="text" name="name" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500" placeholder="Enter task name..." required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Due Date</label>
-                        <input type="date" name="due_date" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Assign To</label>
-                        <select name="assigned_to" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
-                            <option value="">-- Unassigned --</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ $user->id === auth()->id() ? 'selected' : '' }}>{{ $user->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('add-task-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Task</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Task Modal -->
-    <div id="edit-task-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold text-slate-900 mb-4">Edit Task</h3>
-            <form id="edit-task-form" method="POST" action="">
-                @csrf
-                @method('PATCH')
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Task Name</label>
-                        <input type="text" name="name" id="edit-task-name" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Due Date</label>
-                        <input type="date" name="due_date" id="edit-task-due-date" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Assign To</label>
-                        <select name="assigned_to" id="edit-task-assigned-to" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
-                            <option value="">-- Unassigned --</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Status</label>
-                        <select name="status" id="edit-task-status" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500">
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('edit-task-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Assign Task Modal -->
-    <div id="assign-task-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold text-slate-900 mb-4">Assign Task</h3>
-            <form id="assign-task-form" method="POST" action="">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="name" id="assign-task-name-input" value="">
-                <input type="hidden" name="status" id="assign-task-status-input" value="pending">
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Task</label>
-                        <p id="assign-task-name" class="text-slate-900 font-medium"></p>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Assign To</label>
-                        <select name="assigned_to" id="assign-task-assigned-to" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500" required>
-                            <option value="">-- Select Team Member --</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('assign-task-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Assign</button>
+                    <x-action-button type="cancel" onclick="document.getElementById('add-addon-modal').classList.add('hidden')" />
+                    <x-action-button type="add" label="Add Experience" :submit="true" id="addon-submit-btn" />
                 </div>
             </form>
         </div>
@@ -1888,8 +1373,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('payment-reminder-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Send Reminder</button>
+                    <x-action-button type="cancel" onclick="document.getElementById('payment-reminder-modal').classList.add('hidden')" />
+                    <x-action-button type="email" label="Send Reminder" :submit="true" />
                 </div>
             </form>
         </div>
@@ -2080,28 +1565,6 @@
             document.getElementById('payment-reminder-modal').classList.remove('hidden');
         }
 
-        // Edit Task Modal
-        function openEditTaskModal(taskId, name, dueDate, assignedTo) {
-            const form = document.getElementById('edit-task-form');
-            form.action = `/tasks/${taskId}`;
-            document.getElementById('edit-task-name').value = name;
-            document.getElementById('edit-task-due-date').value = dueDate || '';
-            document.getElementById('edit-task-assigned-to').value = assignedTo || '';
-            document.getElementById('edit-task-status').value = 'pending';
-            document.getElementById('edit-task-modal').classList.remove('hidden');
-        }
-
-        // Assign Task Modal
-        function openAssignTaskModal(taskId, name, status, currentAssignee) {
-            const form = document.getElementById('assign-task-form');
-            form.action = `/tasks/${taskId}`;
-            document.getElementById('assign-task-name').textContent = name;
-            document.getElementById('assign-task-name-input').value = name;
-            document.getElementById('assign-task-status-input').value = status || 'pending';
-            document.getElementById('assign-task-assigned-to').value = currentAssignee || '';
-            document.getElementById('assign-task-modal').classList.remove('hidden');
-        }
-
         // Close modals when clicking outside
         document.querySelectorAll('[id$="-modal"]').forEach(modal => {
             modal.addEventListener('click', function(e) {
@@ -2110,24 +1573,6 @@
                 }
             });
         });
-
-        // Toggle ledger form fields based on type
-        function toggleLedgerFields() {
-            const type = document.getElementById('ledger-type').value;
-            const receivedField = document.getElementById('received-category-field');
-            const paidField = document.getElementById('paid-category-field');
-            const vendorField = document.getElementById('vendor-field');
-
-            if (type === 'received') {
-                receivedField.classList.remove('hidden');
-                paidField.classList.add('hidden');
-                vendorField.classList.add('hidden');
-            } else {
-                receivedField.classList.add('hidden');
-                paidField.classList.remove('hidden');
-                vendorField.classList.remove('hidden');
-            }
-        }
 
         // Toggle flight pickup/dropoff instructions based on type
         function toggleFlightInstructions() {

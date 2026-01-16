@@ -12,34 +12,8 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
-        // Load all tasks for client-side filtering
-        $tasks = Task::with(['booking', 'assignedTo', 'assignedBy'])
-            ->orderBy('due_date')
-            ->get();
-
-        // Prepare tasks data for Alpine.js
-        $tasksJson = $tasks->map(function ($task) {
-            return [
-                'id' => $task->id,
-                'name' => $task->name,
-                'description' => $task->description,
-                'status' => $task->status,
-                'due_date' => $task->due_date?->format('Y-m-d'),
-                'due_date_formatted' => $task->due_date?->format('M d, Y'),
-                'is_overdue' => $task->due_date && $task->due_date->isPast() && $task->status !== 'completed',
-                'booking_id' => $task->booking_id,
-                'booking_number' => $task->booking->booking_number,
-                'assigned_to' => $task->assigned_to,
-                'assigned_to_name' => $task->assignedTo?->name,
-                'assigned_by' => $task->assigned_by,
-            ];
-        });
-
-        // Get bookings for the create task modal
-        $bookings = Booking::orderBy('start_date', 'desc')->get();
-        $users = User::orderBy('name')->get();
-
-        return view('tasks.index', compact('tasks', 'tasksJson', 'bookings', 'users'));
+        // Livewire handles all the data now
+        return view('tasks.index');
     }
 
     public function store(Request $request, Booking $booking)

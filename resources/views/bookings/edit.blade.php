@@ -75,12 +75,7 @@
                     <div class="mb-6 sm:mb-8">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                             <h3 class="text-lg font-semibold text-slate-900">Travelers</h3>
-                            <button type="button" @click="addTraveler()" class="btn btn-secondary text-sm py-2 px-3 w-full sm:w-auto justify-center">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add Traveler
-                            </button>
+                            <x-action-button type="adduser" size="sm" @click="addTraveler()" class="w-full sm:w-auto justify-center" />
                         </div>
 
                         <template x-for="(traveler, index) in travelers" :key="index">
@@ -142,13 +137,8 @@
                         </button>
 
                         <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-3 order-1 sm:order-2">
-                            <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary w-full sm:w-auto justify-center">Cancel</a>
-                            <button type="submit" class="btn btn-primary w-full sm:w-auto justify-center">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Save Changes
-                            </button>
+                            <x-action-button type="cancel" :href="route('bookings.show', $booking)" class="w-full sm:w-auto justify-center" />
+                            <x-action-button type="save" label="Save Changes" :submit="true" class="w-full sm:w-auto justify-center" />
                         </div>
                     </div>
                 </form>

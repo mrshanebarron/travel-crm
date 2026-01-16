@@ -13,6 +13,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
 
         <style>
             :root {
@@ -261,5 +262,6 @@
                 </div>
             </main>
         </div>
+        @livewireScripts
     </body>
 </html>

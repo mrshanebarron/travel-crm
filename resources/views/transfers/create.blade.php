@@ -35,13 +35,8 @@
                     </div>
 
                     <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-200">
-                        <a href="{{ route('transfers.index') }}" class="btn btn-secondary w-full sm:w-auto justify-center">Cancel</a>
-                        <button type="submit" class="btn btn-primary w-full sm:w-auto justify-center">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Create Transfer
-                        </button>
+                        <x-action-button type="cancel" :href="route('transfers.index')" class="w-full sm:w-auto justify-center" />
+                        <x-action-button type="create" label="Create Transfer" :submit="true" class="w-full sm:w-auto justify-center" />
                     </div>
                 </form>
             </div>

@@ -14,9 +14,9 @@
                     class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="btn btn-primary flex-1 sm:flex-none justify-center">Search</button>
+                <x-action-button type="search" :submit="true" class="flex-1 sm:flex-none justify-center" />
                 @if(request('search'))
-                    <a href="{{ route('clients.index') }}" class="btn btn-secondary flex-1 sm:flex-none justify-center">Clear</a>
+                    <x-action-button type="clear" :href="route('clients.index')" class="flex-1 sm:flex-none justify-center" />
                 @endif
             </div>
         </form>

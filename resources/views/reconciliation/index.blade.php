@@ -21,7 +21,7 @@
                     class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
             <div class="pt-5">
-                <button type="submit" class="btn btn-primary">Apply Filter</button>
+                <x-action-button type="filter" label="Apply Filter" :submit="true" />
             </div>
         </form>
     </div>

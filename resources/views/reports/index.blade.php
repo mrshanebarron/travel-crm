@@ -22,24 +22,12 @@
                         class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                 </div>
                 <div class="sm:pt-5 w-full sm:w-auto">
-                    <button type="submit" class="btn btn-primary w-full sm:w-auto">Apply Filter</button>
+                    <x-action-button type="filter" label="Apply Filter" :submit="true" class="w-full sm:w-auto" />
                 </div>
             </form>
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <a href="{{ route('reports.export.bookings', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}"
-                    class="btn btn-secondary text-sm justify-center">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Export Bookings
-                </a>
-                <a href="{{ route('reports.export.financial', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}"
-                    class="btn btn-secondary text-sm justify-center">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Export Financial
-                </a>
+                <x-action-button type="export" size="sm" label="Export Bookings" :href="route('reports.export.bookings', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')])" class="justify-center" />
+                <x-action-button type="export" size="sm" label="Export Financial" :href="route('reports.export.financial', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')])" class="justify-center" />
             </div>
         </div>
     </div>

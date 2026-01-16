@@ -50,12 +50,7 @@
                             <div class="text-2xl font-bold text-slate-900">${{ number_format($transfer->total_amount, 2) }}</div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-full">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Save Changes
-                        </button>
+                        <x-action-button type="save" label="Save Changes" :submit="true" class="w-full justify-center" />
                     </div>
                 </form>
 
@@ -63,12 +58,7 @@
                     <form method="POST" action="{{ route('transfers.destroy', $transfer) }}" onsubmit="return confirm('Delete this transfer request? This cannot be undone.')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-secondary w-full text-red-600 hover:bg-red-50">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Delete Transfer
-                        </button>
+                        <x-action-button type="delete" label="Delete Transfer" :submit="true" class="w-full justify-center" />
                     </form>
                 </div>
             </div>
@@ -118,7 +108,7 @@
                             <option value="other" {{ old('payment_type') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
                         <input type="number" name="amount" placeholder="Amount" step="0.01" min="0" value="{{ old('amount') }}" class="rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500 @error('amount') border-red-500 @enderror" required>
-                        <button type="submit" class="btn btn-primary text-sm w-full justify-center">Add Expense</button>
+                        <x-action-button type="add" size="sm" label="Add Expense" :submit="true" class="w-full justify-center" />
                     </div>
                     <div class="mt-3">
                         <input type="text" name="notes" placeholder="Notes (optional)" value="{{ old('notes') }}" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">

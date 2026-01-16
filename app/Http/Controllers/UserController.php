@@ -17,10 +17,8 @@ class UserController extends Controller
             abort(403);
         }
 
-        $users = User::with('roles')->orderBy('name')->get();
-        $roles = Role::orderBy('name')->get();
-
-        return view('users.index', compact('users', 'roles'));
+        // Livewire handles all the data now
+        return view('users.index');
     }
 
     public function store(Request $request)

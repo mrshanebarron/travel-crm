@@ -5,12 +5,7 @@
             <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Transfer Requests</h1>
             <p class="text-slate-500 text-sm sm:text-base">Manage fund transfer requests to Kenya</p>
         </div>
-        <a href="{{ route('transfers.create') }}" class="btn btn-primary w-full sm:w-auto justify-center">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            New Transfer
-        </a>
+        <x-action-button type="create" label="New Transfer" :href="route('transfers.create')" class="w-full sm:w-auto justify-center" />
     </div>
 
     <!-- Filters -->
@@ -50,19 +45,8 @@
                         <span class="text-sm text-slate-500">{{ $transfer->expenses->count() }} expenses</span>
                     </div>
                     <div class="mt-3 flex items-center gap-2">
-                        <span class="btn btn-secondary text-sm py-1.5 px-3 flex-1 justify-center">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            View
-                        </span>
-                        <a href="{{ route('transfers.edit', $transfer) }}" class="btn btn-secondary text-sm py-1.5 px-3 flex-1 justify-center" onclick="event.stopPropagation()">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit
-                        </a>
+                        <x-action-button type="view" size="sm" :href="route('transfers.show', $transfer)" class="flex-1 justify-center" />
+                        <x-action-button type="edit" size="sm" :href="route('transfers.edit', $transfer)" class="flex-1 justify-center" onclick="event.stopPropagation()" />
                     </div>
                 </a>
             @empty

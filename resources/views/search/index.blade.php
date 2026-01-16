@@ -55,10 +55,8 @@
                                         <span class="badge" style="background: #f1f5f9; color: #475569;">Completed</span>
                                     @endif
                                 </td>
-                                <td>
-                                    <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary text-sm py-2 px-3" onclick="event.stopPropagation()">
-                                        Open
-                                    </a>
+                                <td onclick="event.stopPropagation()">
+                                    <x-action-button type="view" size="sm" :href="route('bookings.show', $booking)" />
                                 </td>
                             </tr>
                         @endforeach
@@ -104,10 +102,8 @@
                                 <td>
                                     <span class="text-teal-600">{{ $traveler->group->booking->booking_number }}</span>
                                 </td>
-                                <td>
-                                    <a href="{{ route('bookings.show', $traveler->group->booking) }}" class="btn btn-secondary text-sm py-2 px-3" onclick="event.stopPropagation()">
-                                        View Booking
-                                    </a>
+                                <td onclick="event.stopPropagation()">
+                                    <x-action-button type="view" size="sm" label="View Booking" :href="route('bookings.show', $traveler->group->booking)" />
                                 </td>
                             </tr>
                         @endforeach

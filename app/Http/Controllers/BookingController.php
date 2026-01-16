@@ -21,16 +21,8 @@ class BookingController extends Controller
     {
         $this->authorize('viewAny', Booking::class);
 
-        $query = Booking::with(['groups.travelers', 'creator']);
-
-        // Filter by status if provided
-        if ($request->has('status') && in_array($request->status, ['upcoming', 'active', 'completed'])) {
-            $query->where('status', $request->status);
-        }
-
-        $bookings = $query->orderBy('start_date', 'desc')->paginate(15);
-
-        return view('bookings.index', compact('bookings'));
+        // Livewire handles all the data now
+        return view('bookings.index');
     }
 
     public function create()

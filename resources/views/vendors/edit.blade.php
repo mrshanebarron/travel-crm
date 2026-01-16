@@ -121,8 +121,8 @@
                     <button type="submit" class="text-red-600 hover:text-red-800 font-medium text-sm">Delete Vendor</button>
                 </form>
                 <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-3 order-1 sm:order-2">
-                    <a href="{{ route('vendors.show', $vendor) }}" class="btn btn-secondary w-full sm:w-auto justify-center">Cancel</a>
-                    <button type="submit" class="btn btn-primary w-full sm:w-auto justify-center">Save Changes</button>
+                    <x-action-button type="cancel" :href="route('vendors.show', $vendor)" class="w-full sm:w-auto justify-center" />
+                    <x-action-button type="save" label="Save Changes" :submit="true" class="w-full sm:w-auto justify-center" />
                 </div>
             </div>
         </form>

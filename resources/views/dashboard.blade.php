@@ -74,13 +74,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </a>
-                <a href="{{ route('bookings.create') }}" class="btn btn-primary text-sm py-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span class="hidden sm:inline">New Booking</span>
-                    <span class="sm:hidden">New</span>
-                </a>
+<x-action-button type="create" size="sm" label="New Booking" :href="route('bookings.create')" />
             </div>
         </div>
 
@@ -125,12 +119,7 @@
                         </svg>
                     </div>
                     <p class="text-slate-500 mb-4">No upcoming bookings</p>
-                    <a href="{{ route('bookings.create') }}" class="btn btn-primary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Create Your First Booking
-                    </a>
+                    <x-action-button type="create" label="Create Your First Booking" :href="route('bookings.create')" />
                 </div>
             @endforelse
         </div>
@@ -186,25 +175,15 @@
                                     {{ $booking->country }}
                                 </div>
                             </td>
-                            <td>
-                                <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary text-sm py-2 px-3" onclick="event.stopPropagation()">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                    Open
-                                </a>
+                            <td onclick="event.stopPropagation()">
+                                <x-action-button type="view" size="sm" :href="route('bookings.show', $booking)" />
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="6" class="py-12 text-center text-slate-500">
                                 <p class="mb-4">No upcoming bookings</p>
-                                <a href="{{ route('bookings.create') }}" class="btn btn-primary">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Create Your First Booking
-                                </a>
+                                <x-action-button type="create" label="Create Your First Booking" :href="route('bookings.create')" />
                             </td>
                         </tr>
                     @endforelse

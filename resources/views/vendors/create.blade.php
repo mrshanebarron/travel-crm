@@ -126,8 +126,8 @@
             </div>
 
             <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
-                <a href="{{ route('vendors.index') }}" class="btn btn-secondary w-full sm:w-auto justify-center">Cancel</a>
-                <button type="submit" class="btn btn-primary w-full sm:w-auto justify-center">Create Vendor</button>
+                <x-action-button type="cancel" :href="route('vendors.index')" class="w-full sm:w-auto justify-center" />
+                <x-action-button type="create" label="Create Vendor" :submit="true" class="w-full sm:w-auto justify-center" />
             </div>
         </form>
     </div>

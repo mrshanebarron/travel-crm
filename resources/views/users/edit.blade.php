@@ -94,8 +94,8 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-slate-200">
-                    <a href="{{ route('users.index') }}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <x-action-button type="cancel" :href="route('users.index')" />
+                    <x-action-button type="save" label="Save Changes" :submit="true" />
                 </div>
             </form>
         </div>
@@ -108,9 +108,7 @@
                 <form method="POST" action="{{ route('users.destroy', $user) }}" onsubmit="return confirm('Are you sure you want to delete this team member? This action cannot be undone.')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn bg-red-600 hover:bg-red-700 text-white">
-                        Delete Team Member
-                    </button>
+                    <x-action-button type="delete" label="Delete Team Member" :submit="true" />
                 </form>
             </div>
         @endif
