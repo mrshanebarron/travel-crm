@@ -156,8 +156,11 @@ class BookingController extends Controller
 
         DB::transaction(function () use ($validated, $booking) {
             $oldStartDate = $booking->start_date;
+            $oldEndDate = $booking->end_date;
             $newStartDate = \Carbon\Carbon::parse($validated['start_date']);
-            $dateChanged = !$oldStartDate->equalTo($newStartDate);
+            $newEndDate = \Carbon\Carbon::parse($validated['end_date']);
+            $startDateChanged = !$oldStartDate->equalTo($newStartDate);
+            $endDateChanged = !$oldEndDate->equalTo($newEndDate);
 
             $booking->update([
                 'country' => $validated['country'],
@@ -168,7 +171,7 @@ class BookingController extends Controller
             ]);
 
             // If start date changed, recalculate all payment schedules and log it
-            if ($dateChanged) {
+            if ($startDateChanged) {
                 $daysUntilSafari = now()->diffInDays($newStartDate, false);
                 foreach ($booking->groups as $group) {
                     foreach ($group->travelers as $traveler) {
@@ -183,6 +186,15 @@ class BookingController extends Controller
                     'user_id' => auth()->id(),
                     'action_type' => 'date_changed',
                     'notes' => 'Start date changed from ' . $oldStartDate->format('M j, Y') . ' to ' . $newStartDate->format('M j, Y'),
+                ]);
+            }
+
+            // Log end date change separately
+            if ($endDateChanged) {
+                $booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action_type' => 'date_changed',
+                    'notes' => 'End date changed from ' . $oldEndDate->format('M j, Y') . ' to ' . $newEndDate->format('M j, Y'),
                 ]);
             }
 
@@ -217,10 +229,25 @@ class BookingController extends Controller
                             'order' => $index,
                         ]);
                         $existingTravelerIds[] = $newTraveler->id;
+
+                        // Log traveler added
+                        $booking->activityLogs()->create([
+                            'user_id' => auth()->id(),
+                            'action_type' => 'traveler_added',
+                            'notes' => "Traveler added: {$newTraveler->full_name}",
+                        ]);
                     }
                 }
 
-                // Delete travelers that were removed
+                // Delete travelers that were removed and log it
+                $removedTravelers = $group->travelers()->whereNotIn('id', $existingTravelerIds)->get();
+                foreach ($removedTravelers as $removedTraveler) {
+                    $booking->activityLogs()->create([
+                        'user_id' => auth()->id(),
+                        'action_type' => 'traveler_removed',
+                        'notes' => "Traveler removed: {$removedTraveler->full_name}",
+                    ]);
+                }
                 $group->travelers()->whereNotIn('id', $existingTravelerIds)->delete();
             }
         });

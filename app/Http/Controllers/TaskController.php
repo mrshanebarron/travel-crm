@@ -61,13 +61,19 @@ class TaskController extends Controller
             'assigned_at' => $validated['assigned_to'] ? now() : null,
         ]);
 
-        // Log task creation with assignment if applicable
+        // Log task creation
         if (!empty($validated['assigned_to'])) {
             $assignee = User::find($validated['assigned_to']);
             $booking->activityLogs()->create([
                 'user_id' => auth()->id(),
-                'action_type' => 'task_assigned',
+                'action_type' => 'task_created',
                 'notes' => "Task created and assigned to {$assignee->name}: {$validated['name']}",
+            ]);
+        } else {
+            $booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_created',
+                'notes' => "Task created: {$validated['name']}",
             ]);
         }
 
@@ -91,6 +97,7 @@ class TaskController extends Controller
 
         $wasCompleted = $task->status === 'completed';
         $oldAssignee = $task->assigned_to;
+        $oldDueDate = $task->due_date;
 
         if ($validated['status'] === 'completed' && !$wasCompleted) {
             $validated['completed_at'] = now();
@@ -120,6 +127,19 @@ class TaskController extends Controller
                 'user_id' => auth()->id(),
                 'action_type' => 'task_assigned',
                 'notes' => "Task assigned to {$assignee->name}: {$task->name}",
+            ]);
+        }
+
+        // Log task due date change
+        $newDueDate = isset($validated['due_date']) ? \Carbon\Carbon::parse($validated['due_date']) : null;
+        $dueDateChanged = ($oldDueDate xor $newDueDate) || ($oldDueDate && $newDueDate && !$oldDueDate->equalTo($newDueDate));
+        if ($dueDateChanged) {
+            $oldDateStr = $oldDueDate ? $oldDueDate->format('M j, Y') : 'none';
+            $newDateStr = $newDueDate ? $newDueDate->format('M j, Y') : 'none';
+            $task->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_updated',
+                'notes' => "Task due date changed from {$oldDateStr} to {$newDateStr}: {$task->name}",
             ]);
         }
 
