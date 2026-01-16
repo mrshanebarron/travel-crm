@@ -101,7 +101,7 @@ return [
             'timing_description' => '30 days before safari',
         ],
         [
-            'name' => 'Arrival and Departure arrangments made',
+            'name' => 'Arrival and Departure arrangements made',
             'days_before' => 30,
             'assigned_to_name' => 'Albert',
             'timing_description' => '30 days before safari',
