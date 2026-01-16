@@ -239,8 +239,8 @@ class BookingController extends Controller
             if (empty($parsedDays) && empty(array_filter($extractedRates))) {
                 // Store file as document for manual review
                 $booking->documents()->create([
-                    'filename' => $request->file('pdf')->getClientOriginalName(),
-                    'path' => $path,
+                    'name' => $request->file('pdf')->getClientOriginalName(),
+                    'file_path' => $path,
                     'category' => 'misc',
                     'uploaded_by' => auth()->id(),
                 ]);
@@ -333,8 +333,8 @@ class BookingController extends Controller
 
             // Store the PDF as a document
             $booking->documents()->create([
-                'filename' => $request->file('pdf')->getClientOriginalName(),
-                'path' => $path,
+                'name' => $request->file('pdf')->getClientOriginalName(),
+                'file_path' => $path,
                 'category' => 'misc',
                 'uploaded_by' => auth()->id(),
             ]);
@@ -374,8 +374,8 @@ class BookingController extends Controller
 
             // Still save the file for manual review
             $booking->documents()->create([
-                'filename' => $request->file('pdf')->getClientOriginalName(),
-                'path' => $path,
+                'name' => $request->file('pdf')->getClientOriginalName(),
+                'file_path' => $path,
                 'category' => 'misc',
                 'uploaded_by' => auth()->id(),
             ]);
