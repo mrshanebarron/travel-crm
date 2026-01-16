@@ -306,7 +306,15 @@
         <!-- Payment Details Tab -->
         @can('view_financial_data')
         <div class="tab-content p-6" id="payment-details">
-            <h2 class="text-lg font-semibold text-slate-900 mb-6">Safari Rates & Payment Schedule</h2>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold text-slate-900">Safari Rates & Payment Schedule</h2>
+                <button type="button" class="btn btn-secondary text-sm" onclick="document.getElementById('import-pdf-modal').classList.remove('hidden')">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Import from Safari Office
+                </button>
+            </div>
 
             @foreach($booking->groups as $group)
                 <div class="border border-slate-200 rounded-xl mb-6 overflow-hidden">
