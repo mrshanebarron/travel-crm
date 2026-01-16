@@ -11,10 +11,129 @@ class SafariPdfParser
     protected Parser $parser;
     protected string $text;
     protected array $lines;
+    protected array $bookingMetadata = [];
 
     public function __construct()
     {
         $this->parser = new Parser();
+    }
+
+    /**
+     * Extract booking metadata from the PDF.
+     * Returns: lead_name, traveler_count, adult_count, child_count, start_date, end_date, country, adult_rate
+     */
+    public function extractBookingMetadata(): array
+    {
+        if (empty($this->bookingMetadata)) {
+            $this->parseBookingMetadata();
+        }
+        return $this->bookingMetadata;
+    }
+
+    /**
+     * Parse booking metadata from the PDF text.
+     */
+    protected function parseBookingMetadata(): void
+    {
+        $this->bookingMetadata = [
+            'lead_name' => null,
+            'lead_first_name' => null,
+            'lead_last_name' => null,
+            'traveler_count' => 0,
+            'adult_count' => 0,
+            'child_count' => 0,
+            'start_date' => null,
+            'end_date' => null,
+            'country' => null,
+            'adult_rate' => null,
+            'child_rate' => null,
+            'reference_number' => null,
+        ];
+
+        // Extract lead name - "Proposal for Alex Rodgers" or "Dear Alex Rodgers,"
+        if (preg_match('/Proposal for ([A-Za-z\s]+?)(?:\s+\d+\s+Adult|\s*$)/i', $this->text, $match)) {
+            $this->bookingMetadata['lead_name'] = trim($match[1]);
+        } elseif (preg_match('/Dear ([A-Za-z\s]+?),/i', $this->text, $match)) {
+            $this->bookingMetadata['lead_name'] = trim($match[1]);
+        }
+
+        // Split lead name into first/last
+        if ($this->bookingMetadata['lead_name']) {
+            $parts = explode(' ', $this->bookingMetadata['lead_name']);
+            if (count($parts) >= 2) {
+                $this->bookingMetadata['lead_first_name'] = $parts[0];
+                $this->bookingMetadata['lead_last_name'] = implode(' ', array_slice($parts, 1));
+            } else {
+                $this->bookingMetadata['lead_first_name'] = $this->bookingMetadata['lead_name'];
+                $this->bookingMetadata['lead_last_name'] = '';
+            }
+        }
+
+        // Extract traveler counts - "4 Adults" or "2 Adults, 2 Children"
+        if (preg_match('/(\d+)\s*Adult/i', $this->text, $match)) {
+            $this->bookingMetadata['adult_count'] = (int) $match[1];
+        }
+        if (preg_match('/(\d+)\s*Child/i', $this->text, $match)) {
+            $this->bookingMetadata['child_count'] = (int) $match[1];
+        }
+        $this->bookingMetadata['traveler_count'] = $this->bookingMetadata['adult_count'] + $this->bookingMetadata['child_count'];
+
+        // Extract dates - "Start Tour\nJanuary 4, 2027" or "Monday, January 4, 2027"
+        // The PDF has newlines between "Start Tour" and the date
+        if (preg_match('/Start\s*Tour\s*\n\s*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i', $this->text, $match)) {
+            try {
+                $this->bookingMetadata['start_date'] = Carbon::parse(trim($match[1]))->format('Y-m-d');
+            } catch (\Exception $e) {}
+        } elseif (preg_match('/Start\s*\n\s*([A-Za-z]+,?\s+[A-Za-z]+\s+\d{1,2},?\s+\d{4})/i', $this->text, $match)) {
+            try {
+                $this->bookingMetadata['start_date'] = Carbon::parse(trim($match[1]))->format('Y-m-d');
+            } catch (\Exception $e) {}
+        }
+
+        if (preg_match('/End\s*Tour\s*\n\s*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i', $this->text, $match)) {
+            try {
+                $this->bookingMetadata['end_date'] = Carbon::parse(trim($match[1]))->format('Y-m-d');
+            } catch (\Exception $e) {}
+        } elseif (preg_match('/End\s*\n\s*([A-Za-z]+,?\s+[A-Za-z]+\s+\d{1,2},?\s+\d{4})/i', $this->text, $match)) {
+            try {
+                $this->bookingMetadata['end_date'] = Carbon::parse(trim($match[1]))->format('Y-m-d');
+            } catch (\Exception $e) {}
+        }
+
+        // Extract country - look for Kenya, Tanzania, Uganda, etc.
+        $countries = [];
+        if (preg_match('/Kenya/i', $this->text)) $countries[] = 'Kenya';
+        if (preg_match('/Tanzania/i', $this->text)) $countries[] = 'Tanzania';
+        if (preg_match('/Uganda/i', $this->text)) $countries[] = 'Uganda';
+        if (preg_match('/Rwanda/i', $this->text)) $countries[] = 'Rwanda';
+        if (preg_match('/Botswana/i', $this->text)) $countries[] = 'Botswana';
+        if (preg_match('/South Africa/i', $this->text)) $countries[] = 'South Africa';
+        if (preg_match('/Namibia/i', $this->text)) $countries[] = 'Namibia';
+        if (preg_match('/Zimbabwe/i', $this->text)) $countries[] = 'Zimbabwe';
+        if (preg_match('/Zambia/i', $this->text)) $countries[] = 'Zambia';
+
+        if (!empty($countries)) {
+            $this->bookingMetadata['country'] = implode(' & ', array_unique($countries));
+        }
+
+        // Extract adult rate - "4x Adult 4x $6,149.00" or "Adult: $5,990"
+        if (preg_match('/\d+x\s*Adult\s+\d+x\s*\$([0-9,]+(?:\.\d{2})?)/i', $this->text, $match)) {
+            $this->bookingMetadata['adult_rate'] = (float) str_replace(',', '', $match[1]);
+        } elseif (preg_match('/Adult[s]?\s*[:\-]?\s*\$([0-9,]+(?:\.\d{2})?)/i', $this->text, $match)) {
+            $this->bookingMetadata['adult_rate'] = (float) str_replace(',', '', $match[1]);
+        }
+
+        // Extract child rate if present
+        if (preg_match('/\d+x\s*Child\s+\d+x\s*\$([0-9,]+(?:\.\d{2})?)/i', $this->text, $match)) {
+            $this->bookingMetadata['child_rate'] = (float) str_replace(',', '', $match[1]);
+        } elseif (preg_match('/Child(?:ren)?\s*[:\-]?\s*\$([0-9,]+(?:\.\d{2})?)/i', $this->text, $match)) {
+            $this->bookingMetadata['child_rate'] = (float) str_replace(',', '', $match[1]);
+        }
+
+        // Extract reference number - "Ref. Number: #2025-1333.4"
+        if (preg_match('/Ref\.?\s*(?:Number|#)?[:\s]*#?(\d{4}-\d+(?:\.\d+)?)/i', $this->text, $match)) {
+            $this->bookingMetadata['reference_number'] = $match[1];
+        }
     }
 
     /**

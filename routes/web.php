@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Bookings
     Route::resource('bookings', BookingController::class);
+    Route::post('/bookings/create-from-pdf', [BookingController::class, 'createFromPdf'])->name('bookings.create-from-pdf');
     Route::post('/bookings/{booking}/import-pdf', [BookingController::class, 'importPdf'])->name('bookings.import-pdf');
     Route::post('/bookings/{booking}/import-url', [BookingController::class, 'importUrl'])->name('bookings.import-url');
     Route::post('/bookings/bulk-export', [BookingController::class, 'bulkExport'])->name('bookings.bulk-export');

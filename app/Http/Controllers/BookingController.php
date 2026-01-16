@@ -500,6 +500,183 @@ class BookingController extends Controller
     }
 
     /**
+     * Create a new booking from a Safari Office PDF upload.
+     * Extracts metadata, creates booking with travelers, safari days, and rates.
+     */
+    public function createFromPdf(Request $request)
+    {
+        $this->authorize('create', Booking::class);
+
+        $request->validate([
+            'pdf' => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        // Store the uploaded PDF temporarily
+        $path = $request->file('pdf')->store('safari-pdfs', 'local');
+        $fullPath = Storage::disk('local')->path($path);
+
+        try {
+            $parser = new SafariPdfParser();
+            $parsedDays = $parser->parse($fullPath);
+            $metadata = $parser->extractBookingMetadata();
+            $extractedRates = $parser->extractRates();
+
+            // Validate we have minimum required data
+            if (empty($metadata['start_date']) || empty($metadata['end_date'])) {
+                Storage::disk('local')->delete($path);
+                return redirect()->route('bookings.index')
+                    ->with('error', 'Could not extract booking dates from the PDF. Please create the booking manually.');
+            }
+
+            $booking = DB::transaction(function () use ($metadata, $parsedDays, $extractedRates, $path, $request) {
+                // Create the booking
+                $booking = Booking::create([
+                    'booking_number' => Booking::generateBookingNumber(),
+                    'country' => $metadata['country'] ?? 'Kenya',
+                    'start_date' => $metadata['start_date'],
+                    'end_date' => $metadata['end_date'],
+                    'guides' => [],
+                    'created_by' => auth()->id(),
+                ]);
+
+                // Create Group 1
+                $group = $booking->groups()->create(['group_number' => 1]);
+
+                // Create lead traveler
+                if ($metadata['lead_first_name']) {
+                    $leadTraveler = $group->travelers()->create([
+                        'first_name' => $metadata['lead_first_name'],
+                        'last_name' => $metadata['lead_last_name'] ?? '',
+                        'is_lead' => true,
+                        'order' => 0,
+                    ]);
+
+                    // Create payment record for lead if we have a rate
+                    $rate = $extractedRates['adult'] ?? $metadata['adult_rate'] ?? null;
+                    if ($rate && $rate > 0) {
+                        $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
+                        $payment = new \App\Models\Payment();
+                        $payment->traveler_id = $leadTraveler->id;
+                        $payment->safari_rate = $rate;
+                        $payment->recalculateSchedule($daysUntilSafari);
+                        $payment->save();
+                    }
+                }
+
+                // Create placeholder travelers for remaining count
+                $remainingAdults = max(0, ($metadata['adult_count'] ?? 1) - 1);
+                $childCount = $metadata['child_count'] ?? 0;
+
+                for ($i = 0; $i < $remainingAdults; $i++) {
+                    $traveler = $group->travelers()->create([
+                        'first_name' => 'Adult',
+                        'last_name' => ($i + 2),
+                        'is_lead' => false,
+                        'order' => $i + 1,
+                    ]);
+
+                    // Create payment record
+                    $rate = $extractedRates['adult'] ?? $metadata['adult_rate'] ?? null;
+                    if ($rate && $rate > 0) {
+                        $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
+                        $payment = new \App\Models\Payment();
+                        $payment->traveler_id = $traveler->id;
+                        $payment->safari_rate = $rate;
+                        $payment->recalculateSchedule($daysUntilSafari);
+                        $payment->save();
+                    }
+                }
+
+                for ($i = 0; $i < $childCount; $i++) {
+                    $traveler = $group->travelers()->create([
+                        'first_name' => 'Child',
+                        'last_name' => ($i + 1),
+                        'is_lead' => false,
+                        'order' => $remainingAdults + $i + 1,
+                    ]);
+
+                    // Create payment record with child rate
+                    $rate = $extractedRates['child_2_11'] ?? $extractedRates['child_12_17'] ?? $metadata['child_rate'] ?? null;
+                    if ($rate && $rate > 0) {
+                        $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
+                        $payment = new \App\Models\Payment();
+                        $payment->traveler_id = $traveler->id;
+                        $payment->safari_rate = $rate;
+                        $payment->recalculateSchedule($daysUntilSafari);
+                        $payment->save();
+                    }
+                }
+
+                // Create safari days from parsed itinerary or date range
+                if (!empty($parsedDays)) {
+                    foreach ($parsedDays as $dayData) {
+                        $booking->safariDays()->create([
+                            'day_number' => $dayData['day_number'],
+                            'date' => $dayData['date'] ?? null,
+                            'location' => $dayData['location'] ?? '',
+                            'lodge' => $dayData['lodge'] ?? null,
+                            'morning_activity' => $dayData['morning_activity'] ?? null,
+                            'midday_activity' => $dayData['midday_activity'] ?? null,
+                            'afternoon_activity' => $dayData['afternoon_activity'] ?? null,
+                            'other_activities' => $dayData['other_activities'] ?? null,
+                            'meal_plan' => $dayData['meal_plan'] ?? null,
+                            'drink_plan' => $dayData['drink_plan'] ?? null,
+                        ]);
+                    }
+                } else {
+                    // Fallback: create empty days based on date range
+                    $startDate = \Carbon\Carbon::parse($metadata['start_date']);
+                    $endDate = \Carbon\Carbon::parse($metadata['end_date']);
+                    $dayNumber = 1;
+
+                    for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
+                        $booking->safariDays()->create([
+                            'day_number' => $dayNumber++,
+                            'date' => $date->format('Y-m-d'),
+                            'location' => '',
+                        ]);
+                    }
+                }
+
+                // Store the PDF as a document
+                $booking->documents()->create([
+                    'name' => $request->file('pdf')->getClientOriginalName(),
+                    'file_path' => $path,
+                    'category' => 'misc',
+                    'uploaded_by' => auth()->id(),
+                ]);
+
+                // Auto-populate Master Checklist with default tasks
+                $this->createDefaultTasks($booking);
+
+                // Log activity
+                $refInfo = $metadata['reference_number'] ? " (Ref: {$metadata['reference_number']})" : '';
+                $booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action' => 'booking_created_from_pdf',
+                    'description' => "Booking created from Safari Office PDF{$refInfo}. Lead: {$metadata['lead_name']}, {$metadata['traveler_count']} travelers.",
+                ]);
+
+                return $booking;
+            });
+
+            return redirect()->route('bookings.show', $booking)
+                ->with('success', "Booking created from Safari Office PDF! Lead traveler: {$metadata['lead_name']}, {$metadata['traveler_count']} travelers imported.");
+
+        } catch (\Exception $e) {
+            Storage::disk('local')->delete($path);
+
+            \Log::error('Create booking from PDF failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('bookings.index')
+                ->with('error', 'Failed to create booking from PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Import safari itinerary from Safari Office URL.
      */
     public function importUrl(Request $request, Booking $booking)
