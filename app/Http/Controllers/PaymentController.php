@@ -55,19 +55,37 @@ class PaymentController extends Controller
         ]);
 
         $oldRate = $payment->safari_rate;
+        $oldDeposit = $payment->deposit;
+        $old90Day = $payment->payment_90_day;
+        $old45Day = $payment->payment_45_day;
+
         $payment->safari_rate = $validated['safari_rate'];
-        $payment->recalculateSchedule();
+
+        // Get days until safari for proper recalculation
+        $booking = $payment->traveler->group->booking;
+        $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
+
+        $payment->recalculateSchedule($daysUntilSafari);
         $payment->save();
 
-        $booking = $payment->traveler->group->booking;
         $traveler = $payment->traveler;
 
-        // Log rate change
+        // Log rate change with payment details
         if ($oldRate != $validated['safari_rate']) {
+            $notes = "Safari rate changed for {$traveler->full_name}: \${$oldRate} → \${$validated['safari_rate']}";
+            if ($oldDeposit != $payment->deposit) {
+                $notes .= " | Deposit: \${$oldDeposit} → \${$payment->deposit}";
+            }
+            if ($old90Day != $payment->payment_90_day) {
+                $notes .= " | 90-Day: \${$old90Day} → \${$payment->payment_90_day}";
+            }
+            if ($old45Day != $payment->payment_45_day) {
+                $notes .= " | 45-Day: \${$old45Day} → \${$payment->payment_45_day}";
+            }
             $booking->activityLogs()->create([
                 'user_id' => auth()->id(),
                 'action_type' => 'rate_changed',
-                'notes' => "Safari rate changed for {$traveler->full_name}: \${$oldRate} → \${$validated['safari_rate']}",
+                'notes' => $notes,
             ]);
         }
 
