@@ -151,12 +151,8 @@
                             </td>
                             <td>
                                 <div class="flex items-center gap-2">
-                                    <button type="button" onclick="openEditClientModal({{ $traveler->id }}, '{{ addslashes($traveler->first_name) }}', '{{ addslashes($traveler->last_name) }}', '{{ $traveler->email }}', '{{ $traveler->phone }}', '{{ $traveler->dob?->format('Y-m-d') }}', {{ $traveler->is_lead ? 'true' : 'false' }})" class="btn btn-secondary text-sm py-2 px-3">
-                                        Edit
-                                    </button>
-                                    <a href="{{ route('clients.show', $traveler) }}" class="btn btn-secondary text-sm py-2 px-3">
-                                        View
-                                    </a>
+                                    <x-action-button type="view" size="xs" :href="route('clients.show', $traveler)" />
+                                    <x-action-button type="edit" size="xs" onclick="openEditClientModal({{ $traveler->id }}, '{{ addslashes($traveler->first_name) }}', '{{ addslashes($traveler->last_name) }}', '{{ $traveler->email }}', '{{ $traveler->phone }}', '{{ $traveler->dob?->format('Y-m-d') }}', {{ $traveler->is_lead ? 'true' : 'false' }})" />
                                 </div>
                             </td>
                         </tr>

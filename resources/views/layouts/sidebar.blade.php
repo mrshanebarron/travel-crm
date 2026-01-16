@@ -50,6 +50,7 @@
                 </svg>
                 <span>Reports</span>
             </a>
+            {{-- Reconciliation menu hidden per client request
             @can('view_financial_data')
             <a href="{{ route('reconciliation.index') }}" @click="sidebarOpen = false" class="sidebar-link {{ request()->routeIs('reconciliation.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,6 +59,7 @@
                 <span>Reconciliation</span>
             </a>
             @endcan
+            --}}
             @can('view_transfers')
             <a href="{{ route('transfers.index') }}" @click="sidebarOpen = false" class="sidebar-link {{ request()->routeIs('transfers.*') ? 'active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

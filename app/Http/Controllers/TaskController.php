@@ -121,13 +121,32 @@ class TaskController extends Controller
         }
 
         // Log task assignment change
-        if ($newlyAssigned && $validated['assigned_to']) {
-            $assignee = User::find($validated['assigned_to']);
-            $task->booking->activityLogs()->create([
-                'user_id' => auth()->id(),
-                'action_type' => 'task_assigned',
-                'notes' => "Task assigned to {$assignee->name}: {$task->name}",
-            ]);
+        if ($newlyAssigned) {
+            $newAssignee = $validated['assigned_to'] ? User::find($validated['assigned_to']) : null;
+            $oldAssigneeUser = $oldAssignee ? User::find($oldAssignee) : null;
+
+            if ($oldAssigneeUser && $newAssignee) {
+                // Reassignment
+                $task->booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action_type' => 'task_assigned',
+                    'notes' => "Task reassigned from {$oldAssigneeUser->name} to {$newAssignee->name}: {$task->name}",
+                ]);
+            } elseif ($newAssignee) {
+                // New assignment
+                $task->booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action_type' => 'task_assigned',
+                    'notes' => "Task assigned to {$newAssignee->name}: {$task->name}",
+                ]);
+            } elseif ($oldAssigneeUser) {
+                // Unassignment
+                $task->booking->activityLogs()->create([
+                    'user_id' => auth()->id(),
+                    'action_type' => 'task_assigned',
+                    'notes' => "Task unassigned from {$oldAssigneeUser->name}: {$task->name}",
+                ]);
+            }
         }
 
         // Log task due date change

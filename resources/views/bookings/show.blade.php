@@ -807,13 +807,12 @@
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-10"></th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-48">Task</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Assigned</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-20">Assigned</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-20">Completed</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Notes</th>
-                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-28">Timing</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-8"></th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider" style="min-width: 320px;">Task</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Assigned To</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Assigned</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">Completed</th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-full">Notes</th>
                                 <th class="px-2 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16"></th>
                             </tr>
                         </thead>
@@ -843,22 +842,20 @@
                                             </form>
                                         @endif
                                     </td>
-                                    <td class="px-2 py-2">
+                                    <td class="px-2 py-2" style="min-width: 320px;">
                                         <span class="{{ $task->status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900 font-medium' }} text-sm">
                                             {{ $task->name }}
                                         </span>
                                     </td>
-                                    <td class="px-2 py-2 text-xs">
-                                        @if($task->assignedTo)
-                                            <span class="text-slate-700">{{ $task->assignedTo->name }}</span>
-                                        @else
-                                            <span class="text-amber-600">-</span>
-                                        @endif
+                                    <td class="px-2 py-2 text-xs whitespace-nowrap">
+                                        <button type="button" onclick="openAssignTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->status }}', {{ $task->assigned_to ?? 'null' }})" class="text-xs {{ $task->assignedTo ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-orange-100 text-orange-700 hover:bg-orange-200' }} px-2 py-1 rounded font-medium">
+                                            {{ $task->assignedTo ? $task->assignedTo->name : 'Assign' }}
+                                        </button>
                                     </td>
-                                    <td class="px-2 py-2 text-xs text-slate-500">
+                                    <td class="px-2 py-2 text-xs text-slate-500 whitespace-nowrap">
                                         {{ $task->assigned_at ? $task->assigned_at->format('n/j') : '-' }}
                                     </td>
-                                    <td class="px-2 py-2 text-xs text-slate-500">
+                                    <td class="px-2 py-2 text-xs text-slate-500 whitespace-nowrap">
                                         @if($task->status === 'completed' && $task->completed_at)
                                             {{ $task->completed_at->format('n/j') }}
                                         @else
@@ -868,31 +865,16 @@
                                     <td class="px-2 py-2 text-sm text-slate-600">
                                         {{ $task->description ?: '' }}
                                     </td>
-                                    <td class="px-2 py-2 text-xs text-slate-500">
-                                        {{ $task->timing_description ?: '' }}
-                                    </td>
-                                    <td class="px-2 py-2">
-                                        <div class="flex items-center gap-1">
-                                            <button type="button" onclick="openEditTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->due_date?->format('Y-m-d') }}', {{ $task->assigned_to ?? 'null' }})" class="text-slate-400 hover:text-slate-600" title="Edit task">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </button>
-                                            <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-slate-400 hover:text-red-600" title="Delete task">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </form>
+                                    <td class="px-2 py-2 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <x-action-button type="edit" size="xs" onclick="openEditTaskModal({{ $task->id }}, '{{ addslashes($task->name) }}', '{{ $task->due_date?->format('Y-m-d') }}', {{ $task->assigned_to ?? 'null' }})" />
+                                            <x-action-button type="delete" size="xs" :action="route('tasks.destroy', $task)" confirm="Delete this task?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-4 py-6 text-center text-slate-500">
+                                    <td colspan="7" class="px-4 py-6 text-center text-slate-500">
                                         No tasks yet. Click "Add Task" to create one.
                                     </td>
                                 </tr>
@@ -1843,6 +1825,38 @@
         </div>
     </div>
 
+    <!-- Assign Task Modal -->
+    <div id="assign-task-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Assign Task</h3>
+            <form id="assign-task-form" method="POST" action="">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="name" id="assign-task-name-input" value="">
+                <input type="hidden" name="status" id="assign-task-status-input" value="pending">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Task</label>
+                        <p id="assign-task-name" class="text-slate-900 font-medium"></p>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Assign To</label>
+                        <select name="assigned_to" id="assign-task-assigned-to" class="w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500" required>
+                            <option value="">-- Select Team Member --</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="document.getElementById('assign-task-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Payment Reminder Modal -->
     <div id="payment-reminder-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md">
@@ -2075,6 +2089,17 @@
             document.getElementById('edit-task-assigned-to').value = assignedTo || '';
             document.getElementById('edit-task-status').value = 'pending';
             document.getElementById('edit-task-modal').classList.remove('hidden');
+        }
+
+        // Assign Task Modal
+        function openAssignTaskModal(taskId, name, status, currentAssignee) {
+            const form = document.getElementById('assign-task-form');
+            form.action = `/tasks/${taskId}`;
+            document.getElementById('assign-task-name').textContent = name;
+            document.getElementById('assign-task-name-input').value = name;
+            document.getElementById('assign-task-status-input').value = status || 'pending';
+            document.getElementById('assign-task-assigned-to').value = currentAssignee || '';
+            document.getElementById('assign-task-modal').classList.remove('hidden');
         }
 
         // Close modals when clicking outside
