@@ -258,4 +258,120 @@ class SafariPdfParser
     {
         return $this->text ?? '';
     }
+
+    /**
+     * Extract rates by age category from the PDF.
+     * Returns array with keys: adult, child_12_17, child_2_11, infant
+     *
+     * Safari Office PDFs typically have rates in formats like:
+     * - "Adult: $5,990" or "Adults: USD 5990"
+     * - "Child 12-17: $4,990" or "Children (12-17 years): $4990"
+     * - "Child 2-11: $3,990" or "Children (2-11 years): $3990"
+     * - May also show as table format or per-person pricing section
+     */
+    public function extractRates(): array
+    {
+        $rates = [
+            'adult' => null,
+            'child_12_17' => null,
+            'child_2_11' => null,
+            'infant' => null,
+        ];
+
+        // Pattern to match currency amounts: $5,990 or USD 5990 or 5,990 USD etc.
+        $currencyPattern = '[\$]?\s*([0-9,]+(?:\.[0-9]{2})?)\s*(?:USD|pp|per person)?';
+
+        // Adult rate patterns
+        $adultPatterns = [
+            '/adult[s]?\s*(?:rate)?[:\s]+' . $currencyPattern . '/i',
+            '/(?:per\s+)?adult[s]?\s*[:\-]\s*' . $currencyPattern . '/i',
+            '/adult\s+sharing\s*[:\-]?\s*' . $currencyPattern . '/i',
+            '/' . $currencyPattern . '\s*(?:per\s+)?adult/i',
+        ];
+
+        // Child 12-17 patterns
+        $child12to17Patterns = [
+            '/child(?:ren)?\s*\(?12[\s\-–]+17(?:\s*(?:years?|yrs?))?\)?\s*[:\-]?\s*' . $currencyPattern . '/i',
+            '/(?:teen(?:ager)?s?|youth)\s*\(?12[\s\-–]+17\)?\s*[:\-]?\s*' . $currencyPattern . '/i',
+            '/' . $currencyPattern . '\s*(?:per\s+)?child(?:ren)?\s*\(?12[\s\-–]+17/i',
+        ];
+
+        // Child 2-11 patterns
+        $child2to11Patterns = [
+            '/child(?:ren)?\s*\(?2[\s\-–]+11(?:\s*(?:years?|yrs?))?\)?\s*[:\-]?\s*' . $currencyPattern . '/i',
+            '/(?:kids?|children)\s*\(?2[\s\-–]+11\)?\s*[:\-]?\s*' . $currencyPattern . '/i',
+            '/' . $currencyPattern . '\s*(?:per\s+)?child(?:ren)?\s*\(?2[\s\-–]+11/i',
+        ];
+
+        // Infant patterns (usually free or reduced)
+        $infantPatterns = [
+            '/infant[s]?\s*\(?(?:0[\s\-–]+1|under\s*2)(?:\s*(?:years?|yrs?))?\)?\s*[:\-]?\s*' . $currencyPattern . '/i',
+            '/infant[s]?\s*[:\-]?\s*(?:free|complimentary|no\s+charge)/i',
+            '/' . $currencyPattern . '\s*(?:per\s+)?infant/i',
+        ];
+
+        // Search for adult rates
+        foreach ($adultPatterns as $pattern) {
+            if (preg_match($pattern, $this->text, $match)) {
+                $rates['adult'] = $this->parseAmount($match[1]);
+                break;
+            }
+        }
+
+        // Search for child 12-17 rates
+        foreach ($child12to17Patterns as $pattern) {
+            if (preg_match($pattern, $this->text, $match)) {
+                $rates['child_12_17'] = $this->parseAmount($match[1]);
+                break;
+            }
+        }
+
+        // Search for child 2-11 rates
+        foreach ($child2to11Patterns as $pattern) {
+            if (preg_match($pattern, $this->text, $match)) {
+                $rates['child_2_11'] = $this->parseAmount($match[1]);
+                break;
+            }
+        }
+
+        // Search for infant rates
+        foreach ($infantPatterns as $pattern) {
+            if (preg_match($pattern, $this->text, $match)) {
+                if (isset($match[1]) && is_numeric(str_replace(',', '', $match[1]))) {
+                    $rates['infant'] = $this->parseAmount($match[1]);
+                } else {
+                    $rates['infant'] = 0; // Free
+                }
+                break;
+            }
+        }
+
+        // If we only found one rate (likely adult), try generic "per person" patterns
+        if ($rates['adult'] === null) {
+            $genericPatterns = [
+                '/(?:rate|price|cost)\s*(?:per\s+person|pp)\s*[:\-]?\s*' . $currencyPattern . '/i',
+                '/(?:total|safari)\s*(?:price|rate|cost)\s*[:\-]?\s*' . $currencyPattern . '/i',
+                '/' . $currencyPattern . '\s*(?:per\s+person|pp)/i',
+            ];
+
+            foreach ($genericPatterns as $pattern) {
+                if (preg_match($pattern, $this->text, $match)) {
+                    $rates['adult'] = $this->parseAmount($match[1]);
+                    break;
+                }
+            }
+        }
+
+        return $rates;
+    }
+
+    /**
+     * Parse a currency amount string to float.
+     */
+    protected function parseAmount(string $amount): float
+    {
+        // Remove currency symbols and thousands separators
+        $cleaned = preg_replace('/[^\d.]/', '', str_replace(',', '', $amount));
+        return (float) $cleaned;
+    }
 }

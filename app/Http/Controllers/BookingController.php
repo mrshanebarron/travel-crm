@@ -232,7 +232,11 @@ class BookingController extends Controller
             $parser = new SafariPdfParser();
             $parsedDays = $parser->parse($fullPath);
 
-            if (empty($parsedDays)) {
+            // Also extract rates from PDF
+            $extractedRates = $parser->extractRates();
+            $ratesAssigned = 0;
+
+            if (empty($parsedDays) && empty(array_filter($extractedRates))) {
                 // Store file as document for manual review
                 $booking->documents()->create([
                     'filename' => $request->file('pdf')->getClientOriginalName(),
@@ -256,7 +260,8 @@ class BookingController extends Controller
             $existingDays = $booking->safariDays()->orderBy('day_number')->get()->keyBy('day_number');
             $updatedCount = 0;
 
-            DB::transaction(function () use ($parsedDays, $booking, $existingDays, &$updatedCount) {
+            DB::transaction(function () use ($parsedDays, $booking, $existingDays, &$updatedCount, $extractedRates, &$ratesAssigned) {
+                // Update itinerary days
                 foreach ($parsedDays as $dayData) {
                     $dayNumber = $dayData['day_number'];
 
@@ -296,6 +301,34 @@ class BookingController extends Controller
                         }
                     }
                 }
+
+                // Assign rates to travelers based on age category
+                if (!empty(array_filter($extractedRates))) {
+                    $travelers = $booking->groups->flatMap->travelers;
+
+                    foreach ($travelers as $traveler) {
+                        // Skip if traveler already has a payment record
+                        if ($traveler->payment) {
+                            continue;
+                        }
+
+                        $ageCategory = $traveler->age_category;
+                        $rate = $extractedRates[$ageCategory] ?? $extractedRates['adult'] ?? null;
+
+                        if ($rate && $rate > 0) {
+                            // Calculate days until safari for payment schedule
+                            $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
+
+                            $payment = new \App\Models\Payment();
+                            $payment->traveler_id = $traveler->id;
+                            $payment->safari_rate = $rate;
+                            $payment->recalculateSchedule($daysUntilSafari);
+                            $payment->save();
+
+                            $ratesAssigned++;
+                        }
+                    }
+                }
             });
 
             // Store the PDF as a document
@@ -306,15 +339,31 @@ class BookingController extends Controller
                 'uploaded_by' => auth()->id(),
             ]);
 
+            // Build success message
+            $messages = [];
+            if ($updatedCount > 0) {
+                $messages[] = "{$updatedCount} days updated with itinerary data";
+            }
+            if ($ratesAssigned > 0) {
+                $messages[] = "{$ratesAssigned} traveler rates assigned based on age";
+            }
+
+            $description = "Safari Office PDF imported. " . implode('. ', $messages) . ".";
+
             // Log activity
             $booking->activityLogs()->create([
                 'user_id' => auth()->id(),
                 'action' => 'pdf_imported',
-                'description' => "Safari Office PDF imported. {$updatedCount} days updated with itinerary data.",
+                'description' => $description,
             ]);
 
-            return redirect()->route('bookings.show', $booking)
-                ->with('success', "PDF imported successfully! {$updatedCount} safari days were updated with itinerary information.");
+            $successMessage = "PDF imported successfully!";
+            if (!empty($messages)) {
+                $successMessage .= " " . implode('. ', $messages) . ".";
+            }
+
+            return redirect()->route('bookings.show', ['booking' => $booking->id, 'tab' => 'payment-details'])
+                ->with('success', $successMessage);
 
         } catch (\Exception $e) {
             // Log the error for debugging

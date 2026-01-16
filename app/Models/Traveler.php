@@ -69,4 +69,50 @@ class Traveler extends Model
     {
         return $this->first_name . ' ' . $this->last_name;
     }
+
+    /**
+     * Calculate traveler's age at a specific date.
+     */
+    public function getAgeAtDate($date): ?int
+    {
+        if (!$this->dob) {
+            return null;
+        }
+
+        $date = $date instanceof \Carbon\Carbon ? $date : \Carbon\Carbon::parse($date);
+        return $this->dob->diffInYears($date);
+    }
+
+    /**
+     * Get age category for rate assignment.
+     * Categories: adult (18+), child_12_17 (12-17), child_2_11 (2-11), infant (0-1)
+     */
+    public function getAgeCategoryAtDate($date): string
+    {
+        $age = $this->getAgeAtDate($date);
+
+        if ($age === null) {
+            return 'adult'; // Default to adult if no DOB
+        }
+
+        if ($age >= 18) {
+            return 'adult';
+        } elseif ($age >= 12) {
+            return 'child_12_17';
+        } elseif ($age >= 2) {
+            return 'child_2_11';
+        } else {
+            return 'infant';
+        }
+    }
+
+    /**
+     * Get the age category for the booking's safari start date.
+     */
+    public function getAgeCategoryAttribute(): string
+    {
+        $booking = $this->group?->booking;
+        $startDate = $booking?->start_date ?? now();
+        return $this->getAgeCategoryAtDate($startDate);
+    }
 }
