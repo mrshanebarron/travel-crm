@@ -185,7 +185,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                                     </svg>
                                                 </button>
-                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10">
+                                                <div x-show="open" x-cloak @click.away="open = false" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10">
                                                     <form method="POST" action="{{ route('emails.confirmation', [$booking, $traveler]) }}">
                                                         @csrf
                                                         <button type="submit" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Booking Confirmation</button>
@@ -235,7 +235,7 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Safari Itinerary</h2>
                 <div class="flex gap-2">
-                    <button type="button" class="btn btn-secondary text-sm" onclick="document.getElementById('import-pdf-modal').classList.remove('hidden')">
+                    <button type="button" class="btn btn-secondary text-sm" @click="$dispatch('open-import-modal')">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
@@ -308,7 +308,7 @@
         <div class="tab-content p-6" id="payment-details">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Safari Rates & Payment Schedule</h2>
-                <button type="button" class="btn btn-secondary text-sm" onclick="document.getElementById('import-pdf-modal').classList.remove('hidden')">
+                <button type="button" class="btn btn-secondary text-sm" @click="$dispatch('open-import-modal')">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                     </svg>
@@ -1564,18 +1564,29 @@
     </div>
 
     <!-- Import Safari Office Modal -->
-    <div id="import-pdf-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-lg">
+    <div x-data="{ open: false, tab: 'url' }"
+         x-show="open"
+         x-cloak
+         x-on:open-import-modal.window="open = true"
+         x-on:keydown.escape.window="open = false"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg" @click.outside="open = false">
             <h3 class="text-lg font-semibold text-slate-900 mb-4">Import from Safari Office</h3>
 
             <!-- Tabs for import type -->
             <div class="flex gap-4 mb-6 border-b border-slate-200">
-                <button type="button" class="import-tab pb-2 px-1 border-b-2 border-orange-500 text-orange-600 font-medium text-sm" data-import-tab="url">Online Booking URL</button>
-                <button type="button" class="import-tab pb-2 px-1 border-b-2 border-transparent text-slate-500 font-medium text-sm" data-import-tab="pdf">PDF Upload</button>
+                <button type="button"
+                        @click="tab = 'url'"
+                        :class="tab === 'url' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500'"
+                        class="pb-2 px-1 border-b-2 font-medium text-sm">Online Booking URL</button>
+                <button type="button"
+                        @click="tab = 'pdf'"
+                        :class="tab === 'pdf' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500'"
+                        class="pb-2 px-1 border-b-2 font-medium text-sm">PDF Upload</button>
             </div>
 
             <!-- URL Import Form -->
-            <form id="import-url-form" method="POST" action="{{ route('bookings.import-url', $booking) }}">
+            <form x-show="tab === 'url'" method="POST" action="{{ route('bookings.import-url', $booking) }}">
                 @csrf
                 <div class="space-y-4">
                     <div>
@@ -1585,13 +1596,13 @@
                     <p class="text-sm text-slate-500">Paste the Safari Office online booking link. This will extract the itinerary directly from the webpage.</p>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('import-pdf-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="button" @click="open = false" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">Import from URL</button>
                 </div>
             </form>
 
             <!-- PDF Import Form -->
-            <form id="import-pdf-form" method="POST" action="{{ route('bookings.import-pdf', $booking) }}" enctype="multipart/form-data" class="hidden">
+            <form x-show="tab === 'pdf'" method="POST" action="{{ route('bookings.import-pdf', $booking) }}" enctype="multipart/form-data">
                 @csrf
                 <div class="space-y-4">
                     <div>
@@ -1601,7 +1612,7 @@
                     <p class="text-sm text-slate-500">Upload a Safari Office booking confirmation PDF to automatically populate the itinerary.</p>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="document.getElementById('import-pdf-modal').classList.add('hidden')" class="btn btn-secondary">Cancel</button>
+                    <button type="button" @click="open = false" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">Import PDF</button>
                 </div>
             </form>
@@ -2005,27 +2016,5 @@
             }
         }
 
-        // Import modal tab switching
-        document.querySelectorAll('.import-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                // Update tab styles
-                document.querySelectorAll('.import-tab').forEach(t => {
-                    t.classList.remove('border-orange-500', 'text-orange-600');
-                    t.classList.add('border-transparent', 'text-slate-500');
-                });
-                this.classList.remove('border-transparent', 'text-slate-500');
-                this.classList.add('border-orange-500', 'text-orange-600');
-
-                // Toggle forms
-                const tabType = this.dataset.importTab;
-                if (tabType === 'url') {
-                    document.getElementById('import-url-form').classList.remove('hidden');
-                    document.getElementById('import-pdf-form').classList.add('hidden');
-                } else {
-                    document.getElementById('import-url-form').classList.add('hidden');
-                    document.getElementById('import-pdf-form').classList.remove('hidden');
-                }
-            });
-        });
     </script>
 </x-app-layout>
