@@ -3,16 +3,16 @@
         <h2 class="text-lg font-semibold text-slate-900">Activity Log</h2>
     </div>
 
-    <!-- Add Note Form -->
+    <!-- Log Activity Form -->
     <form wire:submit="addNote" class="mb-6 p-4 bg-slate-50 rounded-xl">
         <div class="flex gap-4 items-end">
             <div class="flex-1">
-                <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Add Note</label>
-                <textarea wire:model="notes" rows="2" placeholder="Add a note..." class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required></textarea>
+                <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Log Activity</label>
+                <textarea wire:model="notes" rows="2" placeholder="Record a call, email, or other activity..." class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required></textarea>
                 @error('notes') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
             </div>
             <div>
-                <x-action-button type="add" label="Add Note" :submit="true" />
+                <x-action-button type="add" label="Log Activity" :submit="true" />
             </div>
         </div>
     </form>
