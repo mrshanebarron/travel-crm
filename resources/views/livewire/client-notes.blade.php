@@ -26,7 +26,10 @@
                                     </span>
                                     <span class="text-xs text-slate-500 ml-2">{{ $note->contacted_at->format('M j, Y g:i A') }}</span>
                                 </div>
-                                <x-action-button type="delete" size="xs" :icon="false" wire:click="deleteNote({{ $note->id }})" wire:confirm="Delete this note?" />
+                                <div class="flex items-center gap-1">
+                                    <x-action-button type="edit" size="xs" :icon="false" wire:click="openEditModal({{ $note->id }})" />
+                                    <x-action-button type="delete" size="xs" :icon="false" wire:click="deleteNote({{ $note->id }})" wire:confirm="Delete this note?" />
+                                </div>
                             </div>
                             <div class="mt-2 text-slate-700 whitespace-pre-line">{{ $note->content }}</div>
                             <div class="mt-2 text-xs text-slate-400">
@@ -79,6 +82,44 @@
                     <div class="flex justify-end gap-3 mt-6">
                         <x-action-button type="cancel" wire:click="closeAddModal" />
                         <x-action-button type="add" label="Add Note" :submit="true" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- Edit Note Modal -->
+    @if($showEditModal)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeEditModal">
+            <div class="bg-white rounded-xl p-6 w-full max-w-lg">
+                <h3 class="text-lg font-semibold text-slate-900 mb-4">Edit Note</h3>
+                <form wire:submit="updateNote">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type *</label>
+                                <select wire:model="editNoteType" required class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                    @foreach($noteTypes as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Contact Date/Time</label>
+                                <input type="datetime-local" wire:model="editContactedAt"
+                                    class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes *</label>
+                            <textarea wire:model="editNoteContent" rows="4" required
+                                class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500"
+                                placeholder="Describe the communication or interaction..."></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <x-action-button type="cancel" wire:click="closeEditModal" />
+                        <x-action-button type="save" label="Save Changes" :submit="true" />
                     </div>
                 </form>
             </div>
