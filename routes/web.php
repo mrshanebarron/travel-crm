@@ -24,11 +24,16 @@ use App\Http\Controllers\EmailNotificationController;
 use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\TravelerAddonController;
+use App\Http\Controllers\IntakeFormController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+// Public intake form (no auth required)
+Route::get('/intake/{token}', [IntakeFormController::class, 'show'])->name('intake.show');
+Route::post('/intake/{token}', [IntakeFormController::class, 'submit'])->name('intake.submit');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
@@ -53,6 +58,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/bookings/{booking}/import-url', [BookingController::class, 'importUrl'])->name('bookings.import-url');
     Route::post('/bookings/bulk-export', [BookingController::class, 'bulkExport'])->name('bookings.bulk-export');
     Route::post('/bookings/bulk-status', [BookingController::class, 'bulkStatus'])->name('bookings.bulk-status');
+    Route::post('/bookings/{booking}/generate-intake-token', [IntakeFormController::class, 'generateToken'])->name('bookings.generate-intake-token');
 
     // Groups
     Route::post('/bookings/{booking}/groups', [GroupController::class, 'store'])->name('groups.store');

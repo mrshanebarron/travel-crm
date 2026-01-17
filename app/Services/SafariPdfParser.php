@@ -182,15 +182,19 @@ class SafariPdfParser
 
                 // Create entries for each day in the range
                 for ($dayNum = $startDay; $dayNum <= $endDay; $dayNum++) {
+                    // Extract activities for this specific day
+                    $activities = $this->extractActivitiesForDay($dayNum);
+
                     $days[$dayNum] = [
                         'day_number' => $dayNum,
                         'date' => null,
                         'location' => $location,
                         'lodge' => $lodge ?: null,
-                        'morning_activity' => null,
-                        'midday_activity' => null,
-                        'afternoon_activity' => null,
-                        'other_activities' => null,
+                        'morning_activity' => $activities['morning'] ?? null,
+                        'midday_activity' => $activities['midday'] ?? null,
+                        'afternoon_activity' => $activities['afternoon'] ?? null,
+                        'evening_activity' => $activities['evening'] ?? null,
+                        'other_activities' => $activities['other'] ?? null,
                         'meal_plan' => $mealPlan,
                         'drink_plan' => null,
                     ];
@@ -243,6 +247,92 @@ class SafariPdfParser
         }
 
         return null;
+    }
+
+    /**
+     * Extract activities for a specific day number.
+     * Looks for patterns like "Morning: Game drive", "Afternoon game drive", etc.
+     */
+    protected function extractActivitiesForDay(int $dayNum): array
+    {
+        $activities = [
+            'morning' => null,
+            'midday' => null,
+            'afternoon' => null,
+            'evening' => null,
+            'other' => null,
+        ];
+
+        // Find the section for this day - look for "Day X" followed by content until "Day X+1" or end
+        $nextDay = $dayNum + 1;
+        $dayPattern = "/Day\s*{$dayNum}\b(.*?)(?=Day\s*{$nextDay}\b|$)/si";
+
+        if (!preg_match($dayPattern, $this->text, $dayMatch)) {
+            return $activities;
+        }
+
+        $dayContent = $dayMatch[1];
+
+        // Morning activities - patterns like "Morning:", "Morning game drive", "Sunrise", "Early game"
+        if (preg_match('/(?:Morning|Sunrise|Early\s*(?:morning)?)\s*[:\-]?\s*([^\n]+?)(?=Midday|Lunch|Afternoon|Evening|Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
+            $activities['morning'] = $this->cleanActivityText($match[1]);
+        }
+
+        // Midday activities - patterns like "Midday:", "Lunch:", "Noon"
+        if (preg_match('/(?:Midday|Lunch|Noon)\s*[:\-]?\s*([^\n]+?)(?=Afternoon|Evening|Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
+            $activities['midday'] = $this->cleanActivityText($match[1]);
+        }
+
+        // Afternoon activities - patterns like "Afternoon:", "Afternoon game drive", "Late game"
+        if (preg_match('/(?:Afternoon|Late\s*(?:afternoon)?)\s*[:\-]?\s*([^\n]+?)(?=Evening|Dinner|Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
+            $activities['afternoon'] = $this->cleanActivityText($match[1]);
+        }
+
+        // Evening activities - patterns like "Evening:", "Sunset", "Night", "Dinner"
+        if (preg_match('/(?:Evening|Sunset|Night(?:\s*drive)?|Dinner)\s*[:\-]?\s*([^\n]+?)(?=Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
+            $activities['evening'] = $this->cleanActivityText($match[1]);
+        }
+
+        // Also look for generic activity patterns: "Game drive", "Safari", "Transfer to", etc.
+        if (empty($activities['morning']) && empty($activities['afternoon'])) {
+            $genericPatterns = [
+                '/(?:Full\s*day\s*)?game\s*driv(?:e|ing)/i',
+                '/safari\s*(?:drive|tour|experience)/i',
+                '/transfer\s*(?:to|from)\s*[^\n]+/i',
+                '/(?:flight|fly)\s*(?:to|from)\s*[^\n]+/i',
+                '/visit(?:ing)?\s*[^\n]+/i',
+                '/(?:explore|exploration)\s*[^\n]+/i',
+            ];
+
+            foreach ($genericPatterns as $pattern) {
+                if (preg_match($pattern, $dayContent, $match)) {
+                    if (empty($activities['other'])) {
+                        $activities['other'] = $this->cleanActivityText($match[0]);
+                    } else {
+                        $activities['other'] .= '; ' . $this->cleanActivityText($match[0]);
+                    }
+                }
+            }
+        }
+
+        return $activities;
+    }
+
+    /**
+     * Clean up activity text - remove extra whitespace, trailing punctuation, etc.
+     */
+    protected function cleanActivityText(string $text): ?string
+    {
+        $text = trim($text);
+        // Remove trailing commas, periods, colons
+        $text = preg_replace('/[,.:;]+$/', '', $text);
+        // Clean up excessive whitespace
+        $text = preg_replace('/\s+/', ' ', $text);
+        // Remove if just punctuation or very short
+        if (strlen($text) < 3) {
+            return null;
+        }
+        return $text;
     }
 
     /**

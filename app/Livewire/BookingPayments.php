@@ -122,8 +122,83 @@ class BookingPayments extends Component
 
         $payment = Payment::findOrFail($paymentId);
         $paidField = $field . '_paid';
+        $wasMarkedPaid = $payment->$paidField;
         $payment->$paidField = !$payment->$paidField;
         $payment->save();
+
+        // Get payment amount for ledger
+        $amount = match($field) {
+            'deposit' => $payment->deposit,
+            'payment_90_day' => $payment->payment_90_day,
+            'payment_45_day' => $payment->payment_45_day,
+            default => 0,
+        };
+
+        // Map field to ledger category
+        $category = match($field) {
+            'deposit' => 'deposit',
+            'payment_90_day' => '90_day',
+            'payment_45_day' => '45_day',
+            default => 'other',
+        };
+
+        // Get traveler name for description
+        $travelerName = $payment->traveler?->full_name ?? 'Unknown';
+
+        // Map field to readable name
+        $paymentName = match($field) {
+            'deposit' => 'Deposit',
+            'payment_90_day' => '90-Day Payment',
+            'payment_45_day' => '45-Day Payment',
+            default => 'Payment',
+        };
+
+        if ($payment->$paidField && $amount > 0) {
+            // Payment marked as paid - create ledger entry
+            // Calculate running balance
+            $lastEntry = $this->booking->ledgerEntries()->orderBy('id', 'desc')->first();
+            $newBalance = ($lastEntry?->balance ?? 0) + $amount;
+
+            $this->booking->ledgerEntries()->create([
+                'date' => now(),
+                'description' => "{$paymentName} received from {$travelerName}",
+                'type' => 'received',
+                'amount' => $amount,
+                'balance' => $newBalance,
+                'received_category' => $category,
+                'created_by' => auth()->id(),
+            ]);
+
+            // Log activity
+            $this->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'payment_received',
+                'notes' => "{$paymentName} of \${$amount} received from {$travelerName}",
+            ]);
+            $this->dispatch('activityCreated');
+        } elseif ($wasMarkedPaid && $amount > 0) {
+            // Payment unmarked as paid - create reversal ledger entry
+            $lastEntry = $this->booking->ledgerEntries()->orderBy('id', 'desc')->first();
+            $newBalance = ($lastEntry?->balance ?? 0) - $amount;
+
+            $this->booking->ledgerEntries()->create([
+                'date' => now(),
+                'description' => "{$paymentName} reversed for {$travelerName}",
+                'type' => 'paid',  // Reversal shows as paid (money going out)
+                'amount' => $amount,
+                'balance' => $newBalance,
+                'paid_category' => 'misc',
+                'created_by' => auth()->id(),
+            ]);
+
+            // Log activity
+            $this->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'payment_received',
+                'notes' => "{$paymentName} of \${$amount} unmarked as paid for {$travelerName}",
+            ]);
+            $this->dispatch('activityCreated');
+        }
 
         $this->dispatch('paymentUpdated');
         $this->booking->refresh();

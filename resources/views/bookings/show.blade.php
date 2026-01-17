@@ -1,4 +1,26 @@
 <x-app-layout>
+    @php
+        $leadTraveler = $booking->groups->flatMap->travelers->firstWhere('is_lead', true);
+    @endphp
+
+    <!-- Persistent Booking Header - Shows on all tabs -->
+    <div class="mb-4 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-lg font-bold text-orange-800">{{ $booking->booking_number }}</span>
+                <span class="text-orange-600">|</span>
+                <span class="text-orange-800 font-medium">
+                    @if($leadTraveler)
+                        {{ $leadTraveler->last_name }}, {{ $leadTraveler->first_name }}
+                    @else
+                        No Lead Traveler
+                    @endif
+                </span>
+            </div>
+            <span class="text-sm text-orange-600">{{ $booking->country }} | {{ $booking->start_date->format('M j') }} - {{ $booking->end_date->format('M j, Y') }}</span>
+        </div>
+    </div>
+
     <!-- Page Header -->
     <div class="mb-6 flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -100,7 +122,33 @@
         <div class="tab-content active p-6" id="client-details">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-slate-900">Groups & Travelers</h2>
-                <x-action-button type="add" size="sm" label="Add Group" onclick="document.getElementById('add-group-modal').classList.remove('hidden')" />
+                <div class="flex items-center gap-2">
+                    <!-- Intake Form Link -->
+                    <div x-data="{ showCopied: false }" class="flex items-center gap-2">
+                        @if($booking->intake_token)
+                            <button
+                                @click="navigator.clipboard.writeText('{{ route('intake.show', $booking->intake_token) }}'); showCopied = true; setTimeout(() => showCopied = false, 2000)"
+                                class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <span x-text="showCopied ? 'Copied!' : 'Copy Intake Link'"></span>
+                            </button>
+                        @else
+                            <form action="{{ route('bookings.generate-intake-token', $booking) }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                    </svg>
+                                    Generate Intake Link
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                    <x-action-button type="add" size="sm" label="Add Group" onclick="document.getElementById('add-group-modal').classList.remove('hidden')" />
+                </div>
             </div>
 
             @forelse($booking->groups as $group)
@@ -901,6 +949,23 @@
             <form id="add-flight-form" method="POST">
                 @csrf
                 <div class="space-y-4">
+                    <!-- Copy from another traveler -->
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Copy from another traveler (optional)</label>
+                        <select id="copy-from-traveler" class="w-full mt-1 rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" onchange="copyFlightFromTraveler(this.value)">
+                            <option value="">-- Enter manually --</option>
+                            @foreach($booking->groups as $group)
+                                @foreach($group->travelers as $t)
+                                    @foreach($t->flights as $f)
+                                        <option value="{{ $f->id }}" data-type="{{ $f->type }}" data-airport="{{ $f->airport }}" data-flight-number="{{ $f->flight_number }}" data-date="{{ $f->date?->format('Y-m-d') }}" data-time="{{ $f->time }}">
+                                            {{ $t->first_name }} {{ $t->last_name }} - {{ ucfirst($f->type) }} ({{ $f->airport }}{{ $f->flight_number ? ', ' . $f->flight_number : '' }})
+                                        </option>
+                                    @endforeach
+                                @endforeach
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Type</label>
@@ -911,22 +976,22 @@
                         </div>
                         <div>
                             <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Airport</label>
-                            <input type="text" name="airport" placeholder="e.g., JRO" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                            <input type="text" name="airport" id="flight-airport" placeholder="e.g., JRO" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Flight Number</label>
-                            <input type="text" name="flight_number" placeholder="e.g., KQ 100" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <input type="text" name="flight_number" id="flight-number" placeholder="e.g., KQ 100" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Date</label>
-                            <input type="date" name="date" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <input type="date" name="date" id="flight-date" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                         </div>
                     </div>
                     <div>
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Time</label>
-                        <input type="time" name="time" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                        <input type="time" name="time" id="flight-time" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
                     </div>
                     <div id="pickup-instructions-field">
                         <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Pickup Instructions</label>
@@ -1281,7 +1346,32 @@
         function openAddFlightModal(travelerId) {
             const form = document.getElementById('add-flight-form');
             form.action = `/travelers/${travelerId}/flights`;
+
+            // Reset form fields
+            document.getElementById('copy-from-traveler').value = '';
+            document.getElementById('flight-type-select').value = 'arrival';
+            document.getElementById('flight-airport').value = '';
+            document.getElementById('flight-number').value = '';
+            document.getElementById('flight-date').value = '';
+            document.getElementById('flight-time').value = '';
+            toggleFlightInstructions();
+
             document.getElementById('add-flight-modal').classList.remove('hidden');
+        }
+
+        function copyFlightFromTraveler(flightId) {
+            if (!flightId) return;
+
+            const select = document.getElementById('copy-from-traveler');
+            const option = select.options[select.selectedIndex];
+
+            document.getElementById('flight-type-select').value = option.dataset.type || 'arrival';
+            document.getElementById('flight-airport').value = option.dataset.airport || '';
+            document.getElementById('flight-number').value = option.dataset.flightNumber || '';
+            document.getElementById('flight-date').value = option.dataset.date || '';
+            document.getElementById('flight-time').value = option.dataset.time || '';
+
+            toggleFlightInstructions();
         }
 
         // Copy Flight Modal

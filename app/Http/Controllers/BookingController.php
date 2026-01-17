@@ -695,6 +695,24 @@ class BookingController extends Controller
                 // Auto-populate Master Checklist with default tasks
                 $this->createDefaultTasks($booking);
 
+                // Create deposit expected ledger entry (25% of total rate)
+                $totalRate = $booking->groups->flatMap->travelers->sum(function ($traveler) {
+                    return $traveler->payment?->safari_rate ?? 0;
+                });
+
+                if ($totalRate > 0) {
+                    $depositAmount = round($totalRate * 0.25, 2);
+                    $booking->ledgerEntries()->create([
+                        'date' => now(),
+                        'description' => 'Deposit due (25% of safari rate)',
+                        'type' => 'received',
+                        'amount' => $depositAmount,
+                        'balance' => $depositAmount,
+                        'received_category' => 'deposit',
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+
                 // Log activity
                 $refInfo = $metadata['reference_number'] ? " (Ref: {$metadata['reference_number']})" : '';
                 $booking->activityLogs()->create([
@@ -834,6 +852,7 @@ class BookingController extends Controller
             'morning' => $dayData['morning_activity'] ?? null,
             'midday' => $dayData['midday_activity'] ?? null,
             'afternoon' => $dayData['afternoon_activity'] ?? null,
+            'evening' => $dayData['evening_activity'] ?? null,
         ];
 
         foreach ($periods as $period => $activityText) {
@@ -851,6 +870,23 @@ class BookingController extends Controller
                             'sort_order' => $sortOrder++,
                         ]);
                     }
+                }
+            }
+        }
+
+        // Also handle "other" activities if present
+        if (!empty($dayData['other_activities'])) {
+            $activities = preg_split('/[;\n]/', $dayData['other_activities']);
+            $sortOrder = 0;
+            foreach ($activities as $activity) {
+                $activity = trim($activity);
+                if ($activity) {
+                    // Default to morning if no time specified
+                    $safariDay->activities()->create([
+                        'period' => 'morning',
+                        'activity' => $activity,
+                        'sort_order' => $sortOrder++,
+                    ]);
                 }
             }
         }

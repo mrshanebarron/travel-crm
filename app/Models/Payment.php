@@ -36,10 +36,9 @@ class Payment extends Model
      * Recalculate payment schedule when rate changes.
      *
      * Key rules:
-     * - Deposit is locked once set (amount fixed, but can be recalculated if rate changes before first payment)
-     * - If 90-day payment not yet paid, it adjusts so deposit + 90-day = 50%
-     * - 45-day payment is always the remainder (50% for normal, or whatever's left)
-     * - Paid payments are NEVER changed
+     * - Unpaid payments ALWAYS recalculate based on new rate (25%/25%/50%)
+     * - Paid payments stay fixed (they represent actual money received)
+     * - Unpaid payments absorb the difference from rate changes
      *
      * Booking Timing Logic:
      * - Normal booking (> 90 days out): 25% deposit, 25% at 90-day, 50% at 45-day
@@ -48,77 +47,55 @@ class Payment extends Model
      */
     public function recalculateSchedule(?int $daysUntilSafari = null): void
     {
-        if (!$this->deposit_locked) {
-            // First time setting - determine schedule based on booking timing
-            if ($daysUntilSafari !== null && $daysUntilSafari <= 45) {
-                // Within 45 days - 100% due immediately
-                $this->deposit = $this->safari_rate;
-                $this->payment_90_day = 0;
-                $this->payment_45_day = 0;
-            } elseif ($daysUntilSafari !== null && $daysUntilSafari <= 90) {
-                // Within 90 days - 50% deposit, skip 90-day, 50% at 45-day
-                $this->deposit = $this->safari_rate * 0.50;
-                $this->payment_90_day = 0;
-                $this->payment_45_day = $this->safari_rate * 0.50;
+        // Calculate what's already been paid (don't change these amounts)
+        $paidDeposit = $this->deposit_paid ? $this->deposit : 0;
+        $paid90Day = $this->payment_90_day_paid ? $this->payment_90_day : 0;
+        $paid45Day = $this->payment_45_day_paid ? $this->payment_45_day : 0;
+        $totalPaid = $paidDeposit + $paid90Day + $paid45Day;
+
+        // Determine what the schedule SHOULD be based on current rate
+        if ($daysUntilSafari !== null && $daysUntilSafari <= 45) {
+            // Within 45 days - 100% due immediately
+            $targetDeposit = $this->safari_rate;
+            $target90Day = 0;
+            $target45Day = 0;
+        } elseif ($daysUntilSafari !== null && $daysUntilSafari <= 90) {
+            // Within 90 days - 50% deposit, skip 90-day, 50% at 45-day
+            $targetDeposit = $this->safari_rate * 0.50;
+            $target90Day = 0;
+            $target45Day = $this->safari_rate * 0.50;
+        } else {
+            // Standard booking - 25/25/50 split
+            $targetDeposit = $this->safari_rate * 0.25;
+            $target90Day = $this->safari_rate * 0.25;
+            $target45Day = $this->safari_rate * 0.50;
+        }
+
+        // Update unpaid amounts to target values
+        // Paid amounts stay locked to what was actually received
+        if (!$this->deposit_paid) {
+            $this->deposit = $targetDeposit;
+        }
+
+        if (!$this->payment_90_day_paid) {
+            if ($this->deposit_paid) {
+                // Deposit already paid - adjust 90-day so deposit + 90-day = 50%
+                $halfTotal = $this->safari_rate * 0.50;
+                $this->payment_90_day = max(0, $halfTotal - $this->deposit);
             } else {
-                // Standard booking - 25/25/50 split
-                $this->deposit = $this->safari_rate * 0.25;
-                $this->payment_90_day = $this->safari_rate * 0.25;
-                $this->payment_45_day = $this->safari_rate * 0.50;
+                $this->payment_90_day = $target90Day;
             }
+        }
+
+        if (!$this->payment_45_day_paid) {
+            // 45-day absorbs the remainder
+            $this->payment_45_day = max(0, $this->safari_rate - $this->deposit - $this->payment_90_day);
+        }
+
+        // Track original rate and mark as having a schedule set
+        if (!$this->deposit_locked) {
             $this->original_rate = $this->safari_rate;
             $this->deposit_locked = true;
-        } else {
-            // Rate changed - recalculate unpaid amounts only
-            // Paid amounts stay fixed, unpaid amounts absorb the difference
-
-            $paidAmount = 0;
-            if ($this->deposit_paid) {
-                $paidAmount += $this->deposit;
-            }
-            if ($this->payment_90_day_paid) {
-                $paidAmount += $this->payment_90_day;
-            }
-            if ($this->payment_45_day_paid) {
-                $paidAmount += $this->payment_45_day;
-            }
-
-            $remainingToPay = $this->safari_rate - $paidAmount;
-
-            // Recalculate unpaid amounts
-            if (!$this->deposit_paid) {
-                // Deposit not yet paid - this shouldn't normally happen after locking
-                // but handle it anyway
-                $this->deposit = $this->safari_rate * 0.25;
-                $remainingToPay = $this->safari_rate - $this->deposit;
-
-                if (!$this->payment_90_day_paid && $this->payment_90_day > 0) {
-                    // 90-day not paid - deposit + 90-day should = 50%
-                    $halfTotal = $this->safari_rate * 0.50;
-                    $this->payment_90_day = $halfTotal - $this->deposit;
-                    $this->payment_45_day = $this->safari_rate * 0.50;
-                } else {
-                    // 90-day already paid or was 0 - remainder goes to 45-day
-                    $this->payment_45_day = max(0, $remainingToPay - ($this->payment_90_day_paid ? $this->payment_90_day : 0));
-                }
-            } elseif (!$this->payment_90_day_paid && $this->payment_90_day > 0) {
-                // Deposit paid, 90-day not paid
-                // Recalculate so deposit + 90-day = 50%, 45-day = 50%
-                $halfTotal = $this->safari_rate * 0.50;
-
-                if ($this->deposit >= $halfTotal) {
-                    // Deposit already covers 50% or more - 90-day becomes 0
-                    $this->payment_90_day = 0;
-                    $this->payment_45_day = max(0, $this->safari_rate - $this->deposit);
-                } else {
-                    $this->payment_90_day = $halfTotal - $this->deposit;
-                    $this->payment_45_day = $this->safari_rate * 0.50;
-                }
-            } elseif (!$this->payment_45_day_paid) {
-                // Only 45-day is unpaid - it absorbs all remaining
-                $this->payment_45_day = max(0, $remainingToPay);
-            }
-            // If all paid, nothing changes
         }
     }
 

@@ -39,6 +39,13 @@ class BookingTaskList extends Component
 
     public function toggleTask(Task $task)
     {
+        // Only the assigned user can mark a task as complete
+        // (or mark it back to pending if they completed it)
+        if ($task->assigned_to !== auth()->id()) {
+            session()->flash('error', 'Only the assigned user can mark this task as complete.');
+            return;
+        }
+
         if ($task->status === 'completed') {
             $task->update([
                 'status' => 'pending',

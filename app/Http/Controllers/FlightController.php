@@ -24,7 +24,24 @@ class FlightController extends Controller
             'dropoff_instructions' => 'nullable|string',
         ]);
 
-        $traveler->flights()->create($validated);
+        $flight = $traveler->flights()->create($validated);
+
+        // Log activity
+        $booking = $traveler->group->booking;
+        $flightInfo = $validated['type'] === 'arrival' ? 'Arrival' : 'Departure';
+        $flightInfo .= " flight";
+        if ($validated['flight_number']) {
+            $flightInfo .= " ({$validated['flight_number']})";
+        }
+        $flightInfo .= " at {$validated['airport']}";
+
+        $booking->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action_type' => 'flight_added',
+            'entity_type' => 'flight',
+            'entity_id' => $flight->id,
+            'notes' => "{$flightInfo} added for {$traveler->full_name}",
+        ]);
 
         return redirect()->back()->with('success', 'Flight added successfully.');
     }
@@ -46,6 +63,23 @@ class FlightController extends Controller
 
         $flight->update($validated);
 
+        // Log activity
+        $booking = $flight->traveler->group->booking;
+        $traveler = $flight->traveler;
+        $flightInfo = $validated['type'] === 'arrival' ? 'Arrival' : 'Departure';
+        $flightInfo .= " flight";
+        if ($validated['flight_number']) {
+            $flightInfo .= " ({$validated['flight_number']})";
+        }
+
+        $booking->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action_type' => 'task_updated',  // Using existing action type for updates
+            'entity_type' => 'flight',
+            'entity_id' => $flight->id,
+            'notes' => "{$flightInfo} updated for {$traveler->full_name}",
+        ]);
+
         return redirect()->back()->with('success', 'Flight updated successfully.');
     }
 
@@ -53,7 +87,24 @@ class FlightController extends Controller
     {
         Gate::authorize('update', $flight->traveler->group->booking);
 
+        // Capture info before deletion
+        $booking = $flight->traveler->group->booking;
+        $traveler = $flight->traveler;
+        $flightInfo = $flight->type === 'arrival' ? 'Arrival' : 'Departure';
+        $flightInfo .= " flight";
+        if ($flight->flight_number) {
+            $flightInfo .= " ({$flight->flight_number})";
+        }
+        $flightInfo .= " at {$flight->airport}";
+
         $flight->delete();
+
+        // Log activity
+        $booking->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action_type' => 'traveler_removed',  // Using existing red action type for deletions
+            'notes' => "{$flightInfo} removed for {$traveler->full_name}",
+        ]);
 
         return redirect()->back()->with('success', 'Flight removed successfully.');
     }
@@ -99,6 +150,19 @@ class FlightController extends Controller
         }
 
         if ($copiedCount > 0) {
+            // Log activity
+            $flightInfo = $flight->type === 'arrival' ? 'Arrival' : 'Departure';
+            $flightInfo .= " flight";
+            if ($flight->flight_number) {
+                $flightInfo .= " ({$flight->flight_number})";
+            }
+
+            $booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'flight_added',
+                'notes' => "{$flightInfo} copied to {$copiedCount} traveler(s)",
+            ]);
+
             return redirect()->back()->with('success', "Flight copied to {$copiedCount} traveler(s).");
         }
 

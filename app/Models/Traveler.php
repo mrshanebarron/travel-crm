@@ -16,12 +16,20 @@ class Traveler extends Model
         'dob',
         'email',
         'phone',
+        'passport_number',
+        'passport_expiry',
+        'nationality',
+        'dietary_requirements',
+        'medical_conditions',
+        'emergency_contact_name',
+        'emergency_contact_phone',
         'is_lead',
         'order',
     ];
 
     protected $casts = [
         'dob' => 'date',
+        'passport_expiry' => 'date',
         'is_lead' => 'boolean',
     ];
 

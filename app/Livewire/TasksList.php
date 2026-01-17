@@ -29,18 +29,48 @@ class TasksList extends Component
 
     public function completeTask(Task $task)
     {
+        // Only the assigned user can mark a task as complete
+        if ($task->assigned_to !== auth()->id()) {
+            session()->flash('error', 'Only the assigned user can mark this task as complete.');
+            return;
+        }
+
         $task->update([
             'status' => 'completed',
             'completed_at' => now(),
         ]);
+
+        // Log activity
+        if ($task->booking) {
+            $task->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_completed',
+                'notes' => "Task \"{$task->name}\" completed",
+            ]);
+        }
     }
 
     public function uncompleteTask(Task $task)
     {
+        // Only the assigned user can unmark their completed task
+        if ($task->assigned_to !== auth()->id()) {
+            session()->flash('error', 'Only the assigned user can modify this task.');
+            return;
+        }
+
         $task->update([
             'status' => 'pending',
             'completed_at' => null,
         ]);
+
+        // Log activity
+        if ($task->booking) {
+            $task->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_updated',
+                'notes' => "Task \"{$task->name}\" marked as pending",
+            ]);
+        }
     }
 
     public function deleteTask(Task $task)
@@ -90,7 +120,13 @@ class TasksList extends Component
 
     public function render()
     {
-        $query = Task::with(['booking', 'assignedTo']);
+        // Only show tasks that are assigned OR completed (not unassigned pending tasks)
+        // Unassigned pending tasks belong in the booking's Client Checklist, not the Tasks page
+        $query = Task::with(['booking', 'assignedTo'])
+            ->where(function ($q) {
+                $q->whereNotNull('assigned_to')  // Has an assignment
+                  ->orWhere('status', 'completed');  // Or is completed
+            });
 
         // Base filtering
         $currentUserId = auth()->id();
