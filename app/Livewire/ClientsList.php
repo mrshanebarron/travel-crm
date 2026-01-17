@@ -35,7 +35,7 @@ class ClientsList extends Component
 
     public function openViewModal(Traveler $traveler)
     {
-        $this->viewTraveler = $traveler->load(['group.booking', 'payment', 'flights', 'addons', 'clientNotes']);
+        $this->viewTraveler = $traveler->load(['group.booking', 'payment', 'flights', 'addons', 'notes']);
         $this->showViewModal = true;
     }
 
