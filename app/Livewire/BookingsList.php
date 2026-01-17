@@ -70,18 +70,15 @@ class BookingsList extends Component
             'travelers.0.last_name.required' => 'Lead traveler last name is required.',
         ]);
 
-        // Create booking
+        // Create booking with generated booking number
         $booking = Booking::create([
+            'booking_number' => Booking::generateBookingNumber(),
             'country' => $this->country,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
             'status' => 'upcoming',
             'created_by' => auth()->id(),
         ]);
-
-        // Generate booking number
-        $booking->booking_number = $booking->generateBookingNumber();
-        $booking->save();
 
         // Create default group
         $group = Group::create([

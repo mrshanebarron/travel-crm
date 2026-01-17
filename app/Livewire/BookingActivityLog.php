@@ -11,6 +11,12 @@ class BookingActivityLog extends Component
     public Booking $booking;
     public $notes = '';
 
+    protected $listeners = [
+        'activityCreated' => '$refresh',
+        'ledgerUpdated' => '$refresh',
+        'paymentUpdated' => '$refresh',
+    ];
+
     public function mount(Booking $booking)
     {
         $this->booking = $booking;

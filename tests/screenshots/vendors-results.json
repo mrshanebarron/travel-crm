@@ -1,0 +1,14 @@
+{
+  "passed": [
+    "Vendors - Page loads",
+    "Vendors - Search filtering (live)",
+    "Vendors - Category filter",
+    "Vendors - Open create modal",
+    "Vendors - Fill create form",
+    "Vendors - Close modal via X",
+    "Vendors - Create new vendor (full flow)",
+    "Vendors - View/Edit buttons visible on list"
+  ],
+  "failed": [],
+  "timestamp": "2026-01-17T00:06:01.999Z"
+}

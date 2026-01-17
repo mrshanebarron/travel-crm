@@ -398,14 +398,18 @@ class SafariPdfParser
         ];
 
         // Pattern to match currency amounts: $5,990 or USD 5990 or 5,990 USD etc.
-        $currencyPattern = '[\$]?\s*([0-9,]+(?:\.[0-9]{2})?)\s*(?:USD|pp|per person)?';
+        // Requires $ sign OR number with comma OR 3+ digits to avoid matching counts like "4 Adult"
+        $currencyPattern = '\$\s*([0-9,]+(?:\.[0-9]{2})?)\s*(?:USD|pp|per person)?';
+        $currencyPatternNoDollar = '([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{2})?|[0-9]{3,}(?:\.[0-9]{2})?)\s*(?:USD|pp|per person)?';
 
-        // Adult rate patterns
+        // Adult rate patterns - prioritize patterns with $ sign
         $adultPatterns = [
             '/adult[s]?\s*(?:rate)?[:\s]+' . $currencyPattern . '/i',
             '/(?:per\s+)?adult[s]?\s*[:\-]\s*' . $currencyPattern . '/i',
             '/adult\s+sharing\s*[:\-]?\s*' . $currencyPattern . '/i',
             '/' . $currencyPattern . '\s*(?:per\s+)?adult/i',
+            // Fallback patterns without $ sign but requiring 3+ digits or comma-separated
+            '/adult[s]?\s*(?:rate)?[:\s]+' . $currencyPatternNoDollar . '/i',
         ];
 
         // Child 12-17 patterns

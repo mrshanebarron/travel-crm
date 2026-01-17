@@ -1,0 +1,16 @@
+{
+  "passed": [
+    "Users - Page loads",
+    "Users - Role legend displayed",
+    "Users - Users table displayed",
+    "Users - Open add user modal",
+    "Users - Add modal has required fields",
+    "Users - Close add modal",
+    "Users - Open edit user modal",
+    "Users - Edit modal has correct fields",
+    "Users - Close edit modal",
+    "Users - Edit/Delete buttons visible in table"
+  ],
+  "failed": [],
+  "timestamp": "2026-01-17T00:19:47.023Z"
+}

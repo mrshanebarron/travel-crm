@@ -490,7 +490,7 @@ class BookingController extends Controller
      * Tasks are triggered based on timing relative to the safari start date.
      * Assignments are based on the team_members config mapping.
      */
-    private function createDefaultTasks(Booking $booking): void
+    public function createDefaultTasks(Booking $booking): void
     {
         $defaultTasks = config('booking_tasks.default_tasks', []);
         $teamMembers = config('booking_tasks.team_members', []);
@@ -594,7 +594,7 @@ class BookingController extends Controller
                     ]);
 
                     // Create payment record for lead if we have a rate
-                    $rate = $extractedRates['adult'] ?? $metadata['adult_rate'] ?? null;
+                    $rate = $metadata['adult_rate'] ?? $extractedRates['adult'] ?? null;
                     if ($rate && $rate > 0) {
                         $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
                         $payment = new \App\Models\Payment();
@@ -618,7 +618,7 @@ class BookingController extends Controller
                     ]);
 
                     // Create payment record
-                    $rate = $extractedRates['adult'] ?? $metadata['adult_rate'] ?? null;
+                    $rate = $metadata['adult_rate'] ?? $extractedRates['adult'] ?? null;
                     if ($rate && $rate > 0) {
                         $daysUntilSafari = now()->startOfDay()->diffInDays($booking->start_date, false);
                         $payment = new \App\Models\Payment();
@@ -651,10 +651,15 @@ class BookingController extends Controller
 
                 // Create safari days from parsed itinerary or date range
                 if (!empty($parsedDays)) {
+                    $startDate = \Carbon\Carbon::parse($metadata['start_date']);
+
                     foreach ($parsedDays as $dayData) {
+                        // Calculate date from start_date + day_number - 1
+                        $dayDate = $dayData['date'] ?? $startDate->copy()->addDays($dayData['day_number'] - 1)->format('Y-m-d');
+
                         $safariDay = $booking->safariDays()->create([
                             'day_number' => $dayData['day_number'],
-                            'date' => $dayData['date'] ?? null,
+                            'date' => $dayDate,
                             'location' => $dayData['location'] ?? '',
                             'lodge' => $dayData['lodge'] ?? null,
                             'meal_plan' => $dayData['meal_plan'] ?? null,

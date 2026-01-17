@@ -1,0 +1,15 @@
+{
+  "passed": [
+    "Clients - Page loads",
+    "Clients - Search filtering (live)",
+    "Clients - Open view modal",
+    "Clients - View modal shows client details",
+    "Clients - Close view modal",
+    "Clients - Open edit modal",
+    "Clients - Edit form has correct fields",
+    "Clients - Close edit modal",
+    "Clients - Update client (full flow)"
+  ],
+  "failed": [],
+  "timestamp": "2026-01-17T00:15:59.145Z"
+}

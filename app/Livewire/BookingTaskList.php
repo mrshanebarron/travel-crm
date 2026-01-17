@@ -50,6 +50,7 @@ class BookingTaskList extends Component
                 'action_type' => 'task_updated',
                 'notes' => "Task \"{$task->name}\" marked as pending",
             ]);
+            $this->dispatch('activityCreated');
         } else {
             $task->update([
                 'status' => 'completed',
@@ -61,6 +62,7 @@ class BookingTaskList extends Component
                 'action_type' => 'task_completed',
                 'notes' => "Task \"{$task->name}\" completed",
             ]);
+            $this->dispatch('activityCreated');
         }
 
         $this->booking->refresh();
@@ -102,6 +104,7 @@ class BookingTaskList extends Component
             'action_type' => 'task_created',
             'notes' => "Task \"{$this->taskName}\" created" . ($assignee ? " and assigned to {$assignee}" : ''),
         ]);
+        $this->dispatch('activityCreated');
 
         $this->reset(['taskName', 'taskDescription', 'taskDueDate', 'taskAssignedTo']);
         $this->showAddModal = false;
@@ -160,6 +163,7 @@ class BookingTaskList extends Component
             'action_type' => 'task_updated',
             'notes' => "Task \"{$oldName}\" updated" . (count($changes) ? ': ' . implode(', ', $changes) : ''),
         ]);
+        $this->dispatch('activityCreated');
 
         $this->showEditModal = false;
         $this->editingTaskId = null;
@@ -195,6 +199,7 @@ class BookingTaskList extends Component
             'action_type' => 'task_assigned',
             'notes' => "Task \"{$task->name}\" assigned to {$assigneeName}",
         ]);
+        $this->dispatch('activityCreated');
 
         $this->showAssignModal = false;
         $this->assigningTaskId = null;
@@ -211,6 +216,7 @@ class BookingTaskList extends Component
             'action_type' => 'task_updated',
             'notes' => "Task \"{$taskName}\" deleted",
         ]);
+        $this->dispatch('activityCreated');
 
         $this->booking->refresh();
     }

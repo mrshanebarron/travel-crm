@@ -1,0 +1,16 @@
+{
+  "passed": [
+    "Transfers - Page loads",
+    "Transfers - Status tab filtering (Draft)",
+    "Transfers - Status tab filtering (Sent)",
+    "Transfers - Status tab filtering (Transfer Done)",
+    "Transfers - Status tab filtering (Paid)",
+    "Transfers - Status tab filtering (All)",
+    "Transfers - Navigate to create page",
+    "Transfers - Create form has required fields",
+    "Transfers - View/Edit links visible on list",
+    "Transfers - Click View navigates to show page"
+  ],
+  "failed": [],
+  "timestamp": "2026-01-17T00:18:41.649Z"
+}

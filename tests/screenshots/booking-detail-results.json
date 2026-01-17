@@ -1,0 +1,20 @@
+{
+  "passed": [
+    "Booking Detail - Navigate to booking",
+    "Booking Detail - Header shows booking info",
+    "Booking Detail - Tab navigation visible",
+    "Booking Detail - Client Details tab (default)",
+    "Booking Detail - Navigate to Safari Plan tab",
+    "Booking Detail - Navigate to Checklist tab",
+    "Booking Detail - Checklist has tasks",
+    "Booking Detail - Navigate to Documents tab",
+    "Booking Detail - Navigate to Rates & Payments tab",
+    "Booking Detail - Navigate to Ledger tab",
+    "Booking Detail - Navigate to Activity tab",
+    "Booking Detail - Navigate to Arrival/Departure tab",
+    "Booking Detail - Navigate to Rooms tab",
+    "Booking Detail - Edit button works"
+  ],
+  "failed": [],
+  "timestamp": "2026-01-17T00:25:33.686Z"
+}

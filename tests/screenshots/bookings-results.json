@@ -1,0 +1,17 @@
+{
+  "passed": [
+    "Bookings - Page loads",
+    "Bookings - Status tab filtering (Upcoming)",
+    "Bookings - Status tab filtering (Active)",
+    "Bookings - Status tab filtering (Completed)",
+    "Bookings - Status tab filtering (All)",
+    "Bookings - Open create modal",
+    "Bookings - Add traveler in modal",
+    "Bookings - Remove traveler in modal",
+    "Bookings - Close create modal via X",
+    "Bookings - Create new booking (full flow)",
+    "Bookings - Row selection checkbox"
+  ],
+  "failed": [],
+  "timestamp": "2026-01-17T00:04:32.771Z"
+}

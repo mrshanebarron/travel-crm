@@ -19,6 +19,8 @@ class BookingLedger extends Component
     public $amount = '';
     public $description = '';
 
+    protected $listeners = ['ledgerUpdated' => '$refresh', 'paymentUpdated' => '$refresh'];
+
     protected $rules = [
         'date' => 'required|date',
         'type' => 'required|in:received,paid',
@@ -81,6 +83,7 @@ class BookingLedger extends Component
             'description' => $fullDescription,
             'balance' => $balance,
         ]);
+        $this->dispatch('ledgerUpdated');
 
         $this->reset(['amount', 'description', 'vendorName']);
         $this->type = 'received';
@@ -102,6 +105,7 @@ class BookingLedger extends Component
             $e->update(['balance' => $balance]);
         }
 
+        $this->dispatch('ledgerUpdated');
         $this->booking->refresh();
     }
 
