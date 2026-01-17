@@ -44,10 +44,22 @@ class BookingTaskList extends Component
                 'status' => 'pending',
                 'completed_at' => null,
             ]);
+
+            $this->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_updated',
+                'notes' => "Task \"{$task->name}\" marked as pending",
+            ]);
         } else {
             $task->update([
                 'status' => 'completed',
                 'completed_at' => now(),
+            ]);
+
+            $this->booking->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action_type' => 'task_completed',
+                'notes' => "Task \"{$task->name}\" completed",
             ]);
         }
 
@@ -74,7 +86,7 @@ class BookingTaskList extends Component
             'taskAssignedTo' => 'nullable|exists:users,id',
         ]);
 
-        $this->booking->tasks()->create([
+        $task = $this->booking->tasks()->create([
             'name' => $this->taskName,
             'description' => $this->taskDescription,
             'due_date' => $this->taskDueDate ?: null,
@@ -82,6 +94,13 @@ class BookingTaskList extends Component
             'assigned_at' => $this->taskAssignedTo ? now() : null,
             'assigned_by' => $this->taskAssignedTo ? auth()->id() : null,
             'status' => 'pending',
+        ]);
+
+        $assignee = $this->taskAssignedTo ? User::find($this->taskAssignedTo)?->name : null;
+        $this->booking->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action_type' => 'task_created',
+            'notes' => "Task \"{$this->taskName}\" created" . ($assignee ? " and assigned to {$assignee}" : ''),
         ]);
 
         $this->reset(['taskName', 'taskDescription', 'taskDueDate', 'taskAssignedTo']);
@@ -113,6 +132,7 @@ class BookingTaskList extends Component
         ]);
 
         $task = Task::findOrFail($this->editingTaskId);
+        $oldName = $task->name;
 
         $wasAssigned = $task->assigned_to;
         $newAssigned = $this->editTaskAssignedTo;
@@ -123,6 +143,22 @@ class BookingTaskList extends Component
             'assigned_to' => $newAssigned ?: null,
             'assigned_at' => (!$wasAssigned && $newAssigned) ? now() : $task->assigned_at,
             'assigned_by' => (!$wasAssigned && $newAssigned) ? auth()->id() : $task->assigned_by,
+        ]);
+
+        // Log the update
+        $changes = [];
+        if ($oldName !== $this->editTaskName) {
+            $changes[] = "renamed to \"{$this->editTaskName}\"";
+        }
+        if ($wasAssigned != $newAssigned) {
+            $newAssigneeName = $newAssigned ? User::find($newAssigned)?->name : 'unassigned';
+            $changes[] = "assigned to {$newAssigneeName}";
+        }
+
+        $this->booking->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action_type' => 'task_updated',
+            'notes' => "Task \"{$oldName}\" updated" . (count($changes) ? ': ' . implode(', ', $changes) : ''),
         ]);
 
         $this->showEditModal = false;
@@ -153,6 +189,13 @@ class BookingTaskList extends Component
             'assigned_by' => $this->assignTaskUserId ? auth()->id() : null,
         ]);
 
+        $assigneeName = $this->assignTaskUserId ? User::find($this->assignTaskUserId)?->name : 'unassigned';
+        $this->booking->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action_type' => 'task_assigned',
+            'notes' => "Task \"{$task->name}\" assigned to {$assigneeName}",
+        ]);
+
         $this->showAssignModal = false;
         $this->assigningTaskId = null;
         $this->booking->refresh();
@@ -160,7 +203,15 @@ class BookingTaskList extends Component
 
     public function deleteTask(Task $task)
     {
+        $taskName = $task->name;
         $task->delete();
+
+        $this->booking->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action_type' => 'task_updated',
+            'notes' => "Task \"{$taskName}\" deleted",
+        ]);
+
         $this->booking->refresh();
     }
 
