@@ -41,7 +41,7 @@
         <div class="md:hidden divide-y divide-slate-100">
             @forelse($tasks as $task)
                 <div class="block p-4 {{ $task['is_overdue'] ? 'bg-red-50' : '' }}" wire:key="mobile-task-{{ $task['id'] }}">
-                    <a href="{{ route('bookings.show', $task['booking_id']) }}" class="block hover:bg-orange-50 transition-colors">
+                    <a href="{{ $task['booking_id'] ? route('bookings.show', $task['booking_id']) : ($task['transfer_id'] ? route('transfers.show', $task['transfer_id']) : '#') }}" class="block hover:bg-orange-50 transition-colors">
                         <div class="flex items-start justify-between gap-3 mb-2">
                             <div class="min-w-0">
                                 <p class="font-semibold text-slate-900">{{ $task['name'] }}</p>
@@ -114,7 +114,7 @@
                 </thead>
                 <tbody>
                     @forelse($tasks as $task)
-                        <tr class="cursor-pointer hover:bg-slate-50 {{ $task['is_overdue'] ? 'bg-red-50' : '' }}" wire:key="desktop-task-{{ $task['id'] }}" onclick="window.location = '{{ route('bookings.show', $task['booking_id']) }}'">
+                        <tr class="cursor-pointer hover:bg-slate-50 {{ $task['is_overdue'] ? 'bg-red-50' : '' }}" wire:key="desktop-task-{{ $task['id'] }}" onclick="window.location = '{{ $task['booking_id'] ? route('bookings.show', $task['booking_id']) : ($task['transfer_id'] ? route('transfers.show', $task['transfer_id']) : '#') }}'">
                             <td>
                                 <div class="font-medium text-slate-900">{{ $task['name'] }}</div>
                                 @if($task['description'])
