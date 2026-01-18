@@ -217,14 +217,21 @@ class TasksList extends Component
         }
 
         // Apply status filter
+        // Note: 'open' and 'mine' filters only show tasks due today or in the past
+        // Future tasks are hidden until their due date arrives (per client requirement)
         $tasks = $allTasks->filter(function ($task) use ($currentUserId) {
+            $isDueOrPast = !$task['is_future']; // Today or past
+
             switch ($this->filter) {
                 case 'open':
-                    return $task['status'] !== 'completed';
+                    // Only show non-completed tasks that are due today or overdue
+                    return $task['status'] !== 'completed' && $isDueOrPast;
                 case 'mine':
-                    return $task['assigned_to'] === $currentUserId && $task['status'] !== 'completed';
+                    // Only show my tasks that are due today or overdue
+                    return $task['assigned_to'] === $currentUserId && $task['status'] !== 'completed' && $isDueOrPast;
                 case 'assigned':
-                    return $task['assigned_by'] === $currentUserId && $task['assigned_to'] !== $currentUserId && $task['status'] !== 'completed';
+                    // Tasks I assigned to others - also respect due date filter
+                    return $task['assigned_by'] === $currentUserId && $task['assigned_to'] !== $currentUserId && $task['status'] !== 'completed' && $isDueOrPast;
                 case 'overdue':
                     return $task['is_overdue'];
                 case 'completed':
@@ -264,9 +271,10 @@ class TasksList extends Component
             'calendarMonthName' => Carbon::parse($this->calendarMonth . '-01')->format('F Y'),
             'todayDate' => now()->format('Y-m-d'),
             'counts' => [
-                'open' => $allTasks->where('status', '!=', 'completed')->count(),
-                'mine' => $allTasks->where('assigned_to', $currentUserId)->where('status', '!=', 'completed')->count(),
-                'assigned' => $allTasks->where('assigned_by', $currentUserId)->where('assigned_to', '!=', $currentUserId)->where('status', '!=', 'completed')->count(),
+                // Counts reflect the same filtering logic - only due/past tasks for open/mine/assigned
+                'open' => $allTasks->where('status', '!=', 'completed')->where('is_future', false)->count(),
+                'mine' => $allTasks->where('assigned_to', $currentUserId)->where('status', '!=', 'completed')->where('is_future', false)->count(),
+                'assigned' => $allTasks->where('assigned_by', $currentUserId)->where('assigned_to', '!=', $currentUserId)->where('status', '!=', 'completed')->where('is_future', false)->count(),
                 'overdue' => $allTasks->where('is_overdue', true)->count(),
                 'completed' => $allTasks->where('status', 'completed')->count(),
             ],
