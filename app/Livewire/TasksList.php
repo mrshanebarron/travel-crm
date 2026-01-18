@@ -5,12 +5,15 @@ namespace App\Livewire;
 use App\Models\Booking;
 use App\Models\Task;
 use App\Models\User;
+use Carbon\Carbon;
 use Livewire\Component;
 
 class TasksList extends Component
 {
     public $filter = 'open';
     public $search = '';
+    public $selectedDate = null; // For calendar date filtering
+    public $calendarMonth; // Current month being viewed (Y-m format)
 
     // Create task form
     public $showCreateModal = false;
@@ -20,11 +23,44 @@ class TasksList extends Component
     public $createAssignedTo = '';
     public $createDueDate = '';
 
-    protected $queryString = ['filter'];
+    protected $queryString = ['filter', 'selectedDate'];
 
     public function mount()
     {
         $this->filter = request('filter', 'open');
+        $this->selectedDate = request('selectedDate');
+        $this->calendarMonth = now()->format('Y-m');
+    }
+
+    public function selectDate($date)
+    {
+        // Toggle - if already selected, deselect
+        if ($this->selectedDate === $date) {
+            $this->selectedDate = null;
+        } else {
+            $this->selectedDate = $date;
+        }
+    }
+
+    public function clearDateFilter()
+    {
+        $this->selectedDate = null;
+    }
+
+    public function previousMonth()
+    {
+        $this->calendarMonth = Carbon::parse($this->calendarMonth . '-01')->subMonth()->format('Y-m');
+    }
+
+    public function nextMonth()
+    {
+        $this->calendarMonth = Carbon::parse($this->calendarMonth . '-01')->addMonth()->format('Y-m');
+    }
+
+    public function goToToday()
+    {
+        $this->calendarMonth = now()->format('Y-m');
+        $this->selectedDate = now()->format('Y-m-d');
     }
 
     public function completeTask(Task $task)
@@ -120,24 +156,17 @@ class TasksList extends Component
 
     public function render()
     {
-        // Only show tasks that are assigned OR completed (not unassigned pending tasks)
-        // Unassigned pending tasks belong in the booking's Client Checklist, not the Tasks page
-        // Only show tasks where due_date is today or in the past (not future tasks)
-        // Tasks with no due date should NOT appear until their due date is set
+        // Get ALL assigned tasks (not filtered by date - calendar shows full picture)
         $query = Task::with(['booking', 'assignedTo', 'transfer'])
             ->where(function ($q) {
                 $q->whereNotNull('assigned_to')  // Has an assignment
                   ->orWhere('status', 'completed');  // Or is completed
             })
-            ->where(function ($q) {
-                $q->where('due_date', '<=', now()->endOfDay())  // Due today or past
-                  ->orWhere('status', 'completed');  // Or completed (always show completed)
-            });
+            ->whereNotNull('due_date'); // Must have a due date to appear
 
-        // Base filtering
         $currentUserId = auth()->id();
 
-        $tasks = $query->get()->map(function ($task) use ($currentUserId) {
+        $allTasks = $query->get()->map(function ($task) use ($currentUserId) {
             return [
                 'id' => $task->id,
                 'name' => $task->name,
@@ -146,6 +175,8 @@ class TasksList extends Component
                 'due_date' => $task->due_date?->format('Y-m-d'),
                 'due_date_formatted' => $task->due_date?->format('M j, Y'),
                 'is_overdue' => $task->due_date && $task->due_date->isPast() && $task->status !== 'completed',
+                'is_today' => $task->due_date && $task->due_date->isToday(),
+                'is_future' => $task->due_date && $task->due_date->isFuture(),
                 'booking_id' => $task->booking_id,
                 'booking_number' => $task->booking?->booking_number ?? ($task->transfer ? $task->transfer->transfer_number : 'N/A'),
                 'transfer_id' => $task->transfer_id,
@@ -155,8 +186,38 @@ class TasksList extends Component
             ];
         });
 
-        // Apply filter
-        $filteredTasks = $tasks->filter(function ($task) use ($currentUserId) {
+        // Build calendar data - task counts by date for the current month
+        $calendarStart = Carbon::parse($this->calendarMonth . '-01')->startOfMonth();
+        $calendarEnd = $calendarStart->copy()->endOfMonth();
+
+        $tasksByDate = $allTasks
+            ->where('status', '!=', 'completed')
+            ->groupBy('due_date')
+            ->map(fn ($tasks) => $tasks->count());
+
+        // Build calendar weeks
+        $calendarWeeks = [];
+        $date = $calendarStart->copy()->startOfWeek(Carbon::SUNDAY);
+        while ($date <= $calendarEnd->copy()->endOfWeek(Carbon::SATURDAY)) {
+            $week = [];
+            for ($i = 0; $i < 7; $i++) {
+                $dateStr = $date->format('Y-m-d');
+                $week[] = [
+                    'date' => $dateStr,
+                    'day' => $date->day,
+                    'isCurrentMonth' => $date->month === $calendarStart->month,
+                    'isToday' => $date->isToday(),
+                    'isPast' => $date->isPast() && !$date->isToday(),
+                    'taskCount' => $tasksByDate[$dateStr] ?? 0,
+                    'hasOverdue' => $date->isPast() && !$date->isToday() && ($tasksByDate[$dateStr] ?? 0) > 0,
+                ];
+                $date->addDay();
+            }
+            $calendarWeeks[] = $week;
+        }
+
+        // Apply status filter
+        $tasks = $allTasks->filter(function ($task) use ($currentUserId) {
             switch ($this->filter) {
                 case 'open':
                     return $task['status'] !== 'completed';
@@ -173,10 +234,15 @@ class TasksList extends Component
             }
         });
 
+        // Apply date filter from calendar
+        if ($this->selectedDate) {
+            $tasks = $tasks->filter(fn ($task) => $task['due_date'] === $this->selectedDate);
+        }
+
         // Apply search
         if ($this->search) {
             $searchLower = strtolower($this->search);
-            $filteredTasks = $filteredTasks->filter(function ($task) use ($searchLower) {
+            $tasks = $tasks->filter(function ($task) use ($searchLower) {
                 return str_contains(strtolower($task['name']), $searchLower) ||
                     str_contains(strtolower($task['description'] ?? ''), $searchLower) ||
                     str_contains(strtolower($task['booking_number']), $searchLower) ||
@@ -184,22 +250,25 @@ class TasksList extends Component
             });
         }
 
-        // Sort by due date (nulls last), then by overdue first
-        $filteredTasks = $filteredTasks->sortBy([
+        // Sort by due date (overdue first, then today, then future)
+        $tasks = $tasks->sortBy([
             fn ($a, $b) => ($b['is_overdue'] ?? false) <=> ($a['is_overdue'] ?? false),
             fn ($a, $b) => ($a['due_date'] ?? '9999-99-99') <=> ($b['due_date'] ?? '9999-99-99'),
         ])->values();
 
         return view('livewire.tasks-list', [
-            'tasks' => $filteredTasks,
+            'tasks' => $tasks,
             'bookings' => Booking::orderBy('start_date', 'desc')->get(),
             'users' => User::orderBy('name')->get(),
+            'calendarWeeks' => $calendarWeeks,
+            'calendarMonthName' => Carbon::parse($this->calendarMonth . '-01')->format('F Y'),
+            'todayDate' => now()->format('Y-m-d'),
             'counts' => [
-                'open' => $tasks->where('status', '!=', 'completed')->count(),
-                'mine' => $tasks->where('assigned_to', $currentUserId)->where('status', '!=', 'completed')->count(),
-                'assigned' => $tasks->where('assigned_by', $currentUserId)->where('assigned_to', '!=', $currentUserId)->where('status', '!=', 'completed')->count(),
-                'overdue' => $tasks->where('is_overdue', true)->count(),
-                'completed' => $tasks->where('status', 'completed')->count(),
+                'open' => $allTasks->where('status', '!=', 'completed')->count(),
+                'mine' => $allTasks->where('assigned_to', $currentUserId)->where('status', '!=', 'completed')->count(),
+                'assigned' => $allTasks->where('assigned_by', $currentUserId)->where('assigned_to', '!=', $currentUserId)->where('status', '!=', 'completed')->count(),
+                'overdue' => $allTasks->where('is_overdue', true)->count(),
+                'completed' => $allTasks->where('status', 'completed')->count(),
             ],
         ]);
     }

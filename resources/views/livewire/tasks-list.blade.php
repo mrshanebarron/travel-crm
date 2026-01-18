@@ -8,35 +8,130 @@
         <x-action-button type="create" label="Create Task" wire:click="openCreateModal" />
     </div>
 
-    <!-- Search and Filter Bar -->
-    <div class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6">
-        <!-- Search Input -->
-        <div class="mb-3">
-            <div class="relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search tasks, bookings, assignees..." class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Calendar Sidebar -->
+        <div class="lg:w-80 flex-shrink-0">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 sticky top-4">
+                <!-- Calendar Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <button wire:click="previousMonth" class="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h3 class="font-semibold text-slate-900">{{ $calendarMonthName }}</h3>
+                    <button wire:click="nextMonth" class="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Day Headers -->
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                    @foreach(['S', 'M', 'T', 'W', 'T', 'F', 'S'] as $day)
+                        <div class="text-center text-xs font-medium text-slate-400 py-1">{{ $day }}</div>
+                    @endforeach
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="space-y-1">
+                    @foreach($calendarWeeks as $week)
+                        <div class="grid grid-cols-7 gap-1">
+                            @foreach($week as $day)
+                                <button
+                                    wire:click="selectDate('{{ $day['date'] }}')"
+                                    class="relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all
+                                        {{ !$day['isCurrentMonth'] ? 'text-slate-300' : '' }}
+                                        {{ $day['isToday'] ? 'bg-orange-500 text-white font-bold' : '' }}
+                                        {{ $selectedDate === $day['date'] && !$day['isToday'] ? 'bg-orange-100 ring-2 ring-orange-500' : '' }}
+                                        {{ $day['hasOverdue'] && !$day['isToday'] && $selectedDate !== $day['date'] ? 'bg-red-50' : '' }}
+                                        {{ $day['isCurrentMonth'] && !$day['isToday'] && $selectedDate !== $day['date'] && !$day['hasOverdue'] ? 'hover:bg-slate-100' : '' }}
+                                    "
+                                >
+                                    <span class="{{ $day['hasOverdue'] && !$day['isToday'] ? 'text-red-600' : '' }}">{{ $day['day'] }}</span>
+                                    @if($day['taskCount'] > 0)
+                                        <span class="absolute bottom-0.5 flex items-center justify-center">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $day['isToday'] ? 'bg-white' : ($day['hasOverdue'] ? 'bg-red-500' : 'bg-orange-500') }}"></span>
+                                        </span>
+                                    @endif
+                                </button>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Today Button -->
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <button wire:click="goToToday" class="w-full text-center text-sm text-orange-600 hover:text-orange-700 font-medium">
+                        Go to Today
+                    </button>
+                </div>
+
+                <!-- Selected Date Info -->
+                @if($selectedDate)
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-600">
+                                Showing: <span class="font-medium text-slate-900">{{ \Carbon\Carbon::parse($selectedDate)->format('M j, Y') }}</span>
+                            </span>
+                            <button wire:click="clearDateFilter" class="text-xs text-slate-500 hover:text-slate-700">Clear</button>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Legend -->
+                <div class="mt-4 pt-4 border-t border-slate-200 space-y-2">
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+                        <span>Today</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                        <span>Overdue tasks</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                        <span>Has tasks</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="flex flex-wrap items-center gap-2 sm:gap-4">
-            <button wire:click="setFilter('open')" class="tab whitespace-nowrap {{ $filter === 'open' ? 'active' : '' }}">Open ({{ $counts['open'] }})</button>
-            <button wire:click="setFilter('mine')" class="tab whitespace-nowrap {{ $filter === 'mine' ? 'active' : '' }}">Mine ({{ $counts['mine'] }})</button>
-            <button wire:click="setFilter('assigned')" class="tab whitespace-nowrap {{ $filter === 'assigned' ? 'active' : '' }}">Tasks I Assigned ({{ $counts['assigned'] }})</button>
-            <button wire:click="setFilter('overdue')" class="tab whitespace-nowrap {{ $filter === 'overdue' ? 'active' : '' }}">Overdue ({{ $counts['overdue'] }})</button>
-            <button wire:click="setFilter('completed')" class="tab whitespace-nowrap {{ $filter === 'completed' ? 'active' : '' }}">Done ({{ $counts['completed'] }})</button>
-        </div>
+        <!-- Main Content -->
+        <div class="flex-1 min-w-0">
+            <!-- Search and Filter Bar -->
+            <div class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6">
+                <!-- Search Input -->
+                <div class="mb-3">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search tasks, bookings, assignees..." class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                    </div>
+                </div>
 
-        <!-- Results Count -->
-        <div class="mt-3 text-sm text-slate-500">
-            {{ $tasks->count() }} task{{ $tasks->count() !== 1 ? 's' : '' }}
-        </div>
-    </div>
+                <!-- Filter Tabs -->
+                <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                    <button wire:click="setFilter('open')" class="tab whitespace-nowrap {{ $filter === 'open' ? 'active' : '' }}">Open ({{ $counts['open'] }})</button>
+                    <button wire:click="setFilter('mine')" class="tab whitespace-nowrap {{ $filter === 'mine' ? 'active' : '' }}">Mine ({{ $counts['mine'] }})</button>
+                    <button wire:click="setFilter('assigned')" class="tab whitespace-nowrap {{ $filter === 'assigned' ? 'active' : '' }}">Tasks I Assigned ({{ $counts['assigned'] }})</button>
+                    <button wire:click="setFilter('overdue')" class="tab whitespace-nowrap {{ $filter === 'overdue' ? 'active' : '' }}">Overdue ({{ $counts['overdue'] }})</button>
+                    <button wire:click="setFilter('completed')" class="tab whitespace-nowrap {{ $filter === 'completed' ? 'active' : '' }}">Done ({{ $counts['completed'] }})</button>
+                </div>
 
-    <!-- Tasks -->
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <!-- Results Count -->
+                <div class="mt-3 text-sm text-slate-500">
+                    {{ $tasks->count() }} task{{ $tasks->count() !== 1 ? 's' : '' }}
+                    @if($selectedDate)
+                        on {{ \Carbon\Carbon::parse($selectedDate)->format('M j, Y') }}
+                    @endif
+                </div>
+            </div>
+
+            <!-- Tasks -->
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <!-- Mobile Card View -->
         <div class="md:hidden divide-y divide-slate-100">
             @forelse($tasks as $task)
@@ -178,8 +273,9 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
-    </div>
+            </div>
+        </div><!-- End Main Content -->
+    </div><!-- End Flex Container -->
 
     <!-- Create Task Modal -->
     @if($showCreateModal)
