@@ -88,15 +88,20 @@ class TransferController extends Controller
         $oldStatus = $transfer->status;
 
         // Set timestamps and create tasks based on status changes
+        // Note: draft→sent transition is now primarily handled by send() method,
+        // but keep this for backward compatibility or manual status changes
         if ($validated['status'] === 'sent' && $oldStatus === 'draft') {
             $updateData['sent_at'] = now();
 
-            // Create Task 1: Transfer Execution for Team Member A
+            // Create Task 1: Transfer Execution - assigned to Matt
+            $mattUserId = User::where('email', 'matt@tapestryofafrica.com')->value('id') ?? 1;
             $transferTask = Task::create([
                 'name' => "Make transfer for {$transfer->transfer_number} ({$transfer->request_date->format('M j, Y')})",
                 'description' => "Transfer Amount: $" . number_format($transfer->total_amount, 2) . "\n\nExpenses:\n" . $this->formatExpensesForTask($transfer),
                 'status' => 'pending',
-                'due_date' => now()->addDays(2),
+                'due_date' => now(),
+                'assigned_to' => $mattUserId,
+                'assigned_at' => now(),
                 'assigned_by' => auth()->id(),
             ]);
 
@@ -111,12 +116,15 @@ class TransferController extends Controller
                 $transfer->transferTask->markComplete();
             }
 
-            // Create Task 2: Vendor Payments for Team Member B
+            // Create Task 2: Vendor Payments - assigned to Hilda
+            $hildaUserId = User::where('email', 'hilda@tapestryofafrica.com')->value('id') ?? 3;
             $vendorTask = Task::create([
-                'name' => "Make vendor payments from {$transfer->transfer_number} ({$transfer->request_date->format('M j, Y')})",
+                'name' => "Transfer completed – make vendor payments ({$transfer->transfer_number})",
                 'description' => "Transfer Amount: $" . number_format($transfer->total_amount, 2) . "\n\nVendor Payments Required:\n" . $this->formatExpensesForTask($transfer),
                 'status' => 'pending',
-                'due_date' => now()->addDays(3),
+                'due_date' => now(),
+                'assigned_to' => $hildaUserId,
+                'assigned_at' => now(),
                 'assigned_by' => auth()->id(),
             ]);
 
@@ -199,12 +207,17 @@ class TransferController extends Controller
         $transfer->status = 'sent';
         $transfer->sent_at = now();
 
-        // Create Task: Transfer Execution
+        // Create Task: Transfer Execution - assigned to Matt (user ID 1)
+        // Note: In production, this should be configurable or use a role-based lookup
+        $mattUserId = User::where('email', 'matt@tapestryofafrica.com')->value('id') ?? 1;
+
         $transferTask = Task::create([
             'name' => "Make transfer for {$transfer->transfer_number} ({$transfer->request_date->format('M j, Y')})",
             'description' => "Transfer Amount: $" . number_format($transfer->total_amount, 2) . "\n\nExpenses:\n" . $this->formatExpensesForTask($transfer),
             'status' => 'pending',
-            'due_date' => now()->addDays(2),
+            'due_date' => now(),  // Due today since it should appear immediately
+            'assigned_to' => $mattUserId,
+            'assigned_at' => now(),
             'assigned_by' => auth()->id(),
         ]);
 
