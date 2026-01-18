@@ -9,6 +9,7 @@ class Task extends Model
 {
     protected $fillable = [
         'booking_id',
+        'transfer_id',
         'name',
         'description',
         'assigned_to',
@@ -30,6 +31,11 @@ class Task extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function transfer(): BelongsTo
+    {
+        return $this->belongsTo(Transfer::class);
     }
 
     public function assignedTo(): BelongsTo

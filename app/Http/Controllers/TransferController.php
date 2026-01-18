@@ -103,6 +103,7 @@ class TransferController extends Controller
                 'assigned_to' => $mattUserId,
                 'assigned_at' => now(),
                 'assigned_by' => auth()->id(),
+                'transfer_id' => $transfer->id,
             ]);
 
             $updateData['transfer_task_id'] = $transferTask->id;
@@ -126,6 +127,7 @@ class TransferController extends Controller
                 'assigned_to' => $hildaUserId,
                 'assigned_at' => now(),
                 'assigned_by' => auth()->id(),
+                'transfer_id' => $transfer->id,
             ]);
 
             $updateData['vendor_task_id'] = $vendorTask->id;
@@ -219,6 +221,7 @@ class TransferController extends Controller
             'assigned_to' => $mattUserId,
             'assigned_at' => now(),
             'assigned_by' => auth()->id(),
+            'transfer_id' => $transfer->id,  // Link to transfer (no booking_id needed)
         ]);
 
         $transfer->transfer_task_id = $transferTask->id;
