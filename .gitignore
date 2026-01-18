@@ -22,4 +22,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-whatsapp-jensen.txt
+# Client docs (large binaries, sensitive info)
+/docs/*.pdf
+/docs/*.zip
+/docs/whatsapp-jensen.txt
+/docs/client-assets/
