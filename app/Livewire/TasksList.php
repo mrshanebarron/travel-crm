@@ -122,10 +122,16 @@ class TasksList extends Component
     {
         // Only show tasks that are assigned OR completed (not unassigned pending tasks)
         // Unassigned pending tasks belong in the booking's Client Checklist, not the Tasks page
+        // Also only show tasks where due_date is today or in the past (not future tasks)
         $query = Task::with(['booking', 'assignedTo'])
             ->where(function ($q) {
                 $q->whereNotNull('assigned_to')  // Has an assignment
                   ->orWhere('status', 'completed');  // Or is completed
+            })
+            ->where(function ($q) {
+                $q->whereNull('due_date')  // No due date set (show always)
+                  ->orWhere('due_date', '<=', now()->endOfDay())  // Due today or past
+                  ->orWhere('status', 'completed');  // Or completed (always show completed)
             });
 
         // Base filtering

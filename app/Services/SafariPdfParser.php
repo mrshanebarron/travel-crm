@@ -251,7 +251,20 @@ class SafariPdfParser
 
     /**
      * Extract activities for a specific day number.
-     * Looks for patterns like "Morning: Game drive", "Afternoon game drive", etc.
+     * Safari Office uses 9 time slots which we map to 4 CRM slots:
+     *
+     * Safari Office Slots -> CRM Slot:
+     * - Early Morning     -> Morning (order: 1)
+     * - Morning           -> Morning (order: 2)
+     * - Late Morning      -> Morning (order: 3)
+     * - Midday            -> Midday (order: 1)
+     * - Early Afternoon   -> Afternoon (order: 1)
+     * - Afternoon         -> Afternoon (order: 2)
+     * - Late Afternoon    -> Afternoon (order: 3)
+     * - Evening           -> Evening (order: 1)
+     * - Late Evening      -> Evening (order: 2)
+     *
+     * Activities within each CRM slot are listed in chronological order.
      */
     protected function extractActivitiesForDay(int $dayNum): array
     {
@@ -273,28 +286,82 @@ class SafariPdfParser
 
         $dayContent = $dayMatch[1];
 
-        // Morning activities - patterns like "Morning:", "Morning game drive", "Sunrise", "Early game"
-        if (preg_match('/(?:Morning|Sunrise|Early\s*(?:morning)?)\s*[:\-]?\s*([^\n]+?)(?=Midday|Lunch|Afternoon|Evening|Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
-            $activities['morning'] = $this->cleanActivityText($match[1]);
+        // Safari Office time slots in chronological order, mapped to CRM slots
+        $timeSlotMapping = [
+            // Morning slot (CRM) - chronological order
+            ['pattern' => '/Early\s*Morning\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Morning|Late Morning|Midday|Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'morning', 'order' => 1],
+            ['pattern' => '/(?<!Early\s)(?<!Late\s)Morning\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Late Morning|Midday|Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'morning', 'order' => 2],
+            ['pattern' => '/Late\s*Morning\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Midday|Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'morning', 'order' => 3],
+
+            // Midday slot (CRM)
+            ['pattern' => '/Midday\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'midday', 'order' => 1],
+
+            // Afternoon slot (CRM) - chronological order
+            ['pattern' => '/Early\s*Afternoon\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'afternoon', 'order' => 1],
+            ['pattern' => '/(?<!Early\s)(?<!Late\s)Afternoon\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'afternoon', 'order' => 2],
+            ['pattern' => '/Late\s*Afternoon\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'afternoon', 'order' => 3],
+
+            // Evening slot (CRM) - chronological order
+            ['pattern' => '/(?<!Late\s)Evening\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'evening', 'order' => 1],
+            ['pattern' => '/Late\s*Evening\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Meal Plan|Accommodation)|$)/si', 'slot' => 'evening', 'order' => 2],
+        ];
+
+        // Collect activities by slot with their order
+        $slotActivities = [
+            'morning' => [],
+            'midday' => [],
+            'afternoon' => [],
+            'evening' => [],
+        ];
+
+        foreach ($timeSlotMapping as $mapping) {
+            if (preg_match($mapping['pattern'], $dayContent, $match)) {
+                $activityText = $this->cleanActivityText($match[1]);
+                if ($activityText) {
+                    $slotActivities[$mapping['slot']][$mapping['order']] = $activityText;
+                }
+            }
         }
 
-        // Midday activities - patterns like "Midday:", "Lunch:", "Noon"
-        if (preg_match('/(?:Midday|Lunch|Noon)\s*[:\-]?\s*([^\n]+?)(?=Afternoon|Evening|Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
-            $activities['midday'] = $this->cleanActivityText($match[1]);
+        // Also try bullet-point style activities from Safari Office PDFs
+        // Pattern: "• Activity Name, Location"
+        if (preg_match_all('/•\s*([^•\n]+?)(?:,\s*([A-Za-z\s]+))?(?=\n|•|$)/s', $dayContent, $bulletMatches, PREG_SET_ORDER)) {
+            foreach ($bulletMatches as $bulletMatch) {
+                $activity = trim($bulletMatch[1]);
+                $location = isset($bulletMatch[2]) ? trim($bulletMatch[2]) : '';
+
+                if ($activity && strlen($activity) > 2) {
+                    $fullActivity = $location ? "{$activity}, {$location}" : $activity;
+
+                    // Try to determine time slot from activity keywords
+                    $activityLower = strtolower($activity);
+                    if (preg_match('/airport\s*pick|arrival|check[\s-]?in/i', $activityLower)) {
+                        if (empty($slotActivities['morning'])) {
+                            $slotActivities['morning'][0] = $fullActivity;
+                        }
+                    } elseif (preg_match('/dinner|hotel.*evening|evening/i', $activityLower)) {
+                        $slotActivities['evening'][99] = $fullActivity;
+                    } elseif (preg_match('/lunch/i', $activityLower)) {
+                        $slotActivities['midday'][99] = $fullActivity;
+                    } else {
+                        // Default to afternoon for general activities
+                        $nextKey = empty($slotActivities['afternoon']) ? 50 : max(array_keys($slotActivities['afternoon'])) + 1;
+                        $slotActivities['afternoon'][$nextKey] = $fullActivity;
+                    }
+                }
+            }
         }
 
-        // Afternoon activities - patterns like "Afternoon:", "Afternoon game drive", "Late game"
-        if (preg_match('/(?:Afternoon|Late\s*(?:afternoon)?)\s*[:\-]?\s*([^\n]+?)(?=Evening|Dinner|Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
-            $activities['afternoon'] = $this->cleanActivityText($match[1]);
+        // Sort each slot by order and combine into comma-separated string
+        foreach ($slotActivities as $slot => $items) {
+            if (!empty($items)) {
+                ksort($items);
+                $activities[$slot] = implode('; ', $items);
+            }
         }
 
-        // Evening activities - patterns like "Evening:", "Sunset", "Night", "Dinner"
-        if (preg_match('/(?:Evening|Sunset|Night(?:\s*drive)?|Dinner)\s*[:\-]?\s*([^\n]+?)(?=Meal Plan|Accommodation|$)/si', $dayContent, $match)) {
-            $activities['evening'] = $this->cleanActivityText($match[1]);
-        }
-
-        // Also look for generic activity patterns: "Game drive", "Safari", "Transfer to", etc.
-        if (empty($activities['morning']) && empty($activities['afternoon'])) {
+        // Fallback: Also look for generic activity patterns if no structured activities found
+        if (empty($activities['morning']) && empty($activities['afternoon']) && empty($activities['midday']) && empty($activities['evening'])) {
             $genericPatterns = [
                 '/(?:Full\s*day\s*)?game\s*driv(?:e|ing)/i',
                 '/safari\s*(?:drive|tour|experience)/i',

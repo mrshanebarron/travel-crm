@@ -35,24 +35,48 @@
                                 class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
                         </div>
 
+                        @if($transfer->status !== 'draft')
                         <div>
                             <label for="status" class="text-xs font-medium text-slate-500 uppercase tracking-wide">Status *</label>
                             <select name="status" id="status" class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500" required>
-                                <option value="draft" {{ $transfer->status === 'draft' ? 'selected' : '' }}>Draft</option>
                                 <option value="sent" {{ $transfer->status === 'sent' ? 'selected' : '' }}>Sent</option>
                                 <option value="transfer_completed" {{ $transfer->status === 'transfer_completed' ? 'selected' : '' }}>Transfer Completed</option>
                                 <option value="vendor_payments_completed" {{ $transfer->status === 'vendor_payments_completed' ? 'selected' : '' }}>Vendor Payments Completed</option>
                             </select>
                         </div>
+                        @else
+                        <input type="hidden" name="status" value="draft">
+                        @endif
 
                         <div class="pt-4 border-t border-slate-200">
                             <div class="text-sm text-slate-500">Total Amount</div>
                             <div class="text-2xl font-bold text-slate-900">${{ number_format($transfer->total_amount, 2) }}</div>
                         </div>
 
-                        <x-action-button type="save" label="Save Changes" :submit="true" class="w-full justify-center" />
+                        @if($transfer->status === 'draft')
+                            <x-action-button type="save" label="Save Draft" :submit="true" class="w-full justify-center" />
+                        @else
+                            <x-action-button type="save" label="Save Changes" :submit="true" class="w-full justify-center" />
+                        @endif
                     </div>
                 </form>
+
+                @if($transfer->status === 'draft' && $transfer->expenses->count() > 0)
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <form method="POST" action="{{ route('transfers.send', $transfer) }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition-colors"
+                            onclick="return confirm('Send this transfer request? This will create a task to make the transfer.')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                            Send Transfer
+                        </button>
+                    </form>
+                    <p class="text-xs text-slate-500 mt-2 text-center">Sending will create a task to make the transfer</p>
+                </div>
+                @endif
 
                 <div class="mt-6 pt-6 border-t border-slate-200">
                     <form method="POST" action="{{ route('transfers.destroy', $transfer) }}" onsubmit="return confirm('Delete this transfer request? This cannot be undone.')">

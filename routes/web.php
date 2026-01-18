@@ -107,6 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Transfers
     Route::resource('transfers', TransferController::class);
+    Route::patch('/transfers/{transfer}/send', [TransferController::class, 'send'])->name('transfers.send');
     Route::post('/transfers/{transfer}/expenses', [TransferExpenseController::class, 'store'])->name('transfer-expenses.store');
     Route::patch('/transfer-expenses/{transferExpense}', [TransferExpenseController::class, 'update'])->name('transfer-expenses.update');
     Route::delete('/transfer-expenses/{transferExpense}', [TransferExpenseController::class, 'destroy'])->name('transfer-expenses.destroy');

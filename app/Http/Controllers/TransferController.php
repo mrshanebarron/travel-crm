@@ -178,6 +178,43 @@ class TransferController extends Controller
             ->with('success', $message);
     }
 
+    /**
+     * Send a draft transfer - changes status to 'sent' and creates task.
+     */
+    public function send(Transfer $transfer)
+    {
+        $this->authorize('update', $transfer);
+
+        if ($transfer->status !== 'draft') {
+            return redirect()->route('transfers.show', $transfer)
+                ->with('error', 'Only draft transfers can be sent.');
+        }
+
+        if ($transfer->expenses->count() === 0) {
+            return redirect()->route('transfers.edit', $transfer)
+                ->with('error', 'Cannot send a transfer with no expenses. Add expenses first.');
+        }
+
+        // Update status to sent
+        $transfer->status = 'sent';
+        $transfer->sent_at = now();
+
+        // Create Task: Transfer Execution
+        $transferTask = Task::create([
+            'name' => "Make transfer for {$transfer->transfer_number} ({$transfer->request_date->format('M j, Y')})",
+            'description' => "Transfer Amount: $" . number_format($transfer->total_amount, 2) . "\n\nExpenses:\n" . $this->formatExpensesForTask($transfer),
+            'status' => 'pending',
+            'due_date' => now()->addDays(2),
+            'assigned_by' => auth()->id(),
+        ]);
+
+        $transfer->transfer_task_id = $transferTask->id;
+        $transfer->save();
+
+        return redirect()->route('transfers.show', $transfer)
+            ->with('success', 'Transfer sent! A task has been created to make the transfer.');
+    }
+
     public function destroy(Transfer $transfer)
     {
         $this->authorize('delete', $transfer);
