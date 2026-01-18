@@ -31,7 +31,9 @@ class SearchController extends Controller
             ->get();
 
         // Search travelers by name, email, or phone
+        // Only include travelers whose group has a valid booking
         $travelers = Traveler::with(['group.booking'])
+            ->whereHas('group.booking')
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
                   ->orWhere('last_name', 'like', "%{$query}%")

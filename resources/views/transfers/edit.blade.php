@@ -143,6 +143,7 @@
                     <!-- Mobile Card View -->
                     <div class="md:hidden divide-y divide-slate-100">
                         @foreach($transfer->expenses as $expense)
+                            @if($expense->booking)
                             <div class="py-3">
                                 <div class="flex items-start justify-between gap-3 mb-2">
                                     <div>
@@ -162,6 +163,7 @@
                                     <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
                                 </form>
                             </div>
+                            @endif
                         @endforeach
                         <div class="py-3 bg-slate-50 -mx-4 px-4 sm:-mx-6 sm:px-6">
                             <div class="flex justify-between items-center">
@@ -185,6 +187,7 @@
                             </thead>
                             <tbody>
                                 @foreach($transfer->expenses as $expense)
+                                    @if($expense->booking)
                                     <tr>
                                         <td>
                                             <a href="{{ route('bookings.show', $expense->booking) }}" class="text-orange-600 hover:text-orange-800 font-medium">
@@ -202,6 +205,7 @@
                                             </form>
                                         </td>
                                     </tr>
+                                    @endif
                                 @endforeach
                             </tbody>
                             <tfoot>

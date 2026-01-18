@@ -67,6 +67,8 @@
                     <div class="max-h-80 sm:max-h-96 overflow-y-auto">
                         @php
                             $overdueTasks = \App\Models\Task::with('booking')
+                                ->whereNotNull('booking_id')
+                                ->whereHas('booking')
                                 ->where('assigned_to', auth()->id())
                                 ->where('status', '!=', 'completed')
                                 ->where('due_date', '<', now())
