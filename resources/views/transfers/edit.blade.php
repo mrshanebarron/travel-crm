@@ -144,12 +144,18 @@
                     <div class="md:hidden divide-y divide-slate-100">
                         @foreach($transfer->expenses as $expense)
                             @if($expense->booking)
+                            @php
+                                $leadTraveler = $expense->booking->leadTraveler();
+                            @endphp
                             <div class="py-3">
                                 <div class="flex items-start justify-between gap-3 mb-2">
                                     <div>
                                         <a href="{{ route('bookings.show', $expense->booking) }}" class="text-orange-600 hover:text-orange-800 font-medium">
                                             {{ $expense->booking->booking_number }}
                                         </a>
+                                        @if($leadTraveler)
+                                            <p class="text-sm font-medium text-slate-700">{{ $leadTraveler->last_name }}</p>
+                                        @endif
                                         <p class="text-sm text-slate-500">{{ ucfirst(str_replace('_', ' ', $expense->category)) }}</p>
                                     </div>
                                     <span class="text-lg font-bold text-slate-900">${{ number_format($expense->amount, 2) }}</span>
@@ -179,6 +185,7 @@
                             <thead>
                                 <tr>
                                     <th>Booking</th>
+                                    <th>Client</th>
                                     <th>Category</th>
                                     <th>Vendor</th>
                                     <th class="text-right">Amount</th>
@@ -188,12 +195,16 @@
                             <tbody>
                                 @foreach($transfer->expenses as $expense)
                                     @if($expense->booking)
+                                    @php
+                                        $leadTraveler = $expense->booking->leadTraveler();
+                                    @endphp
                                     <tr>
                                         <td>
                                             <a href="{{ route('bookings.show', $expense->booking) }}" class="text-orange-600 hover:text-orange-800 font-medium">
                                                 {{ $expense->booking->booking_number }}
                                             </a>
                                         </td>
+                                        <td class="text-slate-900">{{ $leadTraveler ? $leadTraveler->last_name : '-' }}</td>
                                         <td class="text-slate-900">{{ ucfirst(str_replace('_', ' ', $expense->category)) }}</td>
                                         <td class="text-slate-900">{{ $expense->vendor_name ?? '-' }}</td>
                                         <td class="text-right font-medium text-slate-900">${{ number_format($expense->amount, 2) }}</td>
@@ -210,7 +221,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="bg-slate-50">
-                                    <td colspan="3" class="text-right font-semibold text-slate-900">Total:</td>
+                                    <td colspan="4" class="text-right font-semibold text-slate-900">Total:</td>
                                     <td class="text-right font-bold text-slate-900">${{ number_format($transfer->total_amount, 2) }}</td>
                                     <td></td>
                                 </tr>

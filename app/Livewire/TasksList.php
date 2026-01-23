@@ -71,10 +71,8 @@ class TasksList extends Component
             return;
         }
 
-        $task->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
+        // Use markComplete() to trigger transfer workflow if applicable
+        $task->markComplete();
 
         // Log activity
         if ($task->booking) {
