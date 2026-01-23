@@ -32,6 +32,14 @@
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">{{ $booking->booking_number }}</h1>
                 <p class="text-slate-500">{{ $booking->country }} | {{ $booking->start_date->format('M j') }} - {{ $booking->end_date->format('M j, Y') }}</p>
+                @if(!empty($booking->guides))
+                    <p class="text-sm text-slate-400 mt-1">
+                        Guides:
+                        @foreach($booking->guides as $country => $guide)
+                            <span class="text-slate-600">{{ $country }}: {{ $guide }}</span>@if(!$loop->last), @endif
+                        @endforeach
+                    </p>
+                @endif
             </div>
         </div>
         <div class="flex items-center gap-3">

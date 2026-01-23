@@ -137,6 +137,8 @@ class BookingController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'required|in:upcoming,active,completed',
             'guides' => 'nullable|array',
+            'guides.*.country' => 'nullable|string|max:255',
+            'guides.*.name' => 'nullable|string|max:255',
             'travelers' => 'sometimes|array',
             'travelers.*.id' => 'nullable|exists:travelers,id',
             'travelers.*.first_name' => 'required|string|max:255',
@@ -154,12 +156,20 @@ class BookingController extends Controller
             $startDateChanged = !$oldStartDate->equalTo($newStartDate);
             $endDateChanged = !$oldEndDate->equalTo($newEndDate);
 
+            // Convert guides from [{country, name}, ...] to {country: name} format
+            $guidesData = [];
+            foreach ($validated['guides'] ?? [] as $guide) {
+                if (!empty($guide['country']) && !empty($guide['name'])) {
+                    $guidesData[$guide['country']] = $guide['name'];
+                }
+            }
+
             $booking->update([
                 'country' => $validated['country'],
                 'start_date' => $validated['start_date'],
                 'end_date' => $validated['end_date'],
                 'status' => $validated['status'],
-                'guides' => $validated['guides'] ?? [],
+                'guides' => $guidesData,
             ]);
 
             // If start date changed, recalculate all payment schedules and log it

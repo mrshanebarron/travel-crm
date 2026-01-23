@@ -160,46 +160,14 @@ class SafariPdfParser
     {
         $days = [];
 
-        // First, try to find the summary section which has the cleaner format
-        // Pattern: LocationDay X or LocationDay X-Y
-        // Examples: "NairobiDay 1", "Masai Mara National ReserveDay 2-3"
+        // First, try to find the summary section
+        // The summary is between "Summary" and "Day by Day"
+        $summaryStart = strpos($this->text, 'Summary');
+        $summaryEnd = strpos($this->text, 'Day by Day');
 
-        // Find all day entries in summary format
-        preg_match_all('/([A-Za-z\s]+(?:National\s+(?:Reserve|Park)|Island|Airport)?)\s*Day\s*(\d+)(?:-(\d+))?\s*\n([^\n]+?)(?:Accommodation:|$)/s', $this->text, $matches, PREG_SET_ORDER);
-
-        if (!empty($matches)) {
-            foreach ($matches as $match) {
-                $location = trim($match[1]);
-                $startDay = (int)$match[2];
-                $endDay = isset($match[3]) && $match[3] ? (int)$match[3] : $startDay;
-                $lodge = trim($match[4]);
-
-                // Clean up lodge name - remove trailing location data
-                $lodge = preg_replace('/\s*(Accommodation|Meal Plan|Room|Double|Single|Triple).*$/i', '', $lodge);
-
-                // Find meal plan for this day section
-                $mealPlan = $this->findMealPlan($location, $startDay);
-
-                // Create entries for each day in the range
-                for ($dayNum = $startDay; $dayNum <= $endDay; $dayNum++) {
-                    // Extract activities for this specific day
-                    $activities = $this->extractActivitiesForDay($dayNum);
-
-                    $days[$dayNum] = [
-                        'day_number' => $dayNum,
-                        'date' => null,
-                        'location' => $location,
-                        'lodge' => $lodge ?: null,
-                        'morning_activity' => $activities['morning'] ?? null,
-                        'midday_activity' => $activities['midday'] ?? null,
-                        'afternoon_activity' => $activities['afternoon'] ?? null,
-                        'evening_activity' => $activities['evening'] ?? null,
-                        'other_activities' => $activities['other'] ?? null,
-                        'meal_plan' => $mealPlan,
-                        'drink_plan' => null,
-                    ];
-                }
-            }
+        if ($summaryStart !== false && $summaryEnd !== false) {
+            $summaryText = substr($this->text, $summaryStart, $summaryEnd - $summaryStart);
+            $days = $this->parseSummarySection($summaryText);
         }
 
         // If summary parsing didn't work well, try detailed day-by-day parsing
@@ -210,6 +178,138 @@ class SafariPdfParser
         // Sort by day number and return as array
         ksort($days);
         return array_values($days);
+    }
+
+    /**
+     * Parse the summary section of Safari Office PDFs.
+     * Format:
+     * LocationDay X[-Y]
+     * Lodge NameAccommodation:    Room Info
+     * Meal DescriptionMeal Plan:
+     * [Drinking water]
+     */
+    protected function parseSummarySection(string $summaryText): array
+    {
+        $days = [];
+
+        // Known country names to filter out
+        $countries = ['Kenya', 'Tanzania', 'Uganda', 'Rwanda', 'Botswana', 'South Africa', 'Namibia', 'Zimbabwe', 'Zambia'];
+
+        // Find all "LocationDay X" patterns - location is on same line as Day, no space before Day
+        // Pattern: Word characters (allowing spaces within location name) directly followed by "Day"
+        // The location must start at beginning of line or after newline
+        preg_match_all('/(?:^|\n)([A-Za-z][A-Za-z\s]*?(?:National\s+(?:Reserve|Park)|Island|Airport|NP|NR)?)Day\s*(\d+)(?:-(\d+))?/m', $summaryText, $dayMatches, PREG_OFFSET_CAPTURE);
+
+        if (empty($dayMatches[0])) {
+            return $days;
+        }
+
+        for ($i = 0; $i < count($dayMatches[0]); $i++) {
+            $location = trim($dayMatches[1][$i][0]);
+            $startDay = (int)$dayMatches[2][$i][0];
+            $endDay = isset($dayMatches[3][$i][0]) && $dayMatches[3][$i][0] ? (int)$dayMatches[3][$i][0] : $startDay;
+            $entryStart = $dayMatches[0][$i][1];
+
+            // Get the text until the next day entry (or end of summary)
+            $nextEntryStart = isset($dayMatches[0][$i + 1]) ? $dayMatches[0][$i + 1][1] : strlen($summaryText);
+            $entryText = substr($summaryText, $entryStart, $nextEntryStart - $entryStart);
+
+            // Clean location - remove newlines and trim
+            $location = preg_replace('/\s+/', ' ', $location);
+            $location = trim($location);
+
+            // Remove country prefix if location contains more info after it
+            foreach ($countries as $country) {
+                if (str_starts_with($location, $country . ' ')) {
+                    $afterCountry = trim(substr($location, strlen($country)));
+                    if (!empty($afterCountry) && !in_array($afterCountry, $countries)) {
+                        $location = $afterCountry;
+                    }
+                    break;
+                }
+            }
+
+            // Extract lodge - text between day number and "Accommodation:"
+            $lodge = null;
+            if (preg_match('/Day\s*\d+(?:-\d+)?\s*\n([^\n]+?)Accommodation:/s', $entryText, $lodgeMatch)) {
+                $lodge = trim($lodgeMatch[1]);
+                // Clean up "No accommodation" or similar
+                if (stripos($lodge, 'No accommodation') !== false || stripos($lodge, 'No ') === 0) {
+                    $lodge = null;
+                }
+            }
+
+            // Extract meal plan - in Safari Office PDFs, meal description appears BEFORE "Meal Plan:" label
+            // Format variations:
+            // 1. "Breakfast, Lunch & Dinner\nDrinking water\nMeal Plan:" (multi-line)
+            // 2. "BreakfastMeal Plan:" (concatenated, no newline)
+            $mealPlan = null;
+            // Try multi-line format first
+            if (preg_match('/\n([^\n]*(?:Breakfast|Lunch|Dinner|Full Board|Half Board|All Inclusive)[^\n]*)\n(?:Drinking water\n)?Meal Plan:/si', $entryText, $mealMatch)) {
+                $mealPlan = $this->normalizeMealPlan(trim($mealMatch[1]));
+            }
+            // Try concatenated format (BreakfastMeal Plan:)
+            elseif (preg_match('/(Breakfast|Lunch|Dinner|Full Board|Half Board|All Inclusive)(?:,\s*[A-Za-z\s&]+)?Meal Plan:/si', $entryText, $mealMatch)) {
+                $mealPlan = $this->normalizeMealPlan(trim($mealMatch[1]));
+            }
+
+            // Check for drinking water inclusion
+            $drinkPlan = null;
+            if (stripos($entryText, 'Drinking water') !== false || stripos($entryText, 'drinks included') !== false) {
+                $drinkPlan = 'Drinking water included';
+            }
+
+            // Create entries for each day in the range
+            for ($dayNum = $startDay; $dayNum <= $endDay; $dayNum++) {
+                // Extract activities for this specific day from the detailed section
+                $activities = $this->extractActivitiesForDay($dayNum);
+
+                $days[$dayNum] = [
+                    'day_number' => $dayNum,
+                    'date' => null,
+                    'location' => $location,
+                    'lodge' => $lodge,
+                    'morning_activity' => $activities['morning'] ?? null,
+                    'midday_activity' => $activities['midday'] ?? null,
+                    'afternoon_activity' => $activities['afternoon'] ?? null,
+                    'evening_activity' => $activities['evening'] ?? null,
+                    'other_activities' => $activities['other'] ?? null,
+                    'meal_plan' => $mealPlan,
+                    'drink_plan' => $drinkPlan,
+                ];
+            }
+        }
+
+        return $days;
+    }
+
+    /**
+     * Normalize meal plan descriptions to standard format.
+     */
+    protected function normalizeMealPlan(string $mealText): string
+    {
+        $mealText = strtolower($mealText);
+
+        if (str_contains($mealText, 'breakfast') && str_contains($mealText, 'lunch') && str_contains($mealText, 'dinner')) {
+            return 'Full Board';
+        }
+        if (str_contains($mealText, 'full board')) {
+            return 'Full Board';
+        }
+        if (str_contains($mealText, 'half board')) {
+            return 'Half Board';
+        }
+        if (str_contains($mealText, 'all inclusive')) {
+            return 'All Inclusive';
+        }
+        if (str_contains($mealText, 'breakfast') && (str_contains($mealText, 'lunch') || str_contains($mealText, 'dinner'))) {
+            return 'Half Board';
+        }
+        if (str_contains($mealText, 'breakfast')) {
+            return 'Breakfast Only';
+        }
+
+        return ucwords($mealText);
     }
 
     /**

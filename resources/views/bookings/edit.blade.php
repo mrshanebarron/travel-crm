@@ -71,6 +71,55 @@
                         </div>
                     </div>
 
+                    <!-- Guides by Country -->
+                    <div class="mb-6 sm:mb-8" x-data="guidesForm()">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                            <h3 class="text-lg font-semibold text-slate-900">Guides by Country</h3>
+                            <button type="button" @click="addGuide()"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-600 hover:text-orange-800 border border-orange-300 hover:border-orange-400 rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Guide
+                            </button>
+                        </div>
+
+                        <template x-if="guides.length === 0">
+                            <p class="text-slate-500 text-sm">No guides assigned yet. Click "Add Guide" to assign guides for each country visited.</p>
+                        </template>
+
+                        <template x-for="(guide, index) in guides" :key="index">
+                            <div class="flex flex-col sm:flex-row gap-3 mb-3">
+                                <div class="sm:w-1/3">
+                                    <select :name="'guides[' + index + '][country]'" x-model="guide.country"
+                                        class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                                        <option value="">Select Country</option>
+                                        <option value="Kenya">Kenya</option>
+                                        <option value="Tanzania">Tanzania</option>
+                                        <option value="Uganda">Uganda</option>
+                                        <option value="Rwanda">Rwanda</option>
+                                        <option value="Botswana">Botswana</option>
+                                        <option value="South Africa">South Africa</option>
+                                        <option value="Namibia">Namibia</option>
+                                        <option value="Zimbabwe">Zimbabwe</option>
+                                        <option value="Zambia">Zambia</option>
+                                    </select>
+                                </div>
+                                <div class="flex-1">
+                                    <input type="text" :name="'guides[' + index + '][name]'" x-model="guide.name"
+                                        placeholder="Guide name"
+                                        class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                                </div>
+                                <button type="button" @click="removeGuide(index)"
+                                    class="text-red-500 hover:text-red-700 p-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
                     <!-- Travelers -->
                     <div class="mb-6 sm:mb-8">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
@@ -163,6 +212,11 @@
                 'is_lead' => $t->is_lead,
             ];
         })->values();
+
+        // Convert guides array to country/name pairs for the form
+        $guidesJson = collect($booking->guides ?? [])->map(function($name, $country) {
+            return ['country' => $country, 'name' => $name];
+        })->values();
     @endphp
     <script>
         function bookingEditForm() {
@@ -173,6 +227,18 @@
                 },
                 removeTraveler(index) {
                     this.travelers.splice(index, 1);
+                }
+            }
+        }
+
+        function guidesForm() {
+            return {
+                guides: @json($guidesJson),
+                addGuide() {
+                    this.guides.push({ country: '', name: '' });
+                },
+                removeGuide(index) {
+                    this.guides.splice(index, 1);
                 }
             }
         }
