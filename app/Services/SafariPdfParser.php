@@ -376,37 +376,18 @@ class SafariPdfParser
             'other' => null,
         ];
 
-        // Find the section for this day - look for "Day X" followed by content until "Day X+1" or end
-        $nextDay = $dayNum + 1;
-        $dayPattern = "/Day\s*{$dayNum}\b(.*?)(?=Day\s*{$nextDay}\b|$)/si";
+        // Safari Office PDFs have "Activities Day X" or "Activity Day X" sections
+        // Section ends at next Activity/Activities Day, Meal Plan, or Day X header
+        $activitySectionPattern = "/Activit(?:y|ies)\s+Day\s*{$dayNum}\s*\n(.*?)(?=Activit(?:y|ies)\s+Day\s*\d+|Meal\s+Plan\s*[–\-]\s*Day|Day\s+\d+\s+(?:to\s+\d+\s+)?[–\-]|$)/si";
 
-        if (!preg_match($dayPattern, $this->text, $dayMatch)) {
-            return $activities;
+        if (!preg_match($activitySectionPattern, $this->text, $activityMatch)) {
+            // Fallback: try to find a broader day section
+            return $this->extractActivitiesFromDaySection($dayNum);
         }
 
-        $dayContent = $dayMatch[1];
+        $activityContent = $activityMatch[1];
 
-        // Safari Office time slots in chronological order, mapped to CRM slots
-        $timeSlotMapping = [
-            // Morning slot (CRM) - chronological order
-            ['pattern' => '/Early\s*Morning\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Morning|Late Morning|Midday|Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'morning', 'order' => 1],
-            ['pattern' => '/(?<!Early\s)(?<!Late\s)Morning\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Late Morning|Midday|Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'morning', 'order' => 2],
-            ['pattern' => '/Late\s*Morning\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Midday|Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'morning', 'order' => 3],
-
-            // Midday slot (CRM)
-            ['pattern' => '/Midday\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Early Afternoon|Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'midday', 'order' => 1],
-
-            // Afternoon slot (CRM) - chronological order
-            ['pattern' => '/Early\s*Afternoon\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Afternoon|Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'afternoon', 'order' => 1],
-            ['pattern' => '/(?<!Early\s)(?<!Late\s)Afternoon\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Late Afternoon|Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'afternoon', 'order' => 2],
-            ['pattern' => '/Late\s*Afternoon\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Evening|Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'afternoon', 'order' => 3],
-
-            // Evening slot (CRM) - chronological order
-            ['pattern' => '/(?<!Late\s)Evening\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Late Evening|Meal Plan|Accommodation)|$)/si', 'slot' => 'evening', 'order' => 1],
-            ['pattern' => '/Late\s*Evening\s*[:\-]?\s*\n?\s*([^\n]+?)(?=\n(?:Meal Plan|Accommodation)|$)/si', 'slot' => 'evening', 'order' => 2],
-        ];
-
-        // Collect activities by slot with their order
+        // Collect activities by slot
         $slotActivities = [
             'morning' => [],
             'midday' => [],
@@ -414,71 +395,213 @@ class SafariPdfParser
             'evening' => [],
         ];
 
-        foreach ($timeSlotMapping as $mapping) {
-            if (preg_match($mapping['pattern'], $dayContent, $match)) {
-                $activityText = $this->cleanActivityText($match[1]);
-                if ($activityText) {
-                    $slotActivities[$mapping['slot']][$mapping['order']] = $activityText;
+        // Time slot headers mapped to CRM slots (order matters - more specific first)
+        $timeSlotHeaders = [
+            'Early\s*Morning' => 'morning',
+            'Late\s*Morning' => 'morning',
+            'Morning\s*&\s*Afternoon' => 'morning',
+            'All\s*day\s*OR\s*morning' => 'morning',
+            'Morning' => 'morning',
+            'Around\s*Lunchtime' => 'midday',
+            'Midday' => 'midday',
+            'Early\s*Afternoon' => 'afternoon',
+            'Late\s*Afternoon' => 'afternoon',
+            'Afternoon' => 'afternoon',
+            'Rest\s*of\s*Day' => 'afternoon',
+            'Late\s*Evening' => 'evening',
+            'Evening' => 'evening',
+        ];
+
+        // Build pattern to find time slot headers
+        $headerPatterns = array_keys($timeSlotHeaders);
+        $combinedPattern = '/\b(' . implode('|', $headerPatterns) . ')\s*\n/i';
+
+        // Find all time slot headers and their positions
+        if (preg_match_all($combinedPattern, $activityContent, $headerMatches, PREG_OFFSET_CAPTURE)) {
+            $numHeaders = count($headerMatches[0]);
+
+            for ($i = 0; $i < $numHeaders; $i++) {
+                $headerText = $headerMatches[1][$i][0];
+                $headerEnd = $headerMatches[0][$i][1] + strlen($headerMatches[0][$i][0]);
+                $sectionEnd = ($i + 1 < $numHeaders) ? $headerMatches[0][$i + 1][1] : strlen($activityContent);
+                $sectionContent = substr($activityContent, $headerEnd, $sectionEnd - $headerEnd);
+
+                // Determine CRM slot
+                $crmSlot = null;
+                foreach ($timeSlotHeaders as $pattern => $slot) {
+                    if (preg_match('/^' . $pattern . '$/i', trim($headerText))) {
+                        $crmSlot = $slot;
+                        break;
+                    }
                 }
-            }
-        }
 
-        // Also try bullet-point style activities from Safari Office PDFs
-        // Pattern: "• Activity Name, Location"
-        if (preg_match_all('/•\s*([^•\n]+?)(?:,\s*([A-Za-z\s]+))?(?=\n|•|$)/s', $dayContent, $bulletMatches, PREG_SET_ORDER)) {
-            foreach ($bulletMatches as $bulletMatch) {
-                $activity = trim($bulletMatch[1]);
-                $location = isset($bulletMatch[2]) ? trim($bulletMatch[2]) : '';
+                if (!$crmSlot) {
+                    continue;
+                }
 
-                if ($activity && strlen($activity) > 2) {
-                    $fullActivity = $location ? "{$activity}, {$location}" : $activity;
+                // Extract bullet-pointed activities from section
+                // PDF format has text followed by bullet on same line or next line
+                // Pattern: capture text before or after bullet marker
 
-                    // Try to determine time slot from activity keywords
-                    $activityLower = strtolower($activity);
-                    if (preg_match('/airport\s*pick|arrival|check[\s-]?in/i', $activityLower)) {
-                        if (empty($slotActivities['morning'])) {
-                            $slotActivities['morning'][0] = $fullActivity;
+                // Split content into activity blocks (separated by bullet markers)
+                // Match: "text•" (bullet at end) or lines between bullets
+                $activityBlocks = preg_split('/•+/', $sectionContent);
+
+                foreach ($activityBlocks as $block) {
+                    $block = trim($block);
+                    if (empty($block)) continue;
+
+                    // Clean the block - remove newlines, extra spaces
+                    $block = preg_replace('/\s+/', ' ', $block);
+
+                    // Skip non-activity content
+                    if (preg_match('/^(Page\s*\d|Ref\.\s*Number|Tapestry of Africa|Breakfast|Lunch|Dinner|Drinking water|Tented camp|Lodge|Hotel|Camp|Resort|Countries|Kenya|Tanzania|Bordering|without fences|There\'s so much|Pool|Inside|View|Room|Outdoor|Campfire|Lounge|Entrance|Restaurant|Accommodation|Meal Plan)/i', $block)) {
+                        continue;
+                    }
+
+                    // Also skip if it contains page/ref markers mid-text
+                    $block = preg_replace('/\s*Page\s*\d+.*$/i', '', $block);
+                    $block = preg_replace('/\s*Accommodation\s+\w.*$/i', '', $block);
+                    $block = preg_replace('/\s*Meal Plan.*$/i', '', $block);
+
+                    // Skip time slot headers that end up as blocks
+                    if (preg_match('/^(Early\s*Morning|Late\s*Morning|Morning|Around\s*Lunchtime|Midday|Early\s*Afternoon|Afternoon|Late\s*Afternoon|Evening|Late\s*Evening|Rest\s*of\s*Day|All\s*day)/i', $block)) {
+                        continue;
+                    }
+
+                    // Skip if it's just a location name or very short
+                    if (strlen($block) < 10) continue;
+
+                    // Skip pure description paragraphs (long text without action verbs)
+                    if (strlen($block) > 200 && !preg_match('/\b(drive|transfer|pick.?up|drop.?off|check.?in|flight|visit|safari|balloon|village)\b/i', $block)) {
+                        continue;
+                    }
+
+                    // Truncate overly long activities (description bled in)
+                    if (strlen($block) > 150) {
+                        // Try to find a natural break point
+                        if (preg_match('/^(.{50,150}?(?:National Park|National Reserve|Camp|Lodge|Airport|Island|Terminal|Border)[,\.]?)/i', $block, $truncMatch)) {
+                            $block = $truncMatch[1];
+                        } else {
+                            // Just truncate
+                            $block = substr($block, 0, 150);
                         }
-                    } elseif (preg_match('/dinner|hotel.*evening|evening/i', $activityLower)) {
-                        $slotActivities['evening'][99] = $fullActivity;
-                    } elseif (preg_match('/lunch/i', $activityLower)) {
-                        $slotActivities['midday'][99] = $fullActivity;
-                    } else {
-                        // Default to afternoon for general activities
-                        $nextKey = empty($slotActivities['afternoon']) ? 50 : max(array_keys($slotActivities['afternoon'])) + 1;
-                        $slotActivities['afternoon'][$nextKey] = $fullActivity;
+                    }
+
+                    $activity = $this->cleanActivityText($block);
+                    if ($activity && strlen($activity) > 5) {
+                        $slotActivities[$crmSlot][] = $activity;
                     }
                 }
             }
         }
 
-        // Sort each slot by order and combine into comma-separated string
+        // If no time slot headers were found, check for direct bullet activities
+        // (common for beach days: "Activity Day X\n• All Day Beach Activities")
+        if (empty($slotActivities['morning']) && empty($slotActivities['midday']) &&
+            empty($slotActivities['afternoon']) && empty($slotActivities['evening'])) {
+
+            $activityBlocks = preg_split('/•+/', $activityContent);
+            foreach ($activityBlocks as $block) {
+                $block = trim($block);
+                if (empty($block) || strlen($block) < 10) continue;
+
+                $block = preg_replace('/\s+/', ' ', $block);
+
+                // Skip non-activity content
+                if (preg_match('/^(Page\s*\d|Ref\.\s*Number|Tapestry of Africa|Breakfast|Meal Plan|Zanzibar Island|Indian Ocean|Gabi Beach|Drinking water|All accommodations|All transportation|Meals \(As|Professional guide|Pop-up|Excluded|International flights|Tips \(|Park fees)/i', $block)) {
+                    continue;
+                }
+
+                // Truncate at common endings
+                $block = preg_replace('/\s*(Zanzibar Island|Indian Ocean|Gabi Beach|Page\s*\d|Drinking water).*$/i', '', $block);
+
+                $activity = $this->cleanActivityText($block);
+                if ($activity && strlen($activity) > 5) {
+                    // "All Day" activities go to morning
+                    if (preg_match('/All\s*Day/i', $activity)) {
+                        $slotActivities['morning'][] = $activity;
+                    } elseif (preg_match('/drop.?off|terminal|airport|departure/i', $activity)) {
+                        $slotActivities['morning'][] = $activity;
+                    } else {
+                        $slotActivities['afternoon'][] = $activity;
+                    }
+                }
+            }
+        }
+
+        // Combine activities in each slot
         foreach ($slotActivities as $slot => $items) {
             if (!empty($items)) {
-                ksort($items);
-                $activities[$slot] = implode('; ', $items);
+                $activities[$slot] = implode('; ', array_unique($items));
             }
         }
 
-        // Fallback: Also look for generic activity patterns if no structured activities found
-        if (empty($activities['morning']) && empty($activities['afternoon']) && empty($activities['midday']) && empty($activities['evening'])) {
-            $genericPatterns = [
-                '/(?:Full\s*day\s*)?game\s*driv(?:e|ing)/i',
-                '/safari\s*(?:drive|tour|experience)/i',
-                '/transfer\s*(?:to|from)\s*[^\n]+/i',
-                '/(?:flight|fly)\s*(?:to|from)\s*[^\n]+/i',
-                '/visit(?:ing)?\s*[^\n]+/i',
-                '/(?:explore|exploration)\s*[^\n]+/i',
-            ];
+        return $activities;
+    }
 
-            foreach ($genericPatterns as $pattern) {
-                if (preg_match($pattern, $dayContent, $match)) {
-                    if (empty($activities['other'])) {
-                        $activities['other'] = $this->cleanActivityText($match[0]);
-                    } else {
-                        $activities['other'] .= '; ' . $this->cleanActivityText($match[0]);
+    /**
+     * Fallback method to extract activities from a general day section.
+     */
+    protected function extractActivitiesFromDaySection(int $dayNum): array
+    {
+        $activities = [
+            'morning' => null,
+            'midday' => null,
+            'afternoon' => null,
+            'evening' => null,
+            'other' => null,
+        ];
+
+        // Look for "Day X" headers in the day-by-day section
+        $nextDay = $dayNum + 1;
+        $dayPattern = "/Day\s*{$dayNum}\s*[–\-]\s*[A-Za-z]+.*?\n(.*?)(?=Day\s*{$nextDay}\s*[–\-]|Pricing|Tour Type|About Us|$)/si";
+
+        if (!preg_match($dayPattern, $this->text, $dayMatch)) {
+            return $activities;
+        }
+
+        $dayContent = $dayMatch[1];
+        $slotActivities = ['morning' => [], 'midday' => [], 'afternoon' => [], 'evening' => []];
+
+        // Extract bullet points and classify by position/context
+        if (preg_match_all('/•\s*([^\n•]+)/s', $dayContent, $bulletMatches)) {
+            foreach ($bulletMatches[1] as $bullet) {
+                $activityText = $this->cleanActivityText($bullet);
+                if (!$activityText || strlen($activityText) < 5 ||
+                    preg_match('/^Page\s+\d|Ref\.\s*Number|Tapestry of Africa/i', $activityText)) {
+                    continue;
+                }
+
+                $activityLower = strtolower($activityText);
+
+                // Classify by keywords
+                if (preg_match('/airport\s*pick|arrival|check[\s-]?in/i', $activityLower)) {
+                    $slotActivities['morning'][] = $activityText;
+                } elseif (preg_match('/dinner|evening|sunset|lodge\s*check/i', $activityLower)) {
+                    $slotActivities['evening'][] = $activityText;
+                } elseif (preg_match('/lunch|lunchtime/i', $activityLower)) {
+                    $slotActivities['midday'][] = $activityText;
+                } elseif (preg_match('/afternoon/i', $activityLower)) {
+                    $slotActivities['afternoon'][] = $activityText;
+                } elseif (preg_match('/morning|scenic\s*drive/i', $activityLower)) {
+                    $slotActivities['morning'][] = $activityText;
+                } else {
+                    // Game drives go to morning if empty, else afternoon
+                    if (preg_match('/game\s*drive|safari\s*drive/i', $activityLower)) {
+                        if (empty($slotActivities['morning'])) {
+                            $slotActivities['morning'][] = $activityText;
+                        } else {
+                            $slotActivities['afternoon'][] = $activityText;
+                        }
                     }
                 }
+            }
+        }
+
+        foreach ($slotActivities as $slot => $items) {
+            if (!empty($items)) {
+                $activities[$slot] = implode('; ', array_unique($items));
             }
         }
 
