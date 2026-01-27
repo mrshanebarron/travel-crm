@@ -22,6 +22,7 @@ class Task extends Model
         'days_before_safari',
         'timing_description',
         'completed_at',
+        'intended_assignee',
     ];
 
     protected $casts = [

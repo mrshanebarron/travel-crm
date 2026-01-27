@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\PreserveTabHash::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        // Run task assignment check daily at 9 AM
+        $schedule->command('tasks:assign-scheduled')
+            ->dailyAt('09:00')
+            ->withoutOverlapping();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

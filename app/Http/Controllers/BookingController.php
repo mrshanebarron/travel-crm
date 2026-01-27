@@ -532,10 +532,19 @@ class BookingController extends Controller
 
             // Look up assigned user by name from team_members config
             $assignedTo = null;
+            $assignedAt = null;
             if (!empty($taskData['assigned_to_name'])) {
                 $memberName = $taskData['assigned_to_name'];
                 // Try to find user by name (case-insensitive partial match)
                 $assignedTo = User::where('name', 'like', "%{$memberName}%")->first()?->id;
+
+                // Only assign immediately if this is an on_create task
+                if (!empty($taskData['on_create']) && $assignedTo) {
+                    $assignedAt = now();
+                } else {
+                    // For scheduled tasks, store who should be assigned but don't assign yet
+                    $assignedTo = null; // Will be assigned later by scheduled job
+                }
             }
 
             $booking->tasks()->create([
@@ -545,8 +554,10 @@ class BookingController extends Controller
                 'days_before_safari' => $taskData['days_before'] ?? null,
                 'timing_description' => $taskData['timing_description'] ?? null,
                 'assigned_to' => $assignedTo,
-                'assigned_at' => $assignedTo ? now() : null,
-                'assigned_by' => auth()->id(),
+                'assigned_at' => $assignedAt,
+                'assigned_by' => $assignedTo ? auth()->id() : null,
+                // Store who should be assigned for later assignment
+                'intended_assignee' => $taskData['assigned_to_name'] ?? null,
             ]);
         }
     }
