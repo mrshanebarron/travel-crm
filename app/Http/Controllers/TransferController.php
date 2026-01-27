@@ -167,6 +167,7 @@ class TransferController extends Controller
                                 'amount' => $expense->amount,
                                 'balance' => $balance,
                                 'transfer_expense_id' => $expense->id,
+                                'created_by' => auth()->id() ?? 1,
                             ]);
 
                             // Mark expense as ledger posted

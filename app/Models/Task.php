@@ -126,6 +126,7 @@ class Task extends Model
                                 'amount' => $expense->amount,
                                 'balance' => $balance,
                                 'transfer_expense_id' => $expense->id,
+                                'created_by' => auth()->id() ?? 1,
                             ]);
 
                             $expense->update(['ledger_posted' => true]);
