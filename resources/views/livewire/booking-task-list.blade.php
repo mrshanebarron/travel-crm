@@ -84,7 +84,14 @@
                             <td class="px-2 py-2 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
                                     <x-action-button type="edit" size="xs" wire:click="openEditModal({{ $task->id }})" />
-                                    <x-action-button type="delete" size="xs" wire:click="deleteTask({{ $task->id }})" wire:confirm="Delete this task?" />
+                                    @if($task->assigned_by === auth()->id() && $task->assigned_to !== auth()->id())
+                                        {{-- User assigned this task to someone else - show "Withdraw" option --}}
+                                        <x-action-button type="delete" size="xs" label="Withdraw" wire:click="deleteTask({{ $task->id }})" wire:confirm="Withdraw this task?" />
+                                    @elseif($task->assigned_to !== auth()->id())
+                                        {{-- User neither assigned nor assigned to this task - show "Delete" option --}}
+                                        <x-action-button type="delete" size="xs" wire:click="deleteTask({{ $task->id }})" wire:confirm="Delete this task?" />
+                                    @endif
+                                    {{-- If user is assigned TO this task, no delete/withdraw option --}}
                                 </div>
                             </td>
                         </tr>

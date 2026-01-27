@@ -179,10 +179,13 @@
                         @if($task['status'] !== 'completed')
                             <x-action-button type="complete" size="sm" wire:click="completeTask({{ $task['id'] }})" class="flex-1 justify-center" />
                             @if($task['assigned_by'] === auth()->id() && $task['assigned_to'] !== auth()->id())
+                                {{-- User assigned this task to someone else - show "Withdraw" option --}}
                                 <x-action-button type="delete" size="sm" label="Withdraw" wire:click="withdrawTask({{ $task['id'] }})" wire:confirm="Withdraw this task?" />
-                            @else
+                            @elseif($task['assigned_to'] !== auth()->id())
+                                {{-- User neither assigned nor assigned to this task - show "Delete" option --}}
                                 <x-action-button type="delete" size="sm" wire:click="deleteTask({{ $task['id'] }})" wire:confirm="Delete this task?" />
                             @endif
+                            {{-- If user is assigned TO this task, no delete/withdraw option --}}
                         @else
                             <x-action-button type="clear" size="sm" label="Reopen" wire:click="uncompleteTask({{ $task['id'] }})" class="flex-1 justify-center" />
                         @endif
@@ -264,10 +267,13 @@
                                     @if($task['status'] !== 'completed')
                                         <x-action-button type="complete" size="xs" wire:click="completeTask({{ $task['id'] }})" />
                                         @if($task['assigned_by'] === auth()->id() && $task['assigned_to'] !== auth()->id())
+                                            {{-- User assigned this task to someone else - show "Withdraw" option --}}
                                             <x-action-button type="delete" size="xs" label="Withdraw" wire:click="withdrawTask({{ $task['id'] }})" wire:confirm="Withdraw this task?" />
-                                        @else
+                                        @elseif($task['assigned_to'] !== auth()->id())
+                                            {{-- User neither assigned nor assigned to this task - show "Delete" option --}}
                                             <x-action-button type="delete" size="xs" wire:click="deleteTask({{ $task['id'] }})" wire:confirm="Delete this task?" />
                                         @endif
+                                        {{-- If user is assigned TO this task, no delete/withdraw option --}}
                                     @else
                                         <x-action-button type="clear" size="xs" label="Reopen" wire:click="uncompleteTask({{ $task['id'] }})" />
                                     @endif
