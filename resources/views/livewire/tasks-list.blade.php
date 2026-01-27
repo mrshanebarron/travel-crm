@@ -114,8 +114,10 @@
 
                 <!-- Filter Tabs -->
                 <div class="flex flex-wrap items-center gap-2 sm:gap-4">
-                    <button wire:click="setFilter('open')" class="tab whitespace-nowrap {{ $filter === 'open' ? 'active' : '' }}">Open ({{ $counts['open'] }})</button>
-                    <button wire:click="setFilter('mine')" class="tab whitespace-nowrap {{ $filter === 'mine' ? 'active' : '' }}">Mine ({{ $counts['mine'] }})</button>
+                    @if(auth()->user()->hasRole('super_admin'))
+                        <button wire:click="setFilter('open')" class="tab whitespace-nowrap {{ $filter === 'open' ? 'active' : '' }}">All Tasks ({{ $counts['open'] }})</button>
+                    @endif
+                    <button wire:click="setFilter('mine')" class="tab whitespace-nowrap {{ $filter === 'mine' ? 'active' : '' }}">My Tasks ({{ $counts['mine'] }})</button>
                     <button wire:click="setFilter('assigned')" class="tab whitespace-nowrap {{ $filter === 'assigned' ? 'active' : '' }}">Tasks I Assigned ({{ $counts['assigned'] }})</button>
                     <button wire:click="setFilter('overdue')" class="tab whitespace-nowrap {{ $filter === 'overdue' ? 'active' : '' }}">Overdue ({{ $counts['overdue'] }})</button>
                     <button wire:click="setFilter('completed')" class="tab whitespace-nowrap {{ $filter === 'completed' ? 'active' : '' }}">Done ({{ $counts['completed'] }})</button>
@@ -176,10 +178,14 @@
                     <div class="mt-3 flex items-center gap-2">
                         @if($task['status'] !== 'completed')
                             <x-action-button type="complete" size="sm" wire:click="completeTask({{ $task['id'] }})" class="flex-1 justify-center" />
+                            @if($task['assigned_by'] === auth()->id() && $task['assigned_to'] !== auth()->id())
+                                <x-action-button type="delete" size="sm" label="Withdraw" wire:click="withdrawTask({{ $task['id'] }})" wire:confirm="Withdraw this task?" />
+                            @else
+                                <x-action-button type="delete" size="sm" wire:click="deleteTask({{ $task['id'] }})" wire:confirm="Delete this task?" />
+                            @endif
                         @else
                             <x-action-button type="clear" size="sm" label="Reopen" wire:click="uncompleteTask({{ $task['id'] }})" class="flex-1 justify-center" />
                         @endif
-                        <x-action-button type="delete" size="sm" wire:click="deleteTask({{ $task['id'] }})" wire:confirm="Delete this task?" />
                     </div>
                 </div>
             @empty
@@ -257,10 +263,14 @@
                                 <div class="flex items-center gap-2">
                                     @if($task['status'] !== 'completed')
                                         <x-action-button type="complete" size="xs" wire:click="completeTask({{ $task['id'] }})" />
+                                        @if($task['assigned_by'] === auth()->id() && $task['assigned_to'] !== auth()->id())
+                                            <x-action-button type="delete" size="xs" label="Withdraw" wire:click="withdrawTask({{ $task['id'] }})" wire:confirm="Withdraw this task?" />
+                                        @else
+                                            <x-action-button type="delete" size="xs" wire:click="deleteTask({{ $task['id'] }})" wire:confirm="Delete this task?" />
+                                        @endif
                                     @else
                                         <x-action-button type="clear" size="xs" label="Reopen" wire:click="uncompleteTask({{ $task['id'] }})" />
                                     @endif
-                                    <x-action-button type="delete" size="xs" wire:click="deleteTask({{ $task['id'] }})" wire:confirm="Delete this task?" />
                                 </div>
                             </td>
                         </tr>

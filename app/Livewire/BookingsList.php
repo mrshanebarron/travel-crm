@@ -28,7 +28,8 @@ class BookingsList extends Component
 
     public function mount()
     {
-        $this->status = request('status', '');
+        // Default to 'upcoming' status with closest bookings first
+        $this->status = request('status', 'upcoming');
         $this->travelers = [['first_name' => '', 'last_name' => '', 'email' => '', 'phone' => '', 'dob' => '']];
     }
 
@@ -153,11 +154,18 @@ class BookingsList extends Component
 
     public function getBookingsProperty()
     {
-        $query = Booking::with(['travelers', 'groups'])
-            ->orderBy('start_date', 'desc');
+        $query = Booking::with(['travelers', 'groups']);
 
         if ($this->status) {
             $query->where('status', $this->status);
+        }
+
+        // For upcoming bookings, show closest first (ascending)
+        // For other statuses, show most recent first (descending)
+        if ($this->status === 'upcoming') {
+            $query->orderBy('start_date', 'asc');
+        } else {
+            $query->orderBy('start_date', 'desc');
         }
 
         return $query->paginate(25);

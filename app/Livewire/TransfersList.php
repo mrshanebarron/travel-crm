@@ -27,7 +27,7 @@ class TransfersList extends Component
 
     public function render()
     {
-        $query = Transfer::with('expenses')
+        $query = Transfer::with(['expenses.booking.groups.travelers'])
             ->orderBy('request_date', 'desc');
 
         if ($this->status) {

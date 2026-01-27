@@ -59,6 +59,7 @@
                 <thead>
                     <tr>
                         <th>Transfer #</th>
+                        <th>Client(s)</th>
                         <th>Request Date</th>
                         <th>Status</th>
                         <th class="text-right">Amount</th>
@@ -73,6 +74,24 @@
                                 <a href="{{ route('transfers.show', $transfer) }}" class="text-orange-600 hover:text-orange-800 font-medium">
                                     {{ $transfer->transfer_number }}
                                 </a>
+                            </td>
+                            <td>
+                                @php
+                                    $clients = $transfer->expenses
+                                        ->pluck('booking')
+                                        ->filter()
+                                        ->unique('id')
+                                        ->map(fn($b) => $b->leadTraveler()?->last_name ?? $b->booking_number)
+                                        ->filter()
+                                        ->take(3);
+                                    $totalBookings = $transfer->expenses->pluck('booking')->filter()->unique('id')->count();
+                                @endphp
+                                <span class="text-slate-700">
+                                    {{ $clients->join(', ') }}
+                                    @if($totalBookings > 3)
+                                        <span class="text-slate-400">+{{ $totalBookings - 3 }} more</span>
+                                    @endif
+                                </span>
                             </td>
                             <td>
                                 <div class="flex items-center gap-2">
@@ -113,7 +132,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-500">
+                            <td colspan="7" class="py-12 text-center text-slate-500">
                                 No transfer requests found. <a href="{{ route('transfers.create') }}" class="text-orange-600 hover:text-orange-800">Create your first transfer</a>
                             </td>
                         </tr>

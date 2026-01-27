@@ -27,7 +27,9 @@ class TasksList extends Component
 
     public function mount()
     {
-        $this->filter = request('filter', 'open');
+        // Default to 'mine' for non-superadmins, 'open' (all tasks) for superadmin
+        $defaultFilter = auth()->user()->hasRole('super_admin') ? 'open' : 'mine';
+        $this->filter = request('filter', $defaultFilter);
         $this->selectedDate = request('selectedDate');
         $this->calendarMonth = now()->format('Y-m');
     }
@@ -109,7 +111,31 @@ class TasksList extends Component
 
     public function deleteTask(Task $task)
     {
+        // Prevent deleting completed tasks
+        if ($task->status === 'completed') {
+            session()->flash('error', 'Completed tasks cannot be deleted.');
+            return;
+        }
+
         $task->delete();
+    }
+
+    public function withdrawTask(Task $task)
+    {
+        // Only the person who assigned the task can withdraw it
+        if ($task->assigned_by !== auth()->id()) {
+            session()->flash('error', 'Only the person who assigned this task can withdraw it.');
+            return;
+        }
+
+        // Can't withdraw completed tasks
+        if ($task->status === 'completed') {
+            session()->flash('error', 'Completed tasks cannot be withdrawn.');
+            return;
+        }
+
+        $task->delete();
+        session()->flash('success', 'Task withdrawn successfully.');
     }
 
     public function openCreateModal()
@@ -255,10 +281,10 @@ class TasksList extends Component
             });
         }
 
-        // Sort by due date (overdue first, then today, then future)
+        // Sort by due date (most recent first - descending order)
         $tasks = $tasks->sortBy([
             fn ($a, $b) => ($b['is_overdue'] ?? false) <=> ($a['is_overdue'] ?? false),
-            fn ($a, $b) => ($a['due_date'] ?? '9999-99-99') <=> ($b['due_date'] ?? '9999-99-99'),
+            fn ($a, $b) => ($b['due_date'] ?? '0000-00-00') <=> ($a['due_date'] ?? '0000-00-00'),
         ])->values();
 
         return view('livewire.tasks-list', [
