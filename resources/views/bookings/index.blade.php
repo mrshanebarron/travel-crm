@@ -18,7 +18,7 @@
             <div class="p-6">
                 <p class="text-slate-600 mb-4">Upload a Safari Office PDF to automatically create a booking with travelers, itinerary, and rates.</p>
                 <form action="{{ route('bookings.create-from-pdf') }}" method="POST" enctype="multipart/form-data" 
-                      @submit="submitting = true" x-data="{ uploading: false }">
+                      @submit="submitting = true">
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-slate-700 mb-2">Safari Office PDF</label>
