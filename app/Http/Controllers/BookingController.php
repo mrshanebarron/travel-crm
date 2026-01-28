@@ -640,6 +640,8 @@ class BookingController extends Controller
      */
     public function createFromPdf(Request $request)
     {
+        \Log::info('PDF upload started', ['file' => $request->file('pdf')?->getClientOriginalName()]);
+        
         $this->authorize('create', Booking::class);
 
         $request->validate([
