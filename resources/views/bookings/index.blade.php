@@ -17,8 +17,7 @@
             </div>
             <div class="p-6">
                 <p class="text-slate-600 mb-4">Upload a Safari Office PDF to automatically create a booking with travelers, itinerary, and rates.</p>
-                <form action="{{ route('bookings.create-from-pdf') }}" method="POST" enctype="multipart/form-data" 
-                      @submit="submitting = true">
+                <form action="{{ route('bookings.create-from-pdf') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-slate-700 mb-2">Safari Office PDF</label>
@@ -28,15 +27,12 @@
                     </div>
                     <div class="flex justify-end gap-3">
                         <x-action-button type="cancel" @click="open = false" x-show="!submitting" />
-                        <button type="submit" :disabled="submitting"
+                        <button type="submit" onclick="console.log('Button clicked'); this.disabled = true; this.form.submit();"
                                 class="inline-flex items-center font-medium rounded border transition-colors text-sm py-1.5 px-3 gap-1.5 bg-orange-600 border-orange-600 text-white hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg x-show="submitting" class="animate-spin w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4V2m0 20v-2m8-8h2M2 12h2m15.364-6.364L19.778 4.222M4.222 19.778l1.414-1.414M19.778 19.778l-1.414-1.414M4.222 4.222l1.414 1.414" />
-                            </svg>
-                            <svg x-show="!submitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            <span x-text="submitting ? 'Creating...' : 'Create Booking'"></span>
+                            Create Booking
                         </button>
                     </div>
                 </form>
