@@ -105,7 +105,8 @@
                                             {{-- Not locked yet - show editable field --}}
                                             <div class="flex items-center gap-2 justify-end">
                                                 <span class="font-medium text-slate-900">${{ number_format($safariRate, 2) }}</span>
-                                                <button type="button" wire:click="startEditing({{ $payment->id }}, {{ $safariRate }})"
+                                                @can('modify_rates_payments')
+                                                    <button type="button" wire:click="startEditing({{ $payment->id }}, {{ $safariRate }})"
                                                     class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-orange-600 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
                                                     title="Click to edit rate">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,15 +114,20 @@
                                                     </svg>
                                                     Edit
                                                 </button>
+                                                @endcan
                                             </div>
                                         @endif
                                     @else
                                         {{-- No payment yet - show input to create --}}
-                                        <div x-data="{ rate: 0 }">
-                                            <input type="number" x-model="rate" step="0.01" min="0"
-                                                class="w-28 text-right rounded border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"
-                                                @change="if(rate > 0) $wire.createPayment({{ $traveler->id }}, rate)">
-                                        </div>
+                                        @can('modify_rates_payments')
+                                            <div x-data="{ rate: 0 }">
+                                                <input type="number" x-model="rate" step="0.01" min="0"
+                                                    class="w-28 text-right rounded border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"
+                                                    @change="if(rate > 0) $wire.createPayment({{ $traveler->id }}, rate)">
+                                            </div>
+                                        @else
+                                            <span class="text-slate-400 text-sm">-</span>
+                                        @endcan
                                     @endif
                                 </td>
                                 {{-- Add-ons column --}}
