@@ -39,6 +39,20 @@
                         @enderror
                     </div>
 
+                    <!-- Phone Number -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-slate-700 mb-2">WhatsApp Phone Number</label>
+                        <input type="tel" id="phone" name="phone" value="{{ old('phone', $user->phone) }}"
+                            class="form-input w-full rounded-lg border-slate-200 focus:border-orange-500 focus:ring-orange-500"
+                            placeholder="+1234567890">
+                        <p class="mt-1 text-xs text-slate-500">
+                            International format for WhatsApp notifications. Leave blank to disable notifications.
+                        </p>
+                        @error('phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Role -->
                     <div>
                         <label for="role" class="block text-sm font-medium text-slate-700 mb-2">Role</label>
