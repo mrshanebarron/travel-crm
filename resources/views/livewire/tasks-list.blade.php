@@ -118,7 +118,7 @@
                         <button wire:click="setFilter('open')" class="tab whitespace-nowrap {{ $filter === 'open' ? 'active' : '' }}">All Tasks ({{ $counts['open'] }})</button>
                     @endif
                     <button wire:click="setFilter('mine')" class="tab whitespace-nowrap {{ $filter === 'mine' ? 'active' : '' }}">My Tasks ({{ $counts['mine'] }})</button>
-                    <button wire:click="setFilter('assigned')" class="tab whitespace-nowrap {{ $filter === 'assigned' ? 'active' : '' }}">Tasks I Assigned ({{ $counts['assigned'] }})</button>
+                    <button wire:click="setFilter('assigned')" class="tab whitespace-nowrap {{ $filter === 'assigned' ? 'active' : '' }}">Tasks I assigned to others ({{ $counts['assigned'] }})</button>
                     <button wire:click="setFilter('overdue')" class="tab whitespace-nowrap {{ $filter === 'overdue' ? 'active' : '' }}">Overdue ({{ $counts['overdue'] }})</button>
                     <button wire:click="setFilter('completed')" class="tab whitespace-nowrap {{ $filter === 'completed' ? 'active' : '' }}">Done ({{ $counts['completed'] }})</button>
                 </div>

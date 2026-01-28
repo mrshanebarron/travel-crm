@@ -254,8 +254,8 @@ class TasksList extends Component
                     // Only show my tasks that are due today or overdue
                     return $task['assigned_to'] === $currentUserId && $task['status'] !== 'completed' && $isDueOrPast;
                 case 'assigned':
-                    // Tasks I assigned to others - also respect due date filter
-                    return $task['assigned_by'] === $currentUserId && $task['assigned_to'] !== $currentUserId && $task['status'] !== 'completed' && $isDueOrPast;
+                    // Tasks I assigned to others - show all, regardless of due date
+                    return $task['assigned_by'] === $currentUserId && $task['assigned_to'] !== $currentUserId && $task['status'] !== 'completed';
                 case 'overdue':
                     return $task['is_overdue'];
                 case 'completed':
@@ -298,7 +298,7 @@ class TasksList extends Component
                 // Counts reflect the same filtering logic - only due/past tasks for open/mine/assigned
                 'open' => $allTasks->where('status', '!=', 'completed')->where('is_future', false)->count(),
                 'mine' => $allTasks->where('assigned_to', $currentUserId)->where('status', '!=', 'completed')->where('is_future', false)->count(),
-                'assigned' => $allTasks->where('assigned_by', $currentUserId)->where('assigned_to', '!=', $currentUserId)->where('status', '!=', 'completed')->where('is_future', false)->count(),
+                'assigned' => $allTasks->where('assigned_by', $currentUserId)->where('assigned_to', '!=', $currentUserId)->where('status', '!=', 'completed')->count(),
                 'overdue' => $allTasks->where('is_overdue', true)->count(),
                 'completed' => $allTasks->where('status', 'completed')->count(),
             ],
