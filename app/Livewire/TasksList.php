@@ -259,7 +259,8 @@ class TasksList extends Component
                 case 'overdue':
                     return $task['is_overdue'];
                 case 'completed':
-                    return $task['status'] === 'completed';
+                    // Only show completed tasks that were assigned TO the current user
+                    return $task['status'] === 'completed' && $task['assigned_to'] === $currentUserId;
                 default:
                     return true;
             }
@@ -300,7 +301,7 @@ class TasksList extends Component
                 'mine' => $allTasks->where('assigned_to', $currentUserId)->where('status', '!=', 'completed')->where('is_future', false)->count(),
                 'assigned' => $allTasks->where('assigned_by', $currentUserId)->where('assigned_to', '!=', $currentUserId)->where('status', '!=', 'completed')->count(),
                 'overdue' => $allTasks->where('is_overdue', true)->count(),
-                'completed' => $allTasks->where('status', 'completed')->count(),
+                'completed' => $allTasks->where('status', 'completed')->where('assigned_to', $currentUserId)->count(),
             ],
         ]);
     }
