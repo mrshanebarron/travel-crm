@@ -341,11 +341,11 @@ class BookingController extends Controller
         $this->authorize('update', $booking);
 
         $request->validate([
-            'pdf' => 'required|file|mimes:pdf|max:50240',|            'pdf' => 'required|file|mimes:pdf|max:50240',|            'pdf' => 'required|file|mimes:pdf|max:50240',|            'pdf' => 'required|file|mimes:pdf|max:50240',
+            'pdf' => 'required|file|mimes:pdf|max:51200',
         ]);
 
         // Store the uploaded PDF
-        $path = $request->            'pdf' => 'required|file|mimes:pdf|max:50240',('pdf')->store('safari-pdfs', 'local');
+        $path = $request->file('pdf')->store('safari-pdfs', 'local');
         $fullPath = Storage::disk('local')->path($path);
 
         try {
@@ -357,10 +357,10 @@ class BookingController extends Controller
             $ratesAssigned = 0;
 
             if (empty($parsedDays) && empty(array_filter($extractedRates))) {
-                // Store             'pdf' => 'required|file|mimes:pdf|max:50240', as document for manual review
+                // Store file as document for manual review
                 $booking->documents()->create([
-                    'name' => $request->            'pdf' => 'required|file|mimes:pdf|max:50240',('pdf')->getClientOriginalName(),
-                    '            'pdf' => 'required|file|mimes:pdf|max:50240',_path' => $path,
+                    'name' => $request->file('pdf')->getClientOriginalName(),
+                    'file_path' => $path,
                     'category' => 'misc',
                     'uploaded_by' => auth()->id(),
                 ]);
@@ -373,7 +373,7 @@ class BookingController extends Controller
                 ]);
 
                 return redirect()->route('bookings.show', $booking)
-                    ->with('warning', 'PDF uploaded but we could not extract itinerary data automatically. The             'pdf' => 'required|file|mimes:pdf|max:50240', has been saved to Documents for manual review.');
+                    ->with('warning', 'PDF uploaded but we could not extract itinerary data automatically. The file has been saved to Documents for manual review.');
             }
 
             // Get existing safari days
@@ -453,8 +453,8 @@ class BookingController extends Controller
 
             // Store the PDF as a document
             $booking->documents()->create([
-                'name' => $request->            'pdf' => 'required|file|mimes:pdf|max:50240',('pdf')->getClientOriginalName(),
-                '            'pdf' => 'required|file|mimes:pdf|max:50240',_path' => $path,
+                'name' => $request->file('pdf')->getClientOriginalName(),
+                'file_path' => $path,
                 'category' => 'misc',
                 'uploaded_by' => auth()->id(),
             ]);
@@ -492,16 +492,16 @@ class BookingController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            // Still save the             'pdf' => 'required|file|mimes:pdf|max:50240', for manual review
+            // Still save the file for manual review
             $booking->documents()->create([
-                'name' => $request->            'pdf' => 'required|file|mimes:pdf|max:50240',('pdf')->getClientOriginalName(),
-                '            'pdf' => 'required|file|mimes:pdf|max:50240',_path' => $path,
+                'name' => $request->file('pdf')->getClientOriginalName(),
+                'file_path' => $path,
                 'category' => 'misc',
                 'uploaded_by' => auth()->id(),
             ]);
 
             return redirect()->route('bookings.show', $booking)
-                ->with('warning', 'There was an issue parsing the PDF automatically. The             'pdf' => 'required|file|mimes:pdf|max:50240', has been saved to Documents for manual review.');
+                ->with('warning', 'There was an issue parsing the PDF automatically. The file has been saved to Documents for manual review.');
         }
     }
 
@@ -640,16 +640,16 @@ class BookingController extends Controller
      */
     public function createFromPdf(Request $request)
     {
-        \Log::info('PDF upload started', ['            'pdf' => 'required|file|mimes:pdf|max:50240',' => $request->            'pdf' => 'required|file|mimes:pdf|max:50240',('pdf')?->getClientOriginalName()]);
+        \Log::info('PDF upload started', ['file' => $request->file('pdf')?->getClientOriginalName()]);
         
         $this->authorize('create', Booking::class);
 
         $request->validate([
-            'pdf' => 'required|file|mimes:pdf|max:50240',|            'pdf' => 'required|file|mimes:pdf|max:50240',|            'pdf' => 'required|file|mimes:pdf|max:50240',|            'pdf' => 'required|file|mimes:pdf|max:50240',
+            'pdf' => 'required|file|mimes:pdf|max:51200',
         ]);
 
         // Store the uploaded PDF temporarily
-        $path = $request->            'pdf' => 'required|file|mimes:pdf|max:50240',('pdf')->store('safari-pdfs', 'local');
+        $path = $request->file('pdf')->store('safari-pdfs', 'local');
         $fullPath = Storage::disk('local')->path($path);
 
         try {
@@ -781,8 +781,8 @@ class BookingController extends Controller
 
                 // Store the PDF as a document
                 $booking->documents()->create([
-                    'name' => $request->            'pdf' => 'required|file|mimes:pdf|max:50240',('pdf')->getClientOriginalName(),
-                    '            'pdf' => 'required|file|mimes:pdf|max:50240',_path' => $path,
+                    'name' => $request->file('pdf')->getClientOriginalName(),
+                    'file_path' => $path,
                     'category' => 'misc',
                     'uploaded_by' => auth()->id(),
                 ]);
