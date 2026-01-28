@@ -317,6 +317,9 @@
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">{{ $day->drink_plan }}</span>
                                                     @endif
                                                 </div>
+                                                @if(auth()->user()->isSuperAdmin())
+                                                    <button onclick="openEditDayModal({{ $day->id }})" class="text-xs text-orange-600 hover:text-orange-800 mt-1">Edit</button>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
@@ -1219,6 +1222,50 @@
         </div>
     </div>
 
+    <!-- Edit Day Modal -->
+    <div id="edit-day-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Edit Safari Day</h3>
+            <form id="edit-day-form" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Location *</label>
+                        <input type="text" id="edit-day-location" name="location" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Lodge</label>
+                        <input type="text" id="edit-day-lodge" name="lodge" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Meal Plan</label>
+                        <select id="edit-day-meal-plan" name="meal_plan" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">None</option>
+                            <option value="BB">BB (Bed & Breakfast)</option>
+                            <option value="HB">HB (Half Board)</option>
+                            <option value="FB">FB (Full Board)</option>
+                            <option value="AI">AI (All Inclusive)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Drink Plan</label>
+                        <select id="edit-day-drink-plan" name="drink_plan" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">None</option>
+                            <option value="Local Drinks">Local Drinks</option>
+                            <option value="Premium Drinks">Premium Drinks</option>
+                            <option value="All Drinks">All Drinks</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <x-action-button type="cancel" onclick="document.getElementById('edit-day-modal').classList.add('hidden')" />
+                    <x-action-button type="save" label="Save Changes" :submit="true" />
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Rate Edit show/hide functions
         function showRateEdit(paymentId) {
@@ -1348,6 +1395,41 @@
             document.getElementById('edit-traveler-dob').value = dob || '';
             document.getElementById('edit-traveler-is-lead').checked = isLead;
             document.getElementById('edit-traveler-modal').classList.remove('hidden');
+        }
+
+        // Edit Day Modal
+        function openEditDayModal(dayId) {
+            // Find the day data from the page
+            const dayRow = document.querySelector(`tr[data-day-id="${dayId}"]`);
+            if (!dayRow) {
+                // Fallback: find by Safari day data in the page
+                const allDays = @json($booking->safariDays->map(function($day) {
+                    return [
+                        'id' => $day->id,
+                        'location' => $day->location,
+                        'lodge' => $day->lodge,
+                        'meal_plan' => $day->meal_plan,
+                        'drink_plan' => $day->drink_plan,
+                    ];
+                }));
+
+                const dayData = allDays.find(day => day.id === dayId);
+                if (dayData) {
+                    populateEditDayModal(dayId, dayData);
+                }
+            }
+        }
+
+        function populateEditDayModal(dayId, dayData) {
+            const form = document.getElementById('edit-day-form');
+            form.action = `/safari-days/${dayId}`;
+
+            document.getElementById('edit-day-location').value = dayData.location || '';
+            document.getElementById('edit-day-lodge').value = dayData.lodge || '';
+            document.getElementById('edit-day-meal-plan').value = dayData.meal_plan || '';
+            document.getElementById('edit-day-drink-plan').value = dayData.drink_plan || '';
+
+            document.getElementById('edit-day-modal').classList.remove('hidden');
         }
 
         // Add Flight Modal
