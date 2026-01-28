@@ -69,6 +69,12 @@
                 </svg>
                 <span>Safari Plan</span>
             </button>
+            <button class="tab flex items-center gap-2" data-tab="guides-drivers">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Guides & Drivers</span>
+            </button>
             @can('view_financial_data')
             <button class="tab flex items-center gap-2" data-tab="payment-details">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -437,6 +443,57 @@
                     </svg>
                     <p>No safari itinerary added yet</p>
                     <p class="text-sm">Import a Safari Office PDF to populate the itinerary</p>
+                </div>
+            @endif
+        </div>
+
+        <!-- Guides and Drivers Tab -->
+        <div class="tab-content p-6" id="guides-drivers">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-semibold text-slate-900">Guides & Drivers</h2>
+                <x-action-button type="add" size="sm" label="Add Guide/Driver" onclick="openAddGuideModal()" />
+            </div>
+
+            @if($booking->guides && count($booking->guides) > 0)
+                <div class="space-y-4">
+                    @foreach($booking->guides as $index => $guide)
+                        <div class="bg-slate-50 rounded-lg border border-slate-200 p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-medium text-slate-900">{{ $guide['name'] ?? 'Unnamed' }}</h3>
+                                        <p class="text-sm text-slate-600">{{ $guide['role'] ?? 'No role specified' }}</p>
+                                        @if(!empty($guide['phone']))
+                                            <p class="text-sm text-slate-500 mt-1">{{ $guide['phone'] }}</p>
+                                        @endif
+                                        @if(!empty($guide['email']))
+                                            <p class="text-sm text-slate-500">{{ $guide['email'] }}</p>
+                                        @endif
+                                        @if(!empty($guide['notes']))
+                                            <p class="text-sm text-slate-600 mt-2">{{ $guide['notes'] }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <x-action-button type="edit" size="xs" onclick="openEditGuideModal({{ $index }}, '{{ addslashes($guide['name'] ?? '') }}', '{{ addslashes($guide['role'] ?? '') }}', '{{ addslashes($guide['phone'] ?? '') }}', '{{ addslashes($guide['email'] ?? '') }}', '{{ addslashes($guide['notes'] ?? '') }}')" />
+                                    <x-action-button type="delete" size="xs" onclick="deleteGuide({{ $index }})" />
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-12 text-slate-500">
+                    <svg class="mx-auto mb-4 text-slate-300" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <p>No guides or drivers assigned yet</p>
+                    <p class="text-sm">Add team members who will be working on this safari</p>
                 </div>
             @endif
         </div>
@@ -1266,6 +1323,99 @@
         </div>
     </div>
 
+    <!-- Add Guide Modal -->
+    <div id="add-guide-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Add Guide/Driver</h3>
+            <form id="add-guide-form" method="POST" action="{{ route('bookings.update', $booking) }}">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="action" value="add_guide">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Name *</label>
+                        <input type="text" name="name" required class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Role *</label>
+                        <select name="role" required class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">Select Role</option>
+                            <option value="Safari Guide">Safari Guide</option>
+                            <option value="Driver">Driver</option>
+                            <option value="Driver-Guide">Driver-Guide</option>
+                            <option value="Camp Manager">Camp Manager</option>
+                            <option value="Tracker">Tracker</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Phone</label>
+                        <input type="text" name="phone" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</label>
+                        <input type="email" name="email" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes</label>
+                        <textarea name="notes" rows="2" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <x-action-button type="cancel" onclick="document.getElementById('add-guide-modal').classList.add('hidden')" />
+                    <x-action-button type="add" label="Add Guide/Driver" :submit="true" />
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Guide Modal -->
+    <div id="edit-guide-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Edit Guide/Driver</h3>
+            <form id="edit-guide-form" method="POST" action="{{ route('bookings.update', $booking) }}">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="action" value="edit_guide">
+                <input type="hidden" id="edit-guide-index" name="guide_index">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Name *</label>
+                        <input type="text" id="edit-guide-name" name="name" required class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Role *</label>
+                        <select id="edit-guide-role" name="role" required class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">Select Role</option>
+                            <option value="Safari Guide">Safari Guide</option>
+                            <option value="Driver">Driver</option>
+                            <option value="Driver-Guide">Driver-Guide</option>
+                            <option value="Camp Manager">Camp Manager</option>
+                            <option value="Tracker">Tracker</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Phone</label>
+                        <input type="text" id="edit-guide-phone" name="phone" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</label>
+                        <input type="email" id="edit-guide-email" name="email" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-500 uppercase tracking-wide">Notes</label>
+                        <textarea id="edit-guide-notes" name="notes" rows="2" class="w-full rounded-lg border-slate-300 text-sm focus:border-orange-500 focus:ring-orange-500"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <x-action-button type="cancel" onclick="document.getElementById('edit-guide-modal').classList.add('hidden')" />
+                    <x-action-button type="save" label="Save Changes" :submit="true" />
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Rate Edit show/hide functions
         function showRateEdit(paymentId) {
@@ -1430,6 +1580,59 @@
             document.getElementById('edit-day-drink-plan').value = dayData.drink_plan || '';
 
             document.getElementById('edit-day-modal').classList.remove('hidden');
+        }
+
+        // Guide Modal Functions
+        function openAddGuideModal() {
+            document.getElementById('add-guide-modal').classList.remove('hidden');
+        }
+
+        function openEditGuideModal(guideIndex, name, role, phone, email, notes) {
+            document.getElementById('edit-guide-index').value = guideIndex;
+            document.getElementById('edit-guide-name').value = name || '';
+            document.getElementById('edit-guide-role').value = role || '';
+            document.getElementById('edit-guide-phone').value = phone || '';
+            document.getElementById('edit-guide-email').value = email || '';
+            document.getElementById('edit-guide-notes').value = notes || '';
+
+            document.getElementById('edit-guide-modal').classList.remove('hidden');
+        }
+
+        function deleteGuide(guideIndex) {
+            if (confirm('Are you sure you want to remove this guide/driver?')) {
+                // Create a form to submit the delete request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route("bookings.update", $booking) }}';
+                form.style.display = 'none';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'PATCH';
+
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete_guide';
+
+                const indexInput = document.createElement('input');
+                indexInput.type = 'hidden';
+                indexInput.name = 'guide_index';
+                indexInput.value = guideIndex;
+
+                form.appendChild(csrfInput);
+                form.appendChild(methodInput);
+                form.appendChild(actionInput);
+                form.appendChild(indexInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
 
         // Add Flight Modal

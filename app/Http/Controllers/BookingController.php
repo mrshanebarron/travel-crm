@@ -131,6 +131,11 @@ class BookingController extends Controller
     {
         $this->authorize('update', $booking);
 
+        // Handle guide-specific actions
+        if ($request->has('action')) {
+            return $this->handleGuideAction($request, $booking);
+        }
+
         $validated = $request->validate([
             'country' => 'required|string|max:255',
             'start_date' => 'required|date',
@@ -256,6 +261,69 @@ class BookingController extends Controller
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Booking updated successfully.');
+    }
+
+    private function handleGuideAction(Request $request, Booking $booking)
+    {
+        $action = $request->input('action');
+        $guides = $booking->guides ?? [];
+
+        switch ($action) {
+            case 'add_guide':
+                $validated = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'role' => 'required|string|max:255',
+                    'phone' => 'nullable|string|max:255',
+                    'email' => 'nullable|email|max:255',
+                    'notes' => 'nullable|string|max:1000',
+                ]);
+
+                $guides[] = $validated;
+                $booking->update(['guides' => $guides]);
+
+                return redirect()->route('bookings.show', ['booking' => $booking, 'tab' => 'guides-drivers'])
+                    ->with('success', 'Guide/Driver added successfully.');
+
+            case 'edit_guide':
+                $validated = $request->validate([
+                    'guide_index' => 'required|integer|min:0',
+                    'name' => 'required|string|max:255',
+                    'role' => 'required|string|max:255',
+                    'phone' => 'nullable|string|max:255',
+                    'email' => 'nullable|email|max:255',
+                    'notes' => 'nullable|string|max:1000',
+                ]);
+
+                $index = $validated['guide_index'];
+                if (isset($guides[$index])) {
+                    $guides[$index] = [
+                        'name' => $validated['name'],
+                        'role' => $validated['role'],
+                        'phone' => $validated['phone'],
+                        'email' => $validated['email'],
+                        'notes' => $validated['notes'],
+                    ];
+                    $booking->update(['guides' => $guides]);
+
+                    return redirect()->route('bookings.show', ['booking' => $booking, 'tab' => 'guides-drivers'])
+                        ->with('success', 'Guide/Driver updated successfully.');
+                }
+                break;
+
+            case 'delete_guide':
+                $index = $request->input('guide_index');
+                if (isset($guides[$index])) {
+                    array_splice($guides, $index, 1);
+                    $booking->update(['guides' => $guides]);
+
+                    return redirect()->route('bookings.show', ['booking' => $booking, 'tab' => 'guides-drivers'])
+                        ->with('success', 'Guide/Driver removed successfully.');
+                }
+                break;
+        }
+
+        return redirect()->route('bookings.show', $booking)
+            ->with('error', 'Invalid guide action.');
     }
 
     public function destroy(Booking $booking)
