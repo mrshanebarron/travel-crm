@@ -603,8 +603,12 @@ class BookingController extends Controller
             $assignedAt = null;
             if (!empty($taskData['assigned_to_name'])) {
                 $memberName = $taskData['assigned_to_name'];
-                // Try to find user by name (case-insensitive partial match)
-                $assignedTo = User::where('name', 'like', "%{$memberName}%")->first()?->id;
+                // Try multiple lookup strategies for better matching
+                $user = User::where('name', 'like', "%{$memberName}%")->first()
+                    ?? User::whereRaw('LOWER(name) = ?', [strtolower($memberName)])->first()
+                    ?? User::where('email', 'like', "%{$memberName}%")->first();
+
+                $assignedTo = $user?->id;
 
                 // Only assign immediately if this is an on_create task
                 if (!empty($taskData['on_create']) && $assignedTo) {
