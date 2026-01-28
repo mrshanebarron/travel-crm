@@ -153,4 +153,85 @@ class TwilioService
             ];
         }
     }
+
+    /**
+     * Send opt-in request message to a user
+     */
+    public function sendOptInRequest(User $user): array
+    {
+        if (empty($user->phone)) {
+            return [
+                'success' => false,
+                'error' => 'User does not have a phone number'
+            ];
+        }
+
+        try {
+            $message = "👋 *Welcome to Tapestry of Africa Task Notifications*\n\n";
+            $message .= "You'll receive WhatsApp notifications when tasks are assigned to you.\n\n";
+            $message .= "Reply with *YES* to confirm you want to receive notifications, or *STOP* to opt out.";
+
+            $twilioMessage = $this->client->messages->create(
+                $this->formatWhatsAppNumber($user->phone),
+                [
+                    'from' => 'whatsapp:' . $this->fromNumber,
+                    'body' => $message
+                ]
+            );
+
+            // Mark user as having been sent opt-in request
+            $user->update(['whatsapp_opt_in_sent_at' => now()]);
+
+            return [
+                'success' => true,
+                'message_sid' => $twilioMessage->sid,
+                'status' => $twilioMessage->status
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Twilio opt-in request failed', [
+                'user_id' => $user->id,
+                'phone' => $user->phone,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Send opt-in requests to all users with phone numbers who haven't been contacted
+     */
+    public function sendBulkOptInRequests(): array
+    {
+        $users = User::whereNotNull('phone')
+            ->whereNull('whatsapp_opt_in_sent_at')
+            ->get();
+
+        $results = [
+            'total' => $users->count(),
+            'sent' => 0,
+            'failed' => 0,
+            'errors' => []
+        ];
+
+        foreach ($users as $user) {
+            $result = $this->sendOptInRequest($user);
+
+            if ($result['success']) {
+                $results['sent']++;
+            } else {
+                $results['failed']++;
+                $results['errors'][] = "Failed for {$user->name}: {$result['error']}";
+            }
+
+            // Small delay to avoid rate limits
+            usleep(500000); // 0.5 second delay
+        }
+
+        return $results;
+    }
 }
