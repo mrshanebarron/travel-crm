@@ -144,6 +144,8 @@ class BookingController extends Controller
             'guides' => 'nullable|array',
             'guides.*.country' => 'nullable|string|max:255',
             'guides.*.name' => 'nullable|string|max:255',
+            'guides.*.from_date' => 'nullable|date',
+            'guides.*.to_date' => 'nullable|date|after_or_equal:guides.*.from_date',
             'travelers' => 'sometimes|array',
             'travelers.*.id' => 'nullable|exists:travelers,id',
             'travelers.*.first_name' => 'required|string|max:255',
@@ -161,11 +163,16 @@ class BookingController extends Controller
             $startDateChanged = !$oldStartDate->equalTo($newStartDate);
             $endDateChanged = !$oldEndDate->equalTo($newEndDate);
 
-            // Convert guides from [{country, name}, ...] to {country: name} format
+            // Store guides in new format with dates
             $guidesData = [];
             foreach ($validated['guides'] ?? [] as $guide) {
                 if (!empty($guide['country']) && !empty($guide['name'])) {
-                    $guidesData[$guide['country']] = $guide['name'];
+                    $guidesData[] = [
+                        'country' => $guide['country'],
+                        'name' => $guide['name'],
+                        'from_date' => $guide['from_date'] ?? null,
+                        'to_date' => $guide['to_date'] ?? null,
+                    ];
                 }
             }
 
@@ -621,13 +628,15 @@ class BookingController extends Controller
 
             $booking->tasks()->create([
                 'name' => $taskData['name'],
-                'status' => 'pending',
+                'status' => !empty($taskData['auto_complete']) ? 'completed' : 'pending',
                 'due_date' => $dueDate,
                 'days_before_safari' => $taskData['days_before'] ?? null,
                 'timing_description' => $taskData['timing_description'] ?? null,
                 'assigned_to' => $assignedTo,
                 'assigned_at' => $assignedAt,
                 'assigned_by' => $assignedTo ? auth()->id() : null,
+                'completed_at' => !empty($taskData['auto_complete']) ? now() : null,
+                'completed_by' => !empty($taskData['auto_complete']) ? auth()->id() : null,
                 // Store who should be assigned for later assignment
                 'intended_assignee' => $taskData['assigned_to_name'] ?? null,
             ]);

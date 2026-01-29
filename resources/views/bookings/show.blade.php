@@ -35,8 +35,12 @@
                 @if(!empty($booking->guides))
                     <p class="text-sm text-slate-400 mt-1">
                         Guides:
-                        @foreach($booking->guides as $country => $guide)
-                            <span class="text-slate-600">{{ $country }}: {{ $guide }}</span>@if(!$loop->last), @endif
+                        @foreach($booking->guides as $guide)
+                            @if(is_array($guide))
+                                <span class="text-slate-600">{{ $guide['country'] ?? '' }}: {{ $guide['name'] ?? '' }}</span>@if(!$loop->last), @endif
+                            @else
+                                <span class="text-slate-600">{{ $loop->index }}: {{ $guide }}</span>@if(!$loop->last), @endif
+                            @endif
                         @endforeach
                     </p>
                 @endif
@@ -466,16 +470,34 @@
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 class="font-medium text-slate-900">{{ $guide['name'] ?? 'Unnamed' }}</h3>
-                                        <p class="text-sm text-slate-600">{{ $guide['role'] ?? 'No role specified' }}</p>
-                                        @if(!empty($guide['phone']))
-                                            <p class="text-sm text-slate-500 mt-1">{{ $guide['phone'] }}</p>
-                                        @endif
-                                        @if(!empty($guide['email']))
-                                            <p class="text-sm text-slate-500">{{ $guide['email'] }}</p>
-                                        @endif
-                                        @if(!empty($guide['notes']))
-                                            <p class="text-sm text-slate-600 mt-2">{{ $guide['notes'] }}</p>
+                                        @if(is_array($guide))
+                                            <h3 class="font-medium text-slate-900">{{ $guide['name'] ?? 'Unnamed' }}</h3>
+                                            <p class="text-sm text-slate-600">{{ $guide['country'] ?? 'No country specified' }}</p>
+                                            @if(!empty($guide['from_date']) || !empty($guide['to_date']))
+                                                <p class="text-sm text-slate-500 mt-1">
+                                                    @if(!empty($guide['from_date']))
+                                                        {{ \Carbon\Carbon::parse($guide['from_date'])->format('M j, Y') }}
+                                                    @endif
+                                                    @if(!empty($guide['from_date']) && !empty($guide['to_date']))
+                                                        -
+                                                    @endif
+                                                    @if(!empty($guide['to_date']))
+                                                        {{ \Carbon\Carbon::parse($guide['to_date'])->format('M j, Y') }}
+                                                    @endif
+                                                </p>
+                                            @endif
+                                            @if(!empty($guide['phone']))
+                                                <p class="text-sm text-slate-500 mt-1">{{ $guide['phone'] }}</p>
+                                            @endif
+                                            @if(!empty($guide['email']))
+                                                <p class="text-sm text-slate-500">{{ $guide['email'] }}</p>
+                                            @endif
+                                            @if(!empty($guide['notes']))
+                                                <p class="text-sm text-slate-600 mt-2">{{ $guide['notes'] }}</p>
+                                            @endif
+                                        @else
+                                            <h3 class="font-medium text-slate-900">{{ $guide }}</h3>
+                                            <p class="text-sm text-slate-600">Legacy format</p>
                                         @endif
                                     </div>
                                 </div>

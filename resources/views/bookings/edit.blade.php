@@ -89,33 +89,82 @@
                         </template>
 
                         <template x-for="(guide, index) in guides" :key="index">
-                            <div class="flex flex-col sm:flex-row gap-3 mb-3">
-                                <div class="sm:w-1/3">
-                                    <select :name="'guides[' + index + '][country]'" x-model="guide.country"
-                                        class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
-                                        <option value="">Select Country</option>
-                                        <option value="Kenya">Kenya</option>
-                                        <option value="Tanzania">Tanzania</option>
-                                        <option value="Uganda">Uganda</option>
-                                        <option value="Rwanda">Rwanda</option>
-                                        <option value="Botswana">Botswana</option>
-                                        <option value="South Africa">South Africa</option>
-                                        <option value="Namibia">Namibia</option>
-                                        <option value="Zimbabwe">Zimbabwe</option>
-                                        <option value="Zambia">Zambia</option>
-                                    </select>
+                            <div class="p-4 border border-slate-200 rounded-lg mb-3">
+                                <div class="flex flex-col lg:flex-row gap-3">
+                                    <!-- Country Selection -->
+                                    <div class="lg:w-1/4">
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Country</label>
+                                        <select :name="'guides[' + index + '][country]'" x-model="guide.country" @change="updateGuideOptions(index)"
+                                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                                            <option value="">Select Country</option>
+                                            <option value="Kenya">Kenya</option>
+                                            <option value="Tanzania">Tanzania</option>
+                                            <option value="Uganda">Uganda</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Guide Selection -->
+                                    <div class="lg:w-1/4">
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Guide</label>
+                                        <select :name="'guides[' + index + '][name]'" x-model="guide.name"
+                                            class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                                            <option value="">Select Guide</option>
+                                            <template x-if="guide.country === 'Kenya'">
+                                                <optgroup label="Kenya Guides">
+                                                    <option value="Sammy">Sammy</option>
+                                                    <option value="George">George</option>
+                                                    <option value="Vincent">Vincent</option>
+                                                    <option value="Joseph">Joseph</option>
+                                                    <option value="Kim">Kim</option>
+                                                    <option value="Wanderi">Wanderi</option>
+                                                    <option value="Boniface">Boniface</option>
+                                                    <option value="Moses">Moses</option>
+                                                </optgroup>
+                                            </template>
+                                            <template x-if="guide.country === 'Tanzania'">
+                                                <optgroup label="Tanzania Guides">
+                                                    <option value="Yuda">Yuda</option>
+                                                    <option value="Josephat">Josephat</option>
+                                                    <option value="Vincent">Vincent</option>
+                                                    <option value="Ernest">Ernest</option>
+                                                    <option value="Eddie">Eddie</option>
+                                                    <option value="Andrew">Andrew</option>
+                                                    <option value="Amos">Amos</option>
+                                                    <option value="Tony">Tony</option>
+                                                </optgroup>
+                                            </template>
+                                            <template x-if="guide.country === 'Uganda'">
+                                                <optgroup label="Uganda Guides">
+                                                    <option value="Francis">Francis</option>
+                                                </optgroup>
+                                            </template>
+                                        </select>
+                                    </div>
+
+                                    <!-- Date Range -->
+                                    <div class="lg:w-1/3 flex gap-2">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-medium text-slate-700 mb-1">From Date</label>
+                                            <input type="date" :name="'guides[' + index + '][from_date]'" x-model="guide.from_date"
+                                                class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-medium text-slate-700 mb-1">To Date</label>
+                                            <input type="date" :name="'guides[' + index + '][to_date]'" x-model="guide.to_date"
+                                                class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
+                                        </div>
+                                    </div>
+
+                                    <!-- Remove Button -->
+                                    <div class="lg:w-auto flex items-end">
+                                        <button type="button" @click="removeGuide(index)"
+                                            class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="flex-1">
-                                    <input type="text" :name="'guides[' + index + '][name]'" x-model="guide.name"
-                                        placeholder="Guide name"
-                                        class="w-full rounded-lg border-slate-300 focus:border-orange-500 focus:ring-orange-500 text-sm">
-                                </div>
-                                <button type="button" @click="removeGuide(index)"
-                                    class="text-red-500 hover:text-red-700 p-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
                             </div>
                         </template>
                     </div>
@@ -213,9 +262,19 @@
             ];
         })->values();
 
-        // Convert guides array to country/name pairs for the form
-        $guidesJson = collect($booking->guides ?? [])->map(function($name, $country) {
-            return ['country' => $country, 'name' => $name];
+        // Convert guides array for the form (handle both old and new formats)
+        $guidesJson = collect($booking->guides ?? [])->map(function($guide, $key) {
+            // If it's the old format (country => name), convert to new format
+            if (is_string($guide)) {
+                return ['country' => $key, 'name' => $guide, 'from_date' => '', 'to_date' => ''];
+            }
+            // If it's already new format, ensure all fields are present
+            return [
+                'country' => $guide['country'] ?? '',
+                'name' => $guide['name'] ?? '',
+                'from_date' => $guide['from_date'] ?? '',
+                'to_date' => $guide['to_date'] ?? '',
+            ];
         })->values();
     @endphp
     <script>
@@ -235,10 +294,14 @@
             return {
                 guides: @json($guidesJson),
                 addGuide() {
-                    this.guides.push({ country: '', name: '' });
+                    this.guides.push({ country: '', name: '', from_date: '', to_date: '' });
                 },
                 removeGuide(index) {
                     this.guides.splice(index, 1);
+                },
+                updateGuideOptions(index) {
+                    // Clear guide name when country changes
+                    this.guides[index].name = '';
                 }
             }
         }

@@ -29,14 +29,15 @@ return [
     'default_tasks' => [
         // === BOOKING CREATION TASKS (Immediately upon booking) ===
         [
-            'name' => 'Deposit Received',
+            'name' => 'Booking Created and Deposit received',
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Matt',
             'timing_description' => 'Immediately upon booking',
+            'auto_complete' => true, // This task is auto-completed when booking is created
         ],
         [
-            'name' => 'Receipt of Deposit email sent',
+            'name' => 'Safari Essentials Activated',
             'days_before' => null,
             'on_create' => true,
             'assigned_to_name' => 'Matt',
@@ -50,17 +51,10 @@ return [
             'timing_description' => 'Immediately upon booking',
         ],
         [
-            'name' => 'Safari Essential Email Series Activated',
-            'days_before' => null,
-            'on_create' => true,
-            'assigned_to_name' => 'Albert',
-            'timing_description' => 'Immediately upon booking',
-        ],
-        [
             'name' => 'Safari Guides assigned',
             'days_before' => null,
             'on_create' => true,
-            'assigned_to_name' => 'Hilda',
+            'assigned_to_name' => 'Albert',
             'timing_description' => 'Immediately upon booking',
         ],
         [
@@ -113,12 +107,6 @@ return [
             'days_before' => 5,
             'assigned_to_name' => 'Peter',
             'timing_description' => '5 days before safari',
-        ],
-        [
-            'name' => 'Welcome communication sent within 1-2 weeks before arrival',
-            'days_before' => 14, // 1-2 weeks before, using 14 days
-            'assigned_to_name' => 'Albert',
-            'timing_description' => '1-2 weeks before arrival',
         ],
 
         // === SAFARI START DAY ===
