@@ -142,6 +142,7 @@
                         <div class="flex items-start justify-between gap-3 mb-2">
                             <div class="min-w-0">
                                 <p class="font-semibold text-slate-900">{{ $task['name'] }}</p>
+                                <p class="text-sm text-slate-700 font-medium">{{ $task['client_name'] }}</p>
                                 <p class="text-sm text-orange-600 font-medium">{{ $task['booking_number'] }}</p>
                             </div>
                             @if($task['status'] === 'pending')
@@ -209,6 +210,7 @@
                 <thead>
                     <tr>
                         <th>Task</th>
+                        <th>Client</th>
                         <th>Booking</th>
                         <th>Due Date</th>
                         <th>Status</th>
@@ -224,6 +226,9 @@
                                 @if($task['description'])
                                     <div class="text-sm text-slate-500">{{ Str::limit($task['description'], 60) }}</div>
                                 @endif
+                            </td>
+                            <td>
+                                <span class="text-slate-700 font-medium">{{ $task['client_name'] }}</span>
                             </td>
                             <td>
                                 <span class="text-orange-600 font-medium">{{ $task['booking_number'] }}</span>
@@ -282,7 +287,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-500">
+                            <td colspan="7" class="py-12 text-center text-slate-500">
                                 No tasks found
                             </td>
                         </tr>

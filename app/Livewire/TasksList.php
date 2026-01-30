@@ -181,7 +181,9 @@ class TasksList extends Component
     public function render()
     {
         // Get ALL assigned tasks (not filtered by date - calendar shows full picture)
-        $query = Task::with(['booking', 'assignedTo', 'transfer'])
+        $query = Task::with(['booking.travelers' => function($query) {
+                $query->where('is_lead', true);
+            }, 'assignedTo', 'transfer'])
             ->where(function ($q) {
                 $q->whereNotNull('assigned_to')  // Has an assignment
                   ->orWhere('status', 'completed');  // Or is completed
@@ -203,6 +205,7 @@ class TasksList extends Component
                 'is_future' => $task->due_date && $task->due_date->isFuture(),
                 'booking_id' => $task->booking_id,
                 'booking_number' => $task->booking?->booking_number ?? ($task->transfer ? $task->transfer->transfer_number : 'N/A'),
+                'client_name' => $task->booking?->leadTraveler()?->first_name . ' ' . $task->booking?->leadTraveler()?->last_name ?? 'N/A',
                 'transfer_id' => $task->transfer_id,
                 'assigned_to' => $task->assigned_to,
                 'assigned_to_name' => $task->assignedTo?->name,
@@ -278,6 +281,7 @@ class TasksList extends Component
                 return str_contains(strtolower($task['name']), $searchLower) ||
                     str_contains(strtolower($task['description'] ?? ''), $searchLower) ||
                     str_contains(strtolower($task['booking_number']), $searchLower) ||
+                    str_contains(strtolower($task['client_name'] ?? ''), $searchLower) ||
                     str_contains(strtolower($task['assigned_to_name'] ?? ''), $searchLower);
             });
         }
