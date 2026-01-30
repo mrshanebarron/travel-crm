@@ -191,6 +191,9 @@ class TasksList extends Component
         $currentUserId = auth()->id();
 
         $allTasks = $query->get()->map(function ($task) use ($currentUserId) {
+            // Get lead traveler once to avoid multiple calls
+            $leadTraveler = $task->booking?->leadTraveler();
+
             return [
                 'id' => $task->id,
                 'name' => $task->name,
@@ -203,8 +206,8 @@ class TasksList extends Component
                 'is_future' => $task->due_date && $task->due_date->isFuture(),
                 'booking_id' => $task->booking_id,
                 'booking_number' => $task->booking?->booking_number ?? ($task->transfer ? $task->transfer->transfer_number : 'N/A'),
-                'client_name' => $task->booking?->leadTraveler()
-                    ? trim($task->booking->leadTraveler()->first_name . ' ' . $task->booking->leadTraveler()->last_name)
+                'client_name' => $leadTraveler
+                    ? trim($leadTraveler->first_name . ' ' . $leadTraveler->last_name)
                     : 'N/A',
                 'transfer_id' => $task->transfer_id,
                 'assigned_to' => $task->assigned_to,
