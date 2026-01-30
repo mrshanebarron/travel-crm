@@ -1,6 +1,6 @@
 <x-app-layout>
     @php
-        $leadTraveler = $booking->groups->flatMap->travelers->firstWhere('is_lead', true);
+        $leadTraveler = $booking->leadTraveler();
     @endphp
 
     <!-- Persistent Booking Header - Shows on all tabs -->
