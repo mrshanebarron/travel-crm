@@ -622,7 +622,120 @@ class SafariPdfParser
         if (strlen($text) < 3) {
             return null;
         }
-        return $text;
+
+        // Apply intelligent parsing using trigger words
+        return $this->parseActivityWithTriggerWords($text);
+    }
+
+    /**
+     * Parse activity text using trigger words to create concise descriptions.
+     * Example: "It's time for a guided game drive through beautiful Lake Nakuru National Park..."
+     * becomes "Guided Game Drive-Lake Nakuru National Park"
+     */
+    protected function parseActivityWithTriggerWords(string $text): string
+    {
+        // Define trigger words for different activity types
+        $activityTriggers = [
+            'guided game drive' => 'Guided Game Drive',
+            'game drive' => 'Game Drive',
+            'safari drive' => 'Safari Drive',
+            'scenic drive' => 'Scenic Drive',
+            'transfer' => 'Transfer',
+            'airport transfer' => 'Airport Transfer',
+            'check.?in' => 'Check-in',
+            'check.?out' => 'Check-out',
+            'arrival' => 'Arrival',
+            'departure' => 'Departure',
+            'flight' => 'Flight',
+            'balloon safari' => 'Balloon Safari',
+            'hot air balloon' => 'Hot Air Balloon Safari',
+            'walking safari' => 'Walking Safari',
+            'night drive' => 'Night Drive',
+            'cultural visit' => 'Cultural Visit',
+            'village visit' => 'Village Visit',
+            'masai village' => 'Masai Village Visit',
+            'lunch' => 'Lunch',
+            'dinner' => 'Dinner',
+            'breakfast' => 'Breakfast',
+            'sundowner' => 'Sundowner',
+            'sunset' => 'Sunset',
+            'sunrise' => 'Sunrise',
+            'rest' => 'Rest',
+            'relaxation' => 'Relaxation',
+            'spa' => 'Spa',
+            'swimming' => 'Swimming',
+            'pool' => 'Pool Time',
+            'beach' => 'Beach Time',
+            'nature walk' => 'Nature Walk',
+            'guided walk' => 'Guided Walk',
+            'boat ride' => 'Boat Ride',
+            'boat safari' => 'Boat Safari',
+            'fishing' => 'Fishing',
+            'border crossing' => 'Border Crossing',
+            'immigration' => 'Immigration',
+            'customs' => 'Customs',
+        ];
+
+        // Define location patterns to extract key locations
+        $locationPatterns = [
+            '/\b([A-Z][a-z]+\s+(?:National\s+(?:Park|Reserve|Game\s+Reserve)))\b/i',
+            '/\b([A-Z][a-z]+\s+(?:Island|Airport|Airstrip|Lodge|Camp|Resort|Hotel))\b/i',
+            '/\b(Lake\s+[A-Z][a-z]+)\b/i',
+            '/\b(Mount\s+[A-Z][a-z]+)\b/i',
+            '/\b(Masai\s+Mara|Serengeti|Amboseli|Ngorongoro|Tarangire|Samburu|Tsavo|Kruger|Chobe|Okavango)\b/i',
+            '/\b([A-Z][a-z]+\s+(?:River|Valley|Delta|Plains|Hills|Mountains))\b/i',
+        ];
+
+        $textLower = strtolower($text);
+        $activity = null;
+        $location = null;
+
+        // Find the best matching activity trigger
+        foreach ($activityTriggers as $pattern => $activityName) {
+            if (preg_match('/\b' . $pattern . '\b/i', $text)) {
+                $activity = $activityName;
+                break;
+            }
+        }
+
+        // Extract location if found
+        foreach ($locationPatterns as $pattern) {
+            if (preg_match($pattern, $text, $matches)) {
+                $location = $matches[1];
+                break;
+            }
+        }
+
+        // If no activity trigger found, try to extract a general activity description
+        if (!$activity) {
+            // Look for action words at the beginning
+            if (preg_match('/^(?:it\'s\s+time\s+(?:for|to)\s+)?(?:a\s+)?([^.!?]+?)(?:\s+through|\s+to|\s+in|\s+at|\s+for|\.|$)/i', $text, $matches)) {
+                $extracted = trim($matches[1]);
+                $extracted = preg_replace('/^(?:an?\s+|the\s+)/i', '', $extracted);
+                $activity = ucwords(strtolower($extracted));
+            }
+        }
+
+        // Build the concise description
+        if ($activity && $location) {
+            return $activity . ' - ' . $location;
+        } elseif ($activity) {
+            return $activity;
+        } elseif ($location) {
+            return 'Activity - ' . $location;
+        }
+
+        // Fallback: return a cleaned up version of the original
+        $fallback = preg_replace('/^(?:it\'s\s+time\s+(?:for|to)\s+)?(?:an?\s+|the\s+)?/i', '', $text);
+        $fallback = preg_replace('/\.\s*.*$/', '', $fallback); // Remove everything after first sentence
+        $fallback = ucfirst(trim($fallback));
+
+        // Limit length for fallback
+        if (strlen($fallback) > 50) {
+            $fallback = substr($fallback, 0, 47) . '...';
+        }
+
+        return $fallback;
     }
 
     /**
