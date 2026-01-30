@@ -1575,15 +1575,13 @@
             const dayRow = document.querySelector(`tr[data-day-id="${dayId}"]`);
             if (!dayRow) {
                 // Fallback: find by Safari day data in the page
-                const allDays = @json($booking->safariDays->map(function($day) {
-                    return [
-                        'id' => $day->id,
-                        'location' => $day->location,
-                        'lodge' => $day->lodge,
-                        'meal_plan' => $day->meal_plan,
-                        'drink_plan' => $day->drink_plan,
-                    ];
-                }));
+                const allDays = @json($booking->safariDays->map(fn($day) => [
+                    'id' => $day->id,
+                    'location' => $day->location,
+                    'lodge' => $day->lodge,
+                    'meal_plan' => $day->meal_plan,
+                    'drink_plan' => $day->drink_plan,
+                ]));
 
                 const dayData = allDays.find(day => day.id === dayId);
                 if (dayData) {
