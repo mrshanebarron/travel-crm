@@ -181,9 +181,7 @@ class TasksList extends Component
     public function render()
     {
         // Get ALL assigned tasks (not filtered by date - calendar shows full picture)
-        $query = Task::with(['booking.travelers' => function($query) {
-                $query->where('is_lead', true);
-            }, 'assignedTo', 'transfer'])
+        $query = Task::with(['booking.travelers', 'assignedTo', 'transfer'])
             ->where(function ($q) {
                 $q->whereNotNull('assigned_to')  // Has an assignment
                   ->orWhere('status', 'completed');  // Or is completed
