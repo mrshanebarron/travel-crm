@@ -205,7 +205,9 @@ class TasksList extends Component
                 'is_future' => $task->due_date && $task->due_date->isFuture(),
                 'booking_id' => $task->booking_id,
                 'booking_number' => $task->booking?->booking_number ?? ($task->transfer ? $task->transfer->transfer_number : 'N/A'),
-                'client_name' => $task->booking?->leadTraveler()?->first_name . ' ' . $task->booking?->leadTraveler()?->last_name ?? 'N/A',
+                'client_name' => $task->booking?->leadTraveler()
+                    ? trim($task->booking->leadTraveler()->first_name . ' ' . $task->booking->leadTraveler()->last_name)
+                    : 'N/A',
                 'transfer_id' => $task->transfer_id,
                 'assigned_to' => $task->assigned_to,
                 'assigned_to_name' => $task->assignedTo?->name,
