@@ -29,8 +29,7 @@ class BookingsList extends Component
     public function mount()
     {
         // Default to 'upcoming' status with closest bookings first
-        // If no status is provided in query string, default to 'upcoming'
-        $this->status = request('status') !== null ? request('status') : 'upcoming';
+        // Property default handles this now
         $this->travelers = [['first_name' => '', 'last_name' => '', 'email' => '', 'phone' => '', 'dob' => '']];
     }
 
