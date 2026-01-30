@@ -66,6 +66,7 @@ class TransferController extends Controller
         $transfer->load(['expenses.booking']);
         $bookings = Booking::with(['groups.travelers'])
             ->where('status', '!=', 'completed')
+            ->where('end_date', '>=', now())
             ->orderBy('start_date')
             ->get();
         return view('transfers.edit', compact('transfer', 'bookings'));
