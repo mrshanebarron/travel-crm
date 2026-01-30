@@ -13,7 +13,7 @@ class BookingsList extends Component
 {
     use WithPagination;
 
-    public $status = '';
+    public $status = 'upcoming';
     public $selected = [];
     public $selectAll = false;
 
@@ -29,7 +29,8 @@ class BookingsList extends Component
     public function mount()
     {
         // Default to 'upcoming' status with closest bookings first
-        $this->status = request('status', 'upcoming');
+        // If no status is provided in query string, default to 'upcoming'
+        $this->status = request('status') !== null ? request('status') : 'upcoming';
         $this->travelers = [['first_name' => '', 'last_name' => '', 'email' => '', 'phone' => '', 'dob' => '']];
     }
 
@@ -156,7 +157,8 @@ class BookingsList extends Component
     {
         $query = Booking::with(['travelers', 'groups']);
 
-        if ($this->status) {
+        // Filter by status unless it's 'all' or empty string (for "All" filter)
+        if ($this->status && $this->status !== 'all') {
             $query->where('status', $this->status);
         }
 

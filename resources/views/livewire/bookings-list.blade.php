@@ -14,7 +14,7 @@
     <!-- Filters -->
     <div class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6">
         <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1 -mb-1">
-            <button wire:click="setStatus('')" class="tab {{ !$status ? 'active' : '' }}">All</button>
+            <button wire:click="setStatus('all')" class="tab {{ $status === 'all' ? 'active' : '' }}">All</button>
             <button wire:click="setStatus('upcoming')" class="tab {{ $status === 'upcoming' ? 'active' : '' }}">Upcoming</button>
             <button wire:click="setStatus('active')" class="tab {{ $status === 'active' ? 'active' : '' }}">Active</button>
             <button wire:click="setStatus('completed')" class="tab {{ $status === 'completed' ? 'active' : '' }}">Completed</button>
