@@ -1623,12 +1623,6 @@
             if (!dayRow) {
                 // Fallback: find by Safari day data in the page
                 const allDays = {{ Js::from($safariDaysData) }};
-                    'id' => $day->id,
-                    'location' => $day->location,
-                    'lodge' => $day->lodge,
-                    'meal_plan' => $day->meal_plan,
-                    'drink_plan' => $day->drink_plan,
-                ]));
 
                 const dayData = allDays.find(day => day.id === dayId);
                 if (dayData) {
