@@ -117,7 +117,18 @@ class BookingController extends Controller
         // Get all users for task assignment dropdown
         $users = User::orderBy('name')->get();
 
-        return view('bookings.show', compact('booking', 'users'));
+        // Prepare safari days data for JavaScript (avoid complex @json expressions)
+        $safariDaysData = $booking->safariDays->map(function($day) {
+            return [
+                'id' => $day->id,
+                'location' => $day->location,
+                'lodge' => $day->lodge,
+                'meal_plan' => $day->meal_plan,
+                'drink_plan' => $day->drink_plan,
+            ];
+        });
+
+        return view('bookings.show', compact('booking', 'users', 'safariDaysData'));
     }
 
     public function edit(Booking $booking)
