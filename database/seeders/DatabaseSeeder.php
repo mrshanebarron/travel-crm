@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Matt',
             'email' => 'matt@tapestryofafrica.com',
             'password' => Hash::make('password'),
+            'phone' => '+16236062217',  // Matt's WhatsApp number
         ]);
         $matt->assignRole('super_admin');
 
@@ -39,6 +40,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Linda',
             'email' => 'linda@tapestryofafrica.com',
             'password' => Hash::make('password'),
+            'phone' => '+18016567966',  // Linda's WhatsApp number
         ]);
         $linda->assignRole('super_admin');
 
@@ -47,6 +49,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Hilda',
             'email' => 'hilda@tapestryofafrica.com',
             'password' => Hash::make('password'),
+            'phone' => '+254712818547',  // Hilda's WhatsApp number
         ]);
         $hilda->assignRole('admin');
 
@@ -54,6 +57,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Albert',
             'email' => 'albert@tapestryofafrica.com',
             'password' => Hash::make('password'),
+            'phone' => '+254723682940',  // Albert's WhatsApp number
         ]);
         $albert->assignRole('admin');
 
@@ -62,6 +66,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Peter',
             'email' => 'peter@tapestryofafrica.com',
             'password' => Hash::make('password'),
+            'phone' => '+254714555485',  // Peter's WhatsApp number
         ]);
         $peter->assignRole('user');
 

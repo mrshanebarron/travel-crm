@@ -24,12 +24,15 @@ class BookingsList extends Component
     public $endDate = '';
     public $travelers = [];
 
-    protected $queryString = ['status'];
+    protected $queryString = [
+        'status' => ['except' => 'upcoming']
+    ];
 
     public function mount()
     {
-        // Default to 'upcoming' status with closest bookings first
-        // Property default handles this now
+        // Get status from URL or default to 'upcoming'
+        $this->status = request()->get('status', 'upcoming');
+        
         $this->travelers = [['first_name' => '', 'last_name' => '', 'email' => '', 'phone' => '', 'dob' => '']];
     }
 
@@ -156,14 +159,16 @@ class BookingsList extends Component
     {
         $query = Booking::with(['travelers', 'groups']);
 
-        // Filter by status unless it's 'all' or empty string (for "All" filter)
-        if ($this->status && $this->status !== 'all') {
-            $query->where('status', $this->status);
+        // Get the current status, defaulting to 'upcoming'
+        $status = $this->status ?: 'upcoming';
+
+        // Apply status filter unless showing all
+        if ($status !== 'all') {
+            $query->where('status', $status);
         }
 
-        // For upcoming bookings, show closest first (ascending)
-        // For other statuses, show most recent first (descending)
-        if ($this->status === 'upcoming') {
+        // Sort by start date - upcoming first for 'upcoming' status
+        if ($status === 'upcoming') {
             $query->orderBy('start_date', 'asc');
         } else {
             $query->orderBy('start_date', 'desc');

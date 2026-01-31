@@ -25,6 +25,7 @@ use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\TravelerAddonController;
 use App\Http\Controllers\IntakeFormController;
+use App\Http\Controllers\GuideController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -127,6 +128,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Team Management (Admin only)
     Route::resource('users', UserController::class)->except(['show']);
+    
+    // Guides
+    Route::resource('guides', GuideController::class);
 
     // Vendors
     Route::resource('vendors', VendorController::class);
