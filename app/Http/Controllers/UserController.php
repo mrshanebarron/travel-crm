@@ -21,6 +21,20 @@ class UserController extends Controller
         return view('users.index');
     }
 
+    public function create()
+    {
+        if (!auth()->user()->hasRole('super_admin')) {
+            abort(403);
+        }
+
+        // Convert roles to value-label array for the form
+        $roles = Role::all()->pluck('name', 'name')->mapWithKeys(function ($value, $key) {
+            return [$key => ucfirst(str_replace('_', ' ', $value))];
+        })->toArray();
+
+        return view('users.create', compact('roles'));
+    }
+
     public function store(Request $request)
     {
         if (!auth()->user()->hasRole('super_admin')) {
