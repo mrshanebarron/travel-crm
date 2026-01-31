@@ -1,4 +1,51 @@
 <x-app-layout>
+    <!-- Define Alpine.js functions before they're used -->
+    <script>
+        // Define activityCell function for Alpine.js BEFORE it's used
+        function activityCell(safariDayId, period, initialActivities) {
+            return {
+                safariDayId: safariDayId,
+                period: period,
+                activities: initialActivities || [],
+                editing: false,
+                editText: '',
+
+                startEdit() {
+                    this.editText = this.activities.join('\n');
+                    this.editing = true;
+                },
+
+                cancel() {
+                    this.editing = false;
+                    this.editText = '';
+                },
+
+                async saveEdit() {
+                    const activities = this.editText.split('\n').filter(activity => activity.trim() !== '');
+
+                    const response = await fetch(`/safari-days/${this.safariDayId}/activities`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            period: this.period,
+                            activities: activities
+                        })
+                    });
+
+                    if (response.ok) {
+                        this.activities = activities;
+                        this.editing = false;
+                    } else {
+                        alert('Failed to save activities');
+                    }
+                }
+            };
+        }
+    </script>
+
     @php
         $leadTraveler = $booking->leadTraveler();
     @endphp
